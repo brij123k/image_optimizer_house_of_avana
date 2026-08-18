@@ -9,239 +9,198 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Karla:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --abyss:      #061419;
-    --deep:       #0a2029;
-    --panel:      #0e2c37;
-    --panel-soft: #123643;
-    --line:       #1b4553;
-    --mist:       #dcefee;
-    --fog:        #7fa2a9;
-    --glow:       #74e8e0;
-    --glow-deep:  #2b7d78;
-    --ember:      #e0794f;
-    --danger:     #ef6f5e;
-    --moss:       #7fa85f;
-
-    --display: 'Cormorant Garamond', serif;
-    --body:    'Karla', sans-serif;
-    --mono:    'JetBrains Mono', monospace;
+    --abyss:#061419; --deep:#0a2029; --panel-soft:#123643; --line:#1b4553;
+    --mist:#dcefee; --fog:#7fa2a9; --glow:#74e8e0; --glow-deep:#2b7d78;
+    --ember:#e0794f; --danger:#ef6f5e; --moss:#8fbf6a;
+    --display:'Cormorant Garamond',serif; --body:'Karla',sans-serif; --mono:'JetBrains Mono',monospace;
   }
   * { box-sizing: border-box; }
-
   body {
-    margin: 0;
-    min-height: 100vh;
-    color: var(--mist);
-    font-family: var(--body);
+    margin:0; min-height:100vh; color:var(--mist); font-family:var(--body);
     background:
       radial-gradient(1100px 700px at 18% -8%, #14414a 0%, transparent 58%),
       radial-gradient(900px 600px at 92% 8%, #0f3b3f 0%, transparent 55%),
       linear-gradient(180deg, var(--deep) 0%, var(--abyss) 78%);
     background-attachment: fixed;
   }
-
-  /* ---- ambient spores (signature) ---- */
-  .spores { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+  .spores { position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
   .spore {
-    position: absolute;
-    width: 3px; height: 3px;
-    border-radius: 50%;
-    background: var(--glow);
-    opacity: 0;
-    box-shadow: 0 0 8px var(--glow), 0 0 18px rgba(116,232,224,0.55);
-    animation: drift linear infinite;
+    position:absolute; width:3px; height:3px; border-radius:50%; background:var(--glow); opacity:0;
+    box-shadow:0 0 8px var(--glow), 0 0 18px rgba(116,232,224,.55); animation:drift linear infinite;
   }
   @keyframes drift {
-    0%   { transform: translate3d(0, 12vh, 0) scale(0.7); opacity: 0; }
-    15%  { opacity: 0.85; }
-    70%  { opacity: 0.5; }
-    100% { transform: translate3d(22px, -85vh, 0) scale(1.15); opacity: 0; }
+    0% { transform:translate3d(0,12vh,0) scale(.7); opacity:0; }
+    15% { opacity:.85; } 70% { opacity:.5; }
+    100% { transform:translate3d(22px,-85vh,0) scale(1.15); opacity:0; }
   }
-  @media (prefers-reduced-motion: reduce) {
-    .spore { animation: none; opacity: 0.35; }
-    * { transition: none !important; }
-  }
+  @media (prefers-reduced-motion: reduce) { .spore { animation:none; opacity:.35; } * { transition:none !important; } }
 
-  .wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 64px 24px 90px; }
-
-  header { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .wrap { position:relative; z-index:1; max-width:900px; margin:0 auto; padding:64px 24px 90px; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
   h1 {
-    font-family: var(--display);
-    font-weight: 500;
-    font-size: 46px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    margin: 0;
-    color: #bfeef0;
-    text-shadow: 0 0 26px rgba(116,232,224,0.35), 0 0 60px rgba(116,232,224,0.14);
+    font-family:var(--display); font-weight:500; font-size:46px; letter-spacing:.14em;
+    text-transform:uppercase; margin:0; color:#bfeef0;
+    text-shadow:0 0 26px rgba(116,232,224,.35), 0 0 60px rgba(116,232,224,.14);
   }
   .tag {
-    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
-    color: var(--fog); padding: 6px 13px;
-    border: 1px solid var(--line); border-radius: 100px;
-    background: rgba(9,32,40,0.6);
+    font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--fog);
+    padding:6px 13px; border:1px solid var(--line); border-radius:100px; background:rgba(9,32,40,.6);
   }
-  .sub {
-    color: var(--fog); font-size: 14.5px; margin: 10px 0 40px; max-width: 60ch;
-    line-height: 1.55;
+  .sub { color:var(--fog); font-size:14.5px; margin:10px 0 30px; max-width:60ch; line-height:1.55; }
+
+  /* ---- tabs ---- */
+  .tabs { display:flex; gap:8px; margin-bottom:22px; border-bottom:1px solid var(--line); }
+  .tab {
+    font-family:var(--display); font-size:17px; font-weight:600; letter-spacing:.14em;
+    text-transform:uppercase; background:none; border:none; color:var(--fog);
+    padding:10px 4px; margin-right:22px; cursor:pointer; border-bottom:2px solid transparent;
+    transition:color .18s ease, border-color .18s ease;
   }
+  .tab:hover { color:var(--mist); }
+  .tab.active { color:var(--glow); border-bottom-color:var(--glow); }
 
   .panel {
-    background: linear-gradient(180deg, rgba(18,54,67,0.82), rgba(11,36,45,0.82));
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 26px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 18px 40px -28px rgba(0,0,0,0.9);
+    background:linear-gradient(180deg, rgba(18,54,67,.82), rgba(11,36,45,.82));
+    border:1px solid var(--line); border-radius:16px; padding:26px; margin-bottom:20px;
+    backdrop-filter:blur(6px); box-shadow:0 18px 40px -28px rgba(0,0,0,.9);
   }
   .panel h2 {
-    font-family: var(--display);
-    font-size: 19px; font-weight: 600;
-    letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--glow);
-    margin: 0 0 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid rgba(116,232,224,0.14);
+    font-family:var(--display); font-size:19px; font-weight:600; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--glow); margin:0 0 20px; padding-bottom:12px;
+    border-bottom:1px solid rgba(116,232,224,.14);
   }
-  .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
 
-  .status-dot {
-    width: 9px; height: 9px; border-radius: 50%; background: var(--fog);
-    display: inline-block; margin-right: 9px;
-  }
-  .status-dot.live { background: var(--glow); box-shadow: 0 0 10px var(--glow), 0 0 22px rgba(116,232,224,0.6); animation: breathe 2s infinite; }
-  .status-dot.err { background: var(--danger); box-shadow: 0 0 10px rgba(239,111,94,0.7); }
-  @keyframes breathe { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .status-dot { width:9px; height:9px; border-radius:50%; background:var(--fog); display:inline-block; margin-right:9px; }
+  .status-dot.live { background:var(--glow); box-shadow:0 0 10px var(--glow),0 0 22px rgba(116,232,224,.6); animation:breathe 2s infinite; }
+  .status-dot.err { background:var(--danger); box-shadow:0 0 10px rgba(239,111,94,.7); }
+  @keyframes breathe { 0%,100% { opacity:1; } 50% { opacity:.35; } }
 
-  /* ---- scope ---- */
-  .segmented { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  .segmented { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
   .seg {
-    font-family: var(--body); font-weight: 500; font-size: 13.5px;
-    padding: 11px 20px; border-radius: 10px;
-    border: 1px solid var(--line);
-    background: rgba(6,20,25,0.5); color: var(--fog);
-    cursor: pointer; transition: all .18s ease;
+    font-family:var(--body); font-weight:500; font-size:13.5px; padding:11px 20px;
+    border-radius:10px; border:1px solid var(--line); background:rgba(6,20,25,.5);
+    color:var(--fog); cursor:pointer; transition:all .18s ease;
   }
-  .seg:hover { color: var(--mist); border-color: var(--glow-deep); }
-  .seg.active {
-    color: #08222a; background: var(--glow); border-color: var(--glow);
-    box-shadow: 0 0 20px rgba(116,232,224,0.35);
-  }
+  .seg:hover { color:var(--mist); border-color:var(--glow-deep); }
+  .seg.active { color:#08222a; background:var(--glow); border-color:var(--glow); box-shadow:0 0 20px rgba(116,232,224,.35); }
+
   select, input[type=number] {
-    width: 100%; background: rgba(6,20,25,0.65);
-    border: 1px solid var(--line); color: var(--mist);
-    padding: 11px 13px; border-radius: 9px;
-    font-family: var(--mono); font-size: 13px;
+    width:100%; background:rgba(6,20,25,.65); border:1px solid var(--line); color:var(--mist);
+    padding:11px 13px; border-radius:9px; font-family:var(--mono); font-size:13px;
   }
-  select:focus, input:focus { outline: 2px solid var(--glow-deep); outline-offset: 1px; }
-  .hidden { display: none !important; }
+  select:focus, input:focus { outline:2px solid var(--glow-deep); outline-offset:1px; }
+  .hidden { display:none !important; }
 
-  /* ---- picker ---- */
-  .picker-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 18px 0 10px; flex-wrap: wrap; }
-  .picker-count { font-family: var(--mono); font-size: 11.5px; color: var(--fog); letter-spacing: 0.03em; }
-  .picker-count b { color: var(--glow); font-weight: 700; }
+  .picker-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:18px 0 10px; flex-wrap:wrap; }
+  .picker-count { font-family:var(--mono); font-size:11.5px; color:var(--fog); letter-spacing:.03em; }
+  .picker-count b { color:var(--glow); font-weight:700; }
+  .picker-count .done-note { color:var(--moss); }
   .link-btn {
-    background: none; border: none; color: var(--fog);
-    font-family: var(--mono); font-size: 11.5px; cursor: pointer;
-    padding: 5px 7px; border-radius: 5px;
+    background:none; border:none; color:var(--fog); font-family:var(--mono);
+    font-size:11.5px; cursor:pointer; padding:5px 7px; border-radius:5px;
   }
-  .link-btn:hover { color: var(--glow); }
-  .product-list {
-    border: 1px solid var(--line); border-radius: 10px;
-    max-height: 310px; overflow-y: auto;
-    background: rgba(5,17,22,0.6);
-  }
-  .product-list::-webkit-scrollbar { width: 9px; }
-  .product-list::-webkit-scrollbar-thumb { background: var(--glow-deep); border-radius: 5px; }
-  .p-row {
-    display: flex; align-items: center; gap: 13px;
-    padding: 11px 15px; border-bottom: 1px solid rgba(27,69,83,0.7); cursor: pointer;
-  }
-  .p-row:last-child { border-bottom: none; }
-  .p-row:hover { background: rgba(116,232,224,0.05); }
-  .p-row input[type=checkbox] { accent-color: var(--glow); width: 16px; height: 16px; flex: none; }
-  .p-thumb { width: 36px; height: 36px; border-radius: 7px; object-fit: cover; background: var(--panel-soft); flex: none; }
-  .p-title { flex: 1; font-size: 13.5px; }
-  .p-meta { font-family: var(--mono); font-size: 11px; color: var(--fog); flex: none; }
-  .picker-empty { padding: 26px 15px; color: var(--fog); font-size: 13px; text-align: center; }
+  .link-btn:hover { color:var(--glow); }
+  .link-btn.danger:hover { color:var(--danger); }
 
-  /* ---- settings ---- */
-  .controls { display: flex; gap: 26px; flex-wrap: wrap; margin-bottom: 20px; }
-  .field { flex: 1; min-width: 190px; }
-  .field label {
-    display: block; font-size: 11.5px; color: var(--fog);
-    margin-bottom: 10px; font-family: var(--mono); letter-spacing: 0.04em;
+  .product-list { border:1px solid var(--line); border-radius:10px; max-height:310px; overflow-y:auto; background:rgba(5,17,22,.6); }
+  .product-list::-webkit-scrollbar, .report-list::-webkit-scrollbar { width:9px; }
+  .product-list::-webkit-scrollbar-thumb, .report-list::-webkit-scrollbar-thumb { background:var(--glow-deep); border-radius:5px; }
+  .p-row { display:flex; align-items:center; gap:13px; padding:11px 15px; border-bottom:1px solid rgba(27,69,83,.7); cursor:pointer; }
+  .p-row:last-child { border-bottom:none; }
+  .p-row:hover { background:rgba(116,232,224,.05); }
+  .p-row.is-done .p-title { color:var(--fog); }
+  .p-row input[type=checkbox] { accent-color:var(--glow); width:16px; height:16px; flex:none; }
+  .p-thumb { width:36px; height:36px; border-radius:7px; object-fit:cover; background:var(--panel-soft); flex:none; }
+  .p-row.is-done .p-thumb { opacity:.55; }
+  .p-title { flex:1; font-size:13.5px; }
+  .p-meta { font-family:var(--mono); font-size:11px; color:var(--fog); flex:none; }
+  .badge {
+    font-family:var(--mono); font-size:10px; letter-spacing:.06em; padding:3px 8px;
+    border-radius:100px; flex:none; color:var(--moss);
+    border:1px solid rgba(143,191,106,.45); background:rgba(143,191,106,.09);
   }
-  .field input[type=range] { width: 100%; accent-color: var(--glow); }
-  .field .val { font-family: var(--mono); color: var(--glow); }
-  .toggle { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 22px; cursor: pointer; font-size: 13.5px; }
-  .toggle input { accent-color: var(--ember); width: 16px; height: 16px; margin-top: 2px; flex: none; }
-  .toggle .hint { display: block; color: var(--fog); font-size: 12px; margin-top: 4px; line-height: 1.5; }
+  .badge.partial { color:var(--ember); border-color:rgba(224,121,79,.45); background:rgba(224,121,79,.09); }
+  .badge.none { color:var(--fog); border-color:var(--line); background:rgba(127,162,169,.07); }
+  .picker-empty { padding:26px 15px; color:var(--fog); font-size:13px; text-align:center; }
+
+  .controls { display:flex; gap:26px; flex-wrap:wrap; margin-bottom:20px; }
+  .field { flex:1; min-width:190px; }
+  .field label { display:block; font-size:11.5px; color:var(--fog); margin-bottom:10px; font-family:var(--mono); letter-spacing:.04em; }
+  .field input[type=range] { width:100%; accent-color:var(--glow); }
+  .field .val { font-family:var(--mono); color:var(--glow); }
+  .toggle { display:flex; align-items:flex-start; gap:11px; margin-bottom:16px; cursor:pointer; font-size:13.5px; }
+  .toggle input { accent-color:var(--ember); width:16px; height:16px; margin-top:2px; flex:none; }
+  .toggle .hint { display:block; color:var(--fog); font-size:12px; margin-top:4px; line-height:1.5; }
 
   button {
-    font-family: var(--body); font-weight: 600; font-size: 14px;
-    border: none; border-radius: 10px; padding: 13px 26px; cursor: pointer;
-    transition: transform .1s ease, box-shadow .2s ease, opacity .15s ease;
+    font-family:var(--body); font-weight:600; font-size:14px; border:none; border-radius:10px;
+    padding:13px 26px; cursor:pointer; transition:transform .1s ease, box-shadow .2s ease, opacity .15s ease;
   }
-  button:active { transform: scale(0.97); }
-  button:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
-  .btn-primary {
-    background: linear-gradient(180deg, #8af2ea, var(--glow));
-    color: #04222a;
-    box-shadow: 0 0 24px rgba(116,232,224,0.3);
-  }
-  .btn-primary:hover:not(:disabled) { box-shadow: 0 0 34px rgba(116,232,224,0.5); }
-  .btn-ghost { background: transparent; color: var(--fog); border: 1px solid var(--line); }
-  .btn-ghost:hover:not(:disabled) { color: var(--mist); border-color: var(--glow-deep); }
+  button:active { transform:scale(.97); }
+  button:disabled { opacity:.35; cursor:not-allowed; box-shadow:none; }
+  .btn-primary { background:linear-gradient(180deg,#8af2ea,var(--glow)); color:#04222a; box-shadow:0 0 24px rgba(116,232,224,.3); }
+  .btn-primary:hover:not(:disabled) { box-shadow:0 0 34px rgba(116,232,224,.5); }
+  .btn-ghost { background:transparent; color:var(--fog); border:1px solid var(--line); }
+  .btn-ghost:hover:not(:disabled) { color:var(--mist); border-color:var(--glow-deep); }
 
-  /* ---- progress ---- */
-  .meter { display: flex; align-items: flex-end; gap: 40px; margin-bottom: 20px; flex-wrap: wrap; }
-  .stat .num { font-family: var(--mono); font-size: 33px; font-weight: 700; line-height: 1; }
-  .stat .num.saved { color: var(--glow); text-shadow: 0 0 22px rgba(116,232,224,0.4); }
-  .stat .label {
-    font-size: 10.5px; color: var(--fog); text-transform: uppercase;
-    letter-spacing: 0.14em; margin-top: 8px;
+  .meter { display:flex; align-items:flex-end; gap:40px; margin-bottom:20px; flex-wrap:wrap; }
+  .stat .num { font-family:var(--mono); font-size:33px; font-weight:700; line-height:1; }
+  .stat .num.saved { color:var(--glow); text-shadow:0 0 22px rgba(116,232,224,.4); }
+  .stat .label { font-size:10.5px; color:var(--fog); text-transform:uppercase; letter-spacing:.14em; margin-top:8px; }
+  .bar-track { height:9px; background:rgba(5,17,22,.8); border-radius:100px; overflow:hidden; border:1px solid var(--line); }
+  .bar-fill { height:100%; width:0%; background:linear-gradient(90deg,var(--glow-deep),var(--glow)); box-shadow:0 0 16px rgba(116,232,224,.65); transition:width .45s ease; }
+  .bar-fill.moss { background:linear-gradient(90deg,#4b7a35,var(--moss)); box-shadow:0 0 16px rgba(143,191,106,.5); }
+  .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:13px; margin-top:20px; }
+  .mini { background:rgba(5,17,22,.55); border:1px solid var(--line); border-radius:10px; padding:13px 15px; }
+  .mini .n { font-family:var(--mono); font-size:17px; font-weight:700; }
+  .mini .n.moss { color:var(--moss); }
+  .mini .n.ember { color:var(--ember); }
+  .mini .l { font-size:10.5px; color:var(--fog); margin-top:3px; letter-spacing:.08em; text-transform:uppercase; }
+
+  /* ---- report ---- */
+  .report-list { border:1px solid var(--line); border-radius:10px; max-height:520px; overflow-y:auto; background:rgba(5,17,22,.6); }
+  .r-product { border-bottom:1px solid rgba(27,69,83,.7); padding:15px 16px; }
+  .r-product:last-child { border-bottom:none; }
+  .r-head { display:flex; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+  .r-title { flex:1; font-size:14px; min-width:150px; }
+  .r-images { display:flex; gap:10px; flex-wrap:wrap; }
+  .r-img { position:relative; width:62px; height:62px; border-radius:8px; overflow:hidden; border:1px solid var(--line); background:var(--panel-soft); }
+  .r-img img { width:100%; height:100%; object-fit:cover; display:block; }
+  .r-img.done { border-color:rgba(143,191,106,.7); box-shadow:0 0 12px rgba(143,191,106,.18); }
+  .r-img.pending { border-color:rgba(224,121,79,.55); }
+  .r-img:not(.done) img { opacity:.62; }
+  .r-mark {
+    position:absolute; right:3px; bottom:3px; width:17px; height:17px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:10px; font-weight:700; line-height:1;
+    background:rgba(4,14,18,.9);
   }
-  .bar-track {
-    height: 9px; background: rgba(5,17,22,0.8); border-radius: 100px;
-    overflow: hidden; border: 1px solid var(--line);
-  }
-  .bar-fill {
-    height: 100%; width: 0%;
-    background: linear-gradient(90deg, var(--glow-deep), var(--glow));
-    box-shadow: 0 0 16px rgba(116,232,224,0.65);
-    transition: width .45s ease;
-  }
-  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; margin-top: 20px; }
-  .mini { background: rgba(5,17,22,0.55); border: 1px solid var(--line); border-radius: 10px; padding: 13px 15px; }
-  .mini .n { font-family: var(--mono); font-size: 17px; font-weight: 700; }
-  .mini .l { font-size: 10.5px; color: var(--fog); margin-top: 3px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .r-mark.done { color:#0b1f08; background:var(--moss); }
+  .r-mark.pending { color:#1f0e06; background:var(--ember); }
+  .legend { display:flex; gap:18px; flex-wrap:wrap; font-family:var(--mono); font-size:11px; color:var(--fog); margin:14px 0 4px; }
+  .legend span { display:flex; align-items:center; gap:7px; }
+  .dot { width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .dot.moss { background:var(--moss); } .dot.ember { background:var(--ember); }
 
   .log {
-    background: rgba(4,14,18,0.75); border: 1px solid var(--line); border-radius: 10px;
-    padding: 16px 18px; height: 230px; overflow-y: auto;
-    font-family: var(--mono); font-size: 12.5px; color: #a8c4c9; line-height: 1.65;
+    background:rgba(4,14,18,.75); border:1px solid var(--line); border-radius:10px;
+    padding:16px 18px; height:230px; overflow-y:auto; font-family:var(--mono);
+    font-size:12.5px; color:#a8c4c9; line-height:1.65;
   }
-  .log div.err-line { color: var(--danger); }
-  .log div.ok-line { color: var(--glow); }
-  .log::-webkit-scrollbar { width: 9px; }
-  .log::-webkit-scrollbar-thumb { background: var(--glow-deep); border-radius: 5px; }
+  .log div.err-line { color:var(--danger); }
+  .log div.ok-line { color:var(--glow); }
+  .log::-webkit-scrollbar { width:9px; }
+  .log::-webkit-scrollbar-thumb { background:var(--glow-deep); border-radius:5px; }
 
   .error-banner {
-    background: rgba(239,111,94,0.09); border: 1px solid rgba(239,111,94,0.55);
-    color: #ffc3b6; padding: 12px 15px; border-radius: 10px;
-    font-size: 13px; margin-bottom: 18px; display: none;
+    background:rgba(239,111,94,.09); border:1px solid rgba(239,111,94,.55); color:#ffc3b6;
+    padding:12px 15px; border-radius:10px; font-size:13px; margin-bottom:18px; display:none;
   }
-  footer {
-    text-align: center; color: var(--fog); font-size: 11.5px;
-    margin-top: 44px; letter-spacing: 0.04em;
-  }
-  @media (max-width: 600px) {
-    h1 { font-size: 34px; }
-    .grid3 { grid-template-columns: 1fr; }
-    .meter { gap: 26px; }
-  }
+  .note { color:var(--fog); font-size:12px; margin:14px 0 0; line-height:1.55; }
+  footer { text-align:center; color:var(--fog); font-size:11.5px; margin-top:44px; letter-spacing:.04em; }
+  @media (max-width:720px) { .grid4 { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:600px) { h1 { font-size:34px; } .meter { gap:26px; } .tab { font-size:14px; margin-right:14px; } }
 </style>
 </head>
 <body>
@@ -252,89 +211,148 @@
     <h1>Image Compactor</h1>
     <span class="tag" id="shop-tag">not connected</span>
   </header>
-  <p class="sub">Shrinks product image file sizes and pushes the optimized version back — in place.</p>
+  <p class="sub">Shrinks product image file sizes and pushes the optimized version back — in place. Images optimized in an earlier run are skipped automatically.</p>
 
   <div class="error-banner" id="error-banner"></div>
 
-  <div class="panel">
-    <h2>Connection</h2>
-    <div class="row">
-      <div>
-        <span class="status-dot" id="conn-dot"></span>
-        <span id="conn-text" style="font-family: var(--mono); font-size: 13px;">Checking .env credentials…</span>
-      </div>
-      <button class="btn-ghost" id="test-btn">Test connection</button>
-    </div>
+  <div class="tabs">
+    <button class="tab active" data-view="run">Run</button>
+    <button class="tab" data-view="report">Image report</button>
   </div>
 
-  <div class="panel">
-    <h2>What to optimize</h2>
-    <div class="segmented">
-      <button class="seg active" data-scope="store">Entire store</button>
-      <button class="seg" data-scope="collection">A collection</button>
+  <!-- ============ RUN VIEW ============ -->
+  <div id="view-run">
+    <div class="panel">
+      <h2>Connection</h2>
+      <div class="row">
+        <div>
+          <span class="status-dot" id="conn-dot"></span>
+          <span id="conn-text" style="font-family:var(--mono); font-size:13px;">Checking .env credentials…</span>
+        </div>
+        <button class="btn-ghost" id="test-btn">Test connection</button>
+      </div>
     </div>
 
-    <div id="collection-area" class="hidden">
-      <div class="field">
-        <label>Collection</label>
-        <select id="collection-select"><option value="">Loading collections…</option></select>
+    <div class="panel">
+      <h2>What to optimize</h2>
+      <div class="segmented">
+        <button class="seg active" data-scope="store">Entire store</button>
+        <button class="seg" data-scope="collection">A collection</button>
       </div>
 
-      <div class="picker-bar">
-        <span class="picker-count" id="picker-count">No products loaded</span>
-        <span>
-          <button class="link-btn" id="select-all">Select all</button>
-          <button class="link-btn" id="select-none">Clear</button>
+      <div id="collection-area" class="hidden">
+        <div class="field">
+          <label>Collection</label>
+          <select id="collection-select"><option value="">Loading collections…</option></select>
+        </div>
+
+        <div class="picker-bar">
+          <span class="picker-count" id="picker-count">No products loaded</span>
+          <span>
+            <button class="link-btn" id="select-pending">Only unoptimized</button>
+            <button class="link-btn" id="select-all">Select all</button>
+            <button class="link-btn" id="select-none">Clear</button>
+          </span>
+        </div>
+        <div class="product-list" id="product-list">
+          <div class="picker-empty">Choose a collection to list its products.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Settings</h2>
+      <div class="controls">
+        <div class="field">
+          <label>Quality — <span class="val" id="quality-val">75</span></label>
+          <input type="range" id="quality" min="30" max="95" value="75">
+        </div>
+        <div class="field">
+          <label>Max width (px, optional)</label>
+          <input type="number" id="max-width" placeholder="e.g. 2048" min="200">
+        </div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="force-webp">
+        <span>Convert to WebP
+          <span class="hint">Re-encodes every image as WebP. Shopify's CDN already serves WebP to browsers that support it, so this mainly changes what's stored, not what shoppers download.</span>
         </span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="redo">
+        <span>Re-optimize everything
+          <span class="hint">Ignores the record of past runs and processes every image again. Use this after lowering the quality setting — otherwise leave it off.</span>
+        </span>
+      </label>
+      <div class="row">
+        <button class="btn-primary" id="start-btn">Optimize images</button>
+        <button class="btn-ghost" id="stop-btn" style="display:none;">Stop</button>
       </div>
-      <div class="product-list" id="product-list">
-        <div class="picker-empty">Choose a collection to list its products.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Progress</h2>
+      <div class="meter">
+        <div class="stat"><div class="num" id="before-num">0 KB</div><div class="label">Before</div></div>
+        <div class="stat"><div class="num" id="after-num">0 KB</div><div class="label">After</div></div>
+        <div class="stat"><div class="num saved" id="saved-num">0 KB</div><div class="label">Saved</div></div>
       </div>
+      <div class="bar-track"><div class="bar-fill" id="bar-fill"></div></div>
+      <div class="grid4">
+        <div class="mini"><div class="n" id="mini-products">0 / 0</div><div class="l">Products</div></div>
+        <div class="mini"><div class="n" id="mini-images">0 / 0</div><div class="l">Images</div></div>
+        <div class="mini"><div class="n moss" id="mini-done">0</div><div class="l">Done before</div></div>
+        <div class="mini"><div class="n" id="mini-status">Idle</div><div class="l">Status</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Log</h2>
+      <div class="log" id="log"></div>
     </div>
   </div>
 
-  <div class="panel">
-    <h2>Settings</h2>
-    <div class="controls">
-      <div class="field">
-        <label>Quality — <span class="val" id="quality-val">75</span></label>
-        <input type="range" id="quality" min="30" max="95" value="75">
+  <!-- ============ REPORT VIEW ============ -->
+  <div id="view-report" class="hidden">
+    <div class="panel">
+      <h2>Coverage</h2>
+      <div class="row" style="margin-bottom:18px;">
+        <div class="field" style="max-width:340px;">
+          <label>Show</label>
+          <select id="report-collection"><option value="">Entire store</option></select>
+        </div>
+        <button class="btn-ghost" id="report-refresh">Refresh</button>
       </div>
-      <div class="field">
-        <label>Max width (px, optional)</label>
-        <input type="number" id="max-width" placeholder="e.g. 2048" min="200">
+
+      <div class="bar-track"><div class="bar-fill moss" id="report-bar"></div></div>
+      <div class="grid4">
+        <div class="mini"><div class="n" id="rep-products">—</div><div class="l">Products</div></div>
+        <div class="mini"><div class="n" id="rep-images">—</div><div class="l">Images</div></div>
+        <div class="mini"><div class="n moss" id="rep-done">—</div><div class="l">Optimized</div></div>
+        <div class="mini"><div class="n ember" id="rep-pending">—</div><div class="l">Not yet</div></div>
+      </div>
+
+      <p class="note">
+        The record lives in a metafield on your store (namespace <code>image_compactor</code>), created by this app on its first successful run. Shop-level metafields have no screen in the Shopify admin, so this page is where you see them.
+        <button class="link-btn danger" id="reset-ledger">Reset the record</button>
+      </p>
+    </div>
+
+    <div class="panel">
+      <h2>Every image</h2>
+      <div class="segmented">
+        <button class="seg active" data-filter="all">All</button>
+        <button class="seg" data-filter="pending">Not optimized</button>
+        <button class="seg" data-filter="done">Optimized</button>
+      </div>
+      <div class="legend">
+        <span><i class="dot moss"></i> optimized</span>
+        <span><i class="dot ember"></i> not optimized</span>
+      </div>
+      <div class="report-list" id="report-list">
+        <div class="picker-empty">Press Refresh to load the report.</div>
       </div>
     </div>
-    <label class="toggle">
-      <input type="checkbox" id="force-webp">
-      <span>Convert to WebP
-        <span class="hint">Re-encodes every image as WebP. Shopify's CDN already serves WebP to browsers that support it, so this mainly changes what's stored, not what shoppers download.</span>
-      </span>
-    </label>
-    <div class="row">
-      <button class="btn-primary" id="start-btn">Optimize images</button>
-      <button class="btn-ghost" id="stop-btn" style="display:none;">Stop</button>
-    </div>
-  </div>
-
-  <div class="panel">
-    <h2>Progress</h2>
-    <div class="meter">
-      <div class="stat"><div class="num" id="before-num">0 KB</div><div class="label">Before</div></div>
-      <div class="stat"><div class="num" id="after-num">0 KB</div><div class="label">After</div></div>
-      <div class="stat"><div class="num saved" id="saved-num">0 KB</div><div class="label">Saved</div></div>
-    </div>
-    <div class="bar-track"><div class="bar-fill" id="bar-fill"></div></div>
-    <div class="grid3">
-      <div class="mini"><div class="n" id="mini-products">0 / 0</div><div class="l">Products</div></div>
-      <div class="mini"><div class="n" id="mini-images">0 / 0</div><div class="l">Images</div></div>
-      <div class="mini"><div class="n" id="mini-status">Idle</div><div class="l">Status</div></div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <h2>Log</h2>
-    <div class="log" id="log"></div>
   </div>
 
   <footer>Runs locally · credentials read from .env · originals are replaced and cannot be restored</footer>
@@ -343,7 +361,6 @@
 <script>
 const $ = id => document.getElementById(id);
 
-/* ambient spores */
 (function () {
   const layer = $('spores');
   for (let i = 0; i < 16; i++) {
@@ -360,17 +377,20 @@ const $ = id => document.getElementById(id);
 })();
 
 const qualityEl = $('quality'), qualityVal = $('quality-val');
-const maxWidthEl = $('max-width'), forceWebpEl = $('force-webp');
+const maxWidthEl = $('max-width'), forceWebpEl = $('force-webp'), redoEl = $('redo');
 const startBtn = $('start-btn'), stopBtn = $('stop-btn'), testBtn = $('test-btn');
 const connDot = $('conn-dot'), connText = $('conn-text'), shopTag = $('shop-tag');
 const errorBanner = $('error-banner'), logEl = $('log');
 const collectionArea = $('collection-area'), collectionSelect = $('collection-select');
 const productList = $('product-list'), pickerCount = $('picker-count');
+const reportList = $('report-list'), reportCollection = $('report-collection');
 
 let scope = 'store';
 let products = [];
 let selected = new Set();
 let collectionsLoaded = false;
+let reportData = null;
+let reportFilter = 'all';
 
 qualityEl.addEventListener('input', () => qualityVal.textContent = qualityEl.value);
 
@@ -380,11 +400,30 @@ function fmtBytes(n) {
 }
 function showError(msg) { errorBanner.style.display = 'block'; errorBanner.textContent = msg; }
 function hideError() { errorBanner.style.display = 'none'; }
+function thumb(src, px) {
+  // Shopify serves a resized copy when _WxH is appended to the filename.
+  return src.replace(/(\.[a-zA-Z]+)(\?|$)/, `_${px}x${px}$1$2`);
+}
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    const isReport = t.dataset.view === 'report';
+    $('view-run').classList.toggle('hidden', isReport);
+    $('view-report').classList.toggle('hidden', !isReport);
+    if (isReport) {
+      if (!collectionsLoaded) loadCollections();
+      if (!reportData) loadReport();
+    }
+  });
+});
 
 /* ---------- scope ---------- */
-document.querySelectorAll('.seg').forEach(btn => {
+document.querySelectorAll('.seg[data-scope]').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.seg').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.seg[data-scope]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     scope = btn.dataset.scope;
     collectionArea.classList.toggle('hidden', scope !== 'collection');
@@ -399,18 +438,19 @@ async function loadCollections() {
     if (!data.ok) { showError(data.error); return; }
     collectionsLoaded = true;
     collectionSelect.innerHTML = '<option value="">Choose a collection…</option>';
+    reportCollection.innerHTML = '<option value="">Entire store</option>';
     data.collections.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = c.products_count != null ? `${c.title} (${c.products_count})` : c.title;
-      collectionSelect.appendChild(opt);
+      const label = c.products_count != null ? `${c.title} (${c.products_count})` : c.title;
+      [collectionSelect, reportCollection].forEach(sel => {
+        const opt = document.createElement('option');
+        opt.value = c.id; opt.textContent = label;
+        sel.appendChild(opt);
+      });
     });
     if (!data.collections.length) {
       collectionSelect.innerHTML = '<option value="">No collections found</option>';
     }
-  } catch (e) {
-    showError('Could not load collections.');
-  }
+  } catch (e) { showError('Could not load collections.'); }
 }
 
 collectionSelect.addEventListener('change', () => {
@@ -425,23 +465,21 @@ async function loadProducts(collectionId) {
     const data = await res.json();
     if (!data.ok) { showError(data.error); productList.innerHTML = ''; return; }
     products = data.products;
-    selected = new Set(products.map(p => p.id));
+    const pending = products.filter(p => !p.fully_done);
+    selected = new Set((pending.length ? pending : products).map(p => p.id));
     renderProducts();
-  } catch (e) {
-    showError('Could not load products.');
-  }
+  } catch (e) { showError('Could not load products.'); }
 }
 
 function renderProducts() {
   if (!products.length) {
     productList.innerHTML = '<div class="picker-empty">This collection has no products.</div>';
-    updateCount();
-    return;
+    updateCount(); return;
   }
   productList.innerHTML = '';
   products.forEach(p => {
     const row = document.createElement('label');
-    row.className = 'p-row';
+    row.className = 'p-row' + (p.fully_done ? ' is-done' : '');
 
     const cb = document.createElement('input');
     cb.type = 'checkbox';
@@ -451,33 +489,159 @@ function renderProducts() {
       updateCount();
     });
 
-    const thumb = document.createElement('img');
-    thumb.className = 'p-thumb';
-    if (p.thumbnail) thumb.src = p.thumbnail;
+    const img = document.createElement('img');
+    img.className = 'p-thumb';
+    if (p.thumbnail) img.src = thumb(p.thumbnail, 72);
 
     const title = document.createElement('span');
     title.className = 'p-title';
     title.textContent = p.title;
 
+    row.append(cb, img, title);
+
+    if (p.fully_done) {
+      const b = document.createElement('span');
+      b.className = 'badge'; b.textContent = 'optimized'; row.appendChild(b);
+    } else if (p.done_count) {
+      const b = document.createElement('span');
+      b.className = 'badge partial'; b.textContent = `${p.done_count}/${p.image_count} done`;
+      row.appendChild(b);
+    }
+
     const meta = document.createElement('span');
     meta.className = 'p-meta';
     meta.textContent = p.image_count + (p.image_count === 1 ? ' image' : ' images');
+    row.appendChild(meta);
 
-    row.append(cb, thumb, title, meta);
     productList.appendChild(row);
   });
   updateCount();
 }
 
 function updateCount() {
-  const imgs = products.filter(p => selected.has(p.id)).reduce((s, p) => s + p.image_count, 0);
-  pickerCount.innerHTML = products.length
-    ? `<b>${selected.size}</b> of ${products.length} products · ${imgs} images`
-    : 'No products loaded';
+  if (!products.length) { pickerCount.textContent = 'No products loaded'; return; }
+  const chosen = products.filter(p => selected.has(p.id));
+  const images = chosen.reduce((s, p) => s + p.image_count, 0);
+  const done = chosen.reduce((s, p) => s + p.done_count, 0);
+  pickerCount.innerHTML =
+    `<b>${selected.size}</b> of ${products.length} products · ${images - done} images to do` +
+    (done ? ` <span class="done-note">· ${done} already optimized</span>` : '');
 }
 
 $('select-all').addEventListener('click', () => { selected = new Set(products.map(p => p.id)); renderProducts(); });
 $('select-none').addEventListener('click', () => { selected = new Set(); renderProducts(); });
+$('select-pending').addEventListener('click', () => {
+  selected = new Set(products.filter(p => !p.fully_done).map(p => p.id)); renderProducts();
+});
+
+/* ---------- report ---------- */
+document.querySelectorAll('.seg[data-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.seg[data-filter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    reportFilter = btn.dataset.filter;
+    renderReport();
+  });
+});
+
+$('report-refresh').addEventListener('click', loadReport);
+reportCollection.addEventListener('change', loadReport);
+
+async function loadReport() {
+  reportList.innerHTML = '<div class="picker-empty">Loading — this reads every product, so give it a moment…</div>';
+  const cid = reportCollection.value;
+  try {
+    const res = await fetch('/api/report' + (cid ? '?collection_id=' + encodeURIComponent(cid) : ''));
+    const data = await res.json();
+    if (!data.ok) { showError(data.error); reportList.innerHTML = ''; return; }
+    hideError();
+    reportData = data;
+    const t = data.totals;
+    $('rep-products').textContent = t.products;
+    $('rep-images').textContent = t.images;
+    $('rep-done').textContent = t.optimized;
+    $('rep-pending').textContent = t.pending;
+    $('report-bar').style.width = (t.images ? Math.round(100 * t.optimized / t.images) : 0) + '%';
+    renderReport();
+  } catch (e) { showError('Could not load the report.'); }
+}
+
+function renderReport() {
+  if (!reportData) return;
+  const wanted = reportData.products
+    .map(p => ({
+      ...p,
+      shown: p.images.filter(im =>
+        reportFilter === 'all' ? true :
+        reportFilter === 'done' ? im.optimized : !im.optimized),
+    }))
+    .filter(p => p.shown.length);
+
+  if (!wanted.length) {
+    reportList.innerHTML = '<div class="picker-empty">Nothing matches this filter.</div>';
+    return;
+  }
+
+  reportList.innerHTML = '';
+  wanted.forEach(p => {
+    const box = document.createElement('div');
+    box.className = 'r-product';
+
+    const head = document.createElement('div');
+    head.className = 'r-head';
+    const title = document.createElement('span');
+    title.className = 'r-title';
+    title.textContent = p.title;
+
+    const badge = document.createElement('span');
+    const total = p.images.length;
+    if (p.done_count === total) { badge.className = 'badge'; badge.textContent = 'all optimized'; }
+    else if (p.done_count === 0) { badge.className = 'badge none'; badge.textContent = 'none yet'; }
+    else { badge.className = 'badge partial'; badge.textContent = `${p.done_count}/${total} done`; }
+
+    head.append(title, badge);
+    box.appendChild(head);
+
+    const strip = document.createElement('div');
+    strip.className = 'r-images';
+    p.shown.forEach(im => {
+      const cell = document.createElement('div');
+      cell.className = 'r-img ' + (im.optimized ? 'done' : 'pending');
+
+      const img = document.createElement('img');
+      img.src = thumb(im.src, 120);
+      img.loading = 'lazy';
+      img.alt = '';
+
+      const mark = document.createElement('span');
+      mark.className = 'r-mark ' + (im.optimized ? 'done' : 'pending');
+      mark.textContent = im.optimized ? '✓' : '·';
+
+      cell.title = im.optimized
+        ? `Optimized ${new Date(im.optimized_at).toLocaleString()}`
+        : (im.known_but_changed
+            ? 'Changed since it was optimized — will be processed again'
+            : 'Not optimized yet');
+
+      cell.append(img, mark);
+      strip.appendChild(cell);
+    });
+    box.appendChild(strip);
+    reportList.appendChild(box);
+  });
+}
+
+$('reset-ledger').addEventListener('click', async () => {
+  if (!confirm('Forget which images have been optimized? The next run will process everything again.')) return;
+  try {
+    const res = await fetch('/api/ledger', { method: 'DELETE' });
+    const data = await res.json();
+    if (!data.ok) { showError(data.error); return; }
+    hideError();
+    loadReport();
+    if (collectionSelect.value) loadProducts(collectionSelect.value);
+  } catch (e) { showError('Could not reset the record.'); }
+});
 
 /* ---------- job ---------- */
 async function testConnection() {
@@ -509,6 +673,7 @@ async function startJob() {
     quality: parseInt(qualityEl.value, 10),
     max_width: maxWidthEl.value ? parseInt(maxWidthEl.value, 10) : null,
     force_webp: forceWebpEl.checked,
+    redo: redoEl.checked,
     scope: scope,
   };
 
@@ -538,10 +703,11 @@ async function startJob() {
 async function stopJob() { await fetch('/api/stop', { method: 'POST' }); }
 
 let polling = null;
+let wasRunning = false;
 
 function renderLogLine(line) {
   const div = document.createElement('div');
-  if (line.includes('Failed') || line.includes('Error')) div.className = 'err-line';
+  if (line.includes('Failed') || line.includes('Error') || line.includes('Warning')) div.className = 'err-line';
   else if (line.includes('Optimized')) div.className = 'ok-line';
   div.textContent = line;
   return div;
@@ -554,6 +720,7 @@ async function poll() {
 
   $('mini-products').textContent = `${s.processed_products} / ${s.total_products}`;
   $('mini-images').textContent = `${s.processed_images} / ${s.total_images}`;
+  $('mini-done').textContent = s.already_done_images;
   $('mini-status').textContent = s.status.charAt(0).toUpperCase() + s.status.slice(1);
 
   $('before-num').textContent = fmtBytes(s.bytes_before);
@@ -569,12 +736,16 @@ async function poll() {
 
   if (s.shop_name) shopTag.textContent = s.shop_name;
 
-  if (s.status === 'running' || s.status === 'scanning') {
+  const running = s.status === 'running' || s.status === 'scanning';
+  if (running) {
+    wasRunning = true;
     polling = setTimeout(poll, 1200);
   } else {
     startBtn.disabled = false;
     stopBtn.style.display = 'none';
     if (s.status === 'error') showError('Job failed — check the log for details.');
+    // A finished run changes the report, so drop the cached copy.
+    if (wasRunning) { wasRunning = false; reportData = null; }
   }
 }
 
