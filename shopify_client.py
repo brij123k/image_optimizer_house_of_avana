@@ -14,6 +14,11 @@ LEDGER_KEY_PREFIX = "ledger_"
 # across ledger_0, ledger_1, ... as it grows.
 LEDGER_CHUNK_CHARS = 60000
 
+# Separate namespace for the AI ALT-text/rename record, so it can be reset
+# independently of the compression ledger.
+AI_LEDGER_NAMESPACE = "image_ai_labels"
+AI_LEDGER_KEY_PREFIX = "ledger_"
+
 
 class ShopifyClient:
     def __init__(self, store_domain, access_token, api_version="2026-07"):
@@ -106,39 +111,67 @@ class ShopifyClient:
         resp.raise_for_status()
         return resp.content
 
+    def graphql(self, query, variables=None):
+        """The Billing API (one-time purchases, subscriptions) is GraphQL-only
+        — there's no REST equivalent."""
+        resp = self._request(
+            "POST", f"{self.base_url}/graphql.json",
+            json={"query": query, "variables": variables or {}}, timeout=30,
+        )
+        data = resp.json()
+        if data.get("errors"):
+            raise RuntimeError(f"GraphQL error: {data['errors']}")
+        return data["data"]
+
     # ---------- writes ----------
 
-    def update_image(self, product_id, image_id, base64_data, filename=None):
+    def update_image(self, product_id, image_id, base64_data, filename=None, alt=None):
         """Replaces an image's binary data in place, keeping its ID (and so its
-        position and alt text). Returns the updated image object."""
+        position). Passing filename re-uploads under a new name — this changes
+        the image's CDN URL, so anything linking to the old one breaks. Returns
+        the updated image object."""
         url = f"{self.base_url}/products/{product_id}/images/{image_id}.json"
         image = {"id": image_id, "attachment": base64_data}
         if filename:
             image["filename"] = filename
+        if alt is not None:
+            image["alt"] = alt
         return self._request("PUT", url, json={"image": image}, timeout=60).json()["image"]
+
+    def update_image_alt(self, product_id, image_id, alt):
+        """Sets an image's ALT text only — no re-upload, no URL change."""
+        url = f"{self.base_url}/products/{product_id}/images/{image_id}.json"
+        image = {"id": image_id, "alt": alt}
+        return self._request("PUT", url, json={"image": image}, timeout=30).json()["image"]
 
     # ---------- ledger ----------
     #
     # Maps image_id -> the image's updated_at *after* we rewrote it. An image
     # counts as done only if both match, so newly uploaded images (unseen ID)
     # and images edited since (changed timestamp) are picked up automatically.
+    #
+    # The same chunked-metafield mechanism backs two separate records: the
+    # compression ledger (LEDGER_NAMESPACE) and the AI ALT-text/rename ledger
+    # (AI_LEDGER_NAMESPACE) — namespace and key prefix are parameters so both
+    # can share this code without stepping on each other.
 
-    def _ledger_metafields(self):
-        """Returns the raw shop-level metafields holding the ledger."""
-        params = {"namespace": LEDGER_NAMESPACE, "limit": 250}
+    def _ledger_metafields(self, namespace=LEDGER_NAMESPACE, key_prefix=LEDGER_KEY_PREFIX):
+        """Returns the raw shop-level metafields holding the given ledger."""
+        params = {"namespace": namespace, "limit": 250}
         found = []
         for resp in self._paginated(f"{self.base_url}/metafields.json", params):
             for mf in resp.json().get("metafields", []):
-                if mf.get("key", "").startswith(LEDGER_KEY_PREFIX):
+                if mf.get("key", "").startswith(key_prefix):
                     found.append(mf)
         return sorted(found, key=lambda m: m["key"])
 
-    def load_ledger(self):
-        """Returns {image_id: updated_at}. Never raises — a missing or unreadable
-        ledger just means nothing is known to be optimized yet."""
+    def load_ledger(self, namespace=LEDGER_NAMESPACE, key_prefix=LEDGER_KEY_PREFIX):
+        """Returns the merged dict stored across a ledger's chunks. Never
+        raises — a missing or unreadable ledger just means nothing is known
+        yet."""
         ledger = {}
         try:
-            metafields = self._ledger_metafields()
+            metafields = self._ledger_metafields(namespace, key_prefix)
         except requests.HTTPError:
             return {}
         for mf in metafields:
@@ -150,7 +183,7 @@ class ShopifyClient:
                 ledger.update(chunk)
         return ledger
 
-    def save_ledger(self, ledger):
+    def save_ledger(self, ledger, namespace=LEDGER_NAMESPACE, key_prefix=LEDGER_KEY_PREFIX):
         """Writes the ledger back, splitting it across as many metafields as it
         needs and removing chunks that are no longer used."""
         chunks, current = [], {}
@@ -162,12 +195,12 @@ class ShopifyClient:
         if current or not chunks:
             chunks.append(current)
 
-        existing = {mf["key"]: mf for mf in self._ledger_metafields()}
+        existing = {mf["key"]: mf for mf in self._ledger_metafields(namespace, key_prefix)}
 
         for i, chunk in enumerate(chunks):
-            key = f"{LEDGER_KEY_PREFIX}{i}"
+            key = f"{key_prefix}{i}"
             payload = {"metafield": {
-                "namespace": LEDGER_NAMESPACE,
+                "namespace": namespace,
                 "key": key,
                 "value": json.dumps(chunk, separators=(",", ":")),
                 "type": "json",
@@ -183,11 +216,26 @@ class ShopifyClient:
 
         # Drop any chunks left over from a previously larger ledger.
         for key, mf in existing.items():
-            index = key[len(LEDGER_KEY_PREFIX):]
+            index = key[len(key_prefix):]
             if index.isdigit() and int(index) >= len(chunks):
                 self._request("DELETE", f"{self.base_url}/metafields/{mf['id']}.json", timeout=30)
 
-    def clear_ledger(self):
+    def clear_ledger(self, namespace=LEDGER_NAMESPACE, key_prefix=LEDGER_KEY_PREFIX):
         """Forgets every record, so the next run treats all images as new."""
-        for mf in self._ledger_metafields():
+        for mf in self._ledger_metafields(namespace, key_prefix):
             self._request("DELETE", f"{self.base_url}/metafields/{mf['id']}.json", timeout=30)
+
+    # ---------- AI label ledger ----------
+    #
+    # Maps image_id -> {"alt": ..., "renamed": bool, "at": iso timestamp} for
+    # every image the AI feature has touched — lets the label report tell
+    # "labeled by this app" apart from "alt text set some other way".
+
+    def load_ai_ledger(self):
+        return self.load_ledger(AI_LEDGER_NAMESPACE, AI_LEDGER_KEY_PREFIX)
+
+    def save_ai_ledger(self, ledger):
+        return self.save_ledger(ledger, AI_LEDGER_NAMESPACE, AI_LEDGER_KEY_PREFIX)
+
+    def clear_ai_ledger(self):
+        return self.clear_ledger(AI_LEDGER_NAMESPACE, AI_LEDGER_KEY_PREFIX)

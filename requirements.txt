@@ -3,3 +3,5 @@ requests==2.32.3
 Pillow==10.4.0
 python-dotenv==1.0.1
 gunicorn==23.0.0
+rembg==2.0.59
+onnxruntime==1.19.2

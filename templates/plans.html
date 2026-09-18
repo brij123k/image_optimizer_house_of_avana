@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="shopify-api-key" content="{{ shopify_api_key }}">
+<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+<title>Plans — Image Compactor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --abyss:#061419; --deep:#0a2029; --panel-soft:#123643; --line:#1b4553;
+    --mist:#dcefee; --fog:#7fa2a9; --glow:#74e8e0; --glow-deep:#2b7d78;
+    --ember:#e0794f; --danger:#ef6f5e; --moss:#8fbf6a;
+    --display:'Cormorant Garamond',serif; --body:'Karla',sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; min-height:100vh; color:var(--mist); font-family:var(--body);
+    background:
+      radial-gradient(1100px 700px at 18% -8%, #14414a 0%, transparent 58%),
+      radial-gradient(900px 600px at 92% 8%, #0f3b3f 0%, transparent 55%),
+      linear-gradient(180deg, var(--deep) 0%, var(--abyss) 78%);
+    background-attachment: fixed;
+  }
+  .wrap { max-width:1120px; margin:0 auto; padding:64px 24px 90px; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+  .back-link {
+    font-family:var(--mono); font-size:12.5px; color:var(--fog); text-decoration:none;
+    display:inline-flex; align-items:center; gap:6px; margin-bottom:22px;
+  }
+  .back-link:hover { color:var(--glow); }
+  h1 {
+    font-family:var(--display); font-weight:500; font-size:42px; letter-spacing:.12em;
+    text-transform:uppercase; margin:0 0 8px; color:#bfeef0;
+    text-shadow:0 0 26px rgba(116,232,224,.35), 0 0 60px rgba(116,232,224,.14);
+  }
+  .tag {
+    font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--fog);
+    padding:6px 13px; border:1px solid var(--line); border-radius:100px; background:rgba(9,32,40,.6);
+  }
+  .sub { color:var(--fog); font-size:14.5px; margin:0 0 34px; max-width:64ch; line-height:1.55; }
+
+  .panel {
+    background:linear-gradient(180deg, rgba(18,54,67,.82), rgba(11,36,45,.82));
+    border:1px solid var(--line); border-radius:16px; padding:26px; margin-bottom:24px;
+    backdrop-filter:blur(6px); box-shadow:0 18px 40px -28px rgba(0,0,0,.9);
+  }
+  .panel h2 {
+    font-family:var(--display); font-size:19px; font-weight:600; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--glow); margin:0 0 20px; padding-bottom:12px;
+    border-bottom:1px solid rgba(116,232,224,.14);
+  }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .bar-track { height:9px; background:rgba(5,17,22,.8); border-radius:100px; overflow:hidden; border:1px solid var(--line); }
+  .bar-fill { height:100%; width:0%; background:linear-gradient(90deg,#4b7a35,var(--moss)); box-shadow:0 0 16px rgba(143,191,106,.5); transition:width .45s ease; }
+  .bar-fill.empty { background:linear-gradient(90deg,#7a3d35,var(--danger)); box-shadow:0 0 16px rgba(239,111,94,.4); }
+
+  /* ---- pricing cards ---- */
+  .plan-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:18px; margin-top:6px; }
+  .plan-card {
+    background:#f7f8f6; color:#1a2320; border-radius:14px; padding:26px 22px;
+    display:flex; flex-direction:column; border:1px solid transparent;
+    box-shadow:0 14px 30px -18px rgba(0,0,0,.5); transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .plan-card:hover { transform:translateY(-3px); box-shadow:0 20px 40px -18px rgba(0,0,0,.6); }
+  .plan-card.highlight { border-color:var(--glow); box-shadow:0 0 0 1px var(--glow), 0 20px 40px -18px rgba(0,0,0,.6); }
+  .plan-card .plan-name { font-size:14px; color:#5c6b66; font-weight:600; margin-bottom:14px; }
+  .plan-card .plan-price { font-family:var(--body); font-weight:700; font-size:34px; color:#0e1a17; line-height:1; }
+  .plan-card .plan-price .per { font-size:14px; font-weight:500; color:#5c6b66; }
+  .plan-card .features-label {
+    font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    color:#5c6b66; margin:22px 0 12px;
+  }
+  .plan-card ul { list-style:none; margin:0 0 20px; padding:0; flex:1; }
+  .plan-card li {
+    display:flex; align-items:flex-start; gap:8px; font-size:13.5px; color:#2b3733;
+    padding:5px 0; line-height:1.4;
+  }
+  .plan-card li::before { content:'\2713'; color:#3a8f6b; font-weight:700; flex:none; }
+  .plan-card button {
+    width:100%; padding:12px 0; font-family:var(--body); font-weight:700; font-size:13.5px;
+    border:none; border-radius:9px; cursor:pointer; background:#0e1a17; color:#f7f8f6;
+    transition:opacity .15s ease, transform .1s ease;
+  }
+  .plan-card button:hover:not(:disabled) { opacity:.85; }
+  .plan-card button:active { transform:scale(.97); }
+  .plan-card button:disabled { opacity:.4; cursor:not-allowed; }
+  .plan-card.highlight button { background:linear-gradient(180deg,#8af2ea,var(--glow)); color:#04222a; }
+
+  .error-banner {
+    background:rgba(239,111,94,.09); border:1px solid rgba(239,111,94,.55); color:#ffc3b6;
+    padding:12px 15px; border-radius:10px; font-size:13px; margin-bottom:18px; display:none;
+  }
+  .note { color:var(--fog); font-size:12.5px; margin:18px 0 0; line-height:1.6; }
+  footer { text-align:center; color:var(--fog); font-size:11.5px; margin-top:44px; letter-spacing:.04em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="/">&larr; Back to app</a>
+  <header>
+    <h1>Plans</h1>
+    <span class="tag" id="shop-tag">not connected</span>
+  </header>
+  <p class="sub">The first 20 images on every store are free — covering compression, AI ALT text, and AI file renaming alike. Past that, buy an image-credit pack — a one-time purchase, not a subscription. Credits never expire.</p>
+
+  <div class="error-banner" id="error-banner"></div>
+
+  <div class="panel">
+    <h2>Your usage</h2>
+    <div class="row" style="margin-bottom:14px;">
+      <span id="usage-text" style="font-family:var(--mono); font-size:13px; color:var(--fog);">Loading…</span>
+      <span id="usage-count" style="font-family:var(--mono); font-size:13px;"></span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="usage-bar"></div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Choose a plan</h2>
+    <div class="plan-grid" id="plan-list"></div>
+    <p class="note">Charges go through Shopify's own billing — you'll be asked to approve on a Shopify page, then sent back here automatically.</p>
+  </div>
+
+  <footer>Image Compactor — Shopify</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const shopTag = $('shop-tag'), errorBanner = $('error-banner');
+const usageText = $('usage-text'), usageCount = $('usage-count'), usageBar = $('usage-bar');
+const planList = $('plan-list');
+let freeImages = 20;
+
+function showError(msg) { errorBanner.style.display = 'block'; errorBanner.textContent = msg; }
+function hideError() { errorBanner.style.display = 'none'; }
+
+function planCardHTML({ name, price, per, features, buyable, planId, current }) {
+  return `
+    <div class="plan-card${current ? ' highlight' : ''}">
+      <div class="plan-name">${name}</div>
+      <div class="plan-price">${price}<span class="per">${per}</span></div>
+      <div class="features-label">Features</div>
+      <ul>${features.map(f => `<li>${f}</li>`).join('')}</ul>
+      ${buyable
+        ? `<button data-plan="${planId}">Buy this pack</button>`
+        : `<button disabled>${current ? 'Your current tier' : 'Included'}</button>`}
+    </div>
+  `;
+}
+
+async function loadUsage() {
+  try {
+    const res = await fetch('/api/billing/usage');
+    const data = await res.json();
+    if (!data.ok) { showError(data.error); return; }
+    hideError();
+    freeImages = data.free;
+    const total = data.free + data.credits;
+    const doneCount = Math.min(data.used, total);
+    usageText.textContent = data.credits
+      ? `${data.free} free + ${data.credits} purchased`
+      : `${data.free} free images`;
+    usageCount.textContent = `${data.used} used · ${data.remaining} left`;
+    usageBar.style.width = (total ? Math.round(100 * doneCount / total) : 100) + '%';
+    usageBar.classList.toggle('empty', data.remaining === 0);
+    renderFreeCard(data.credits === 0);
+  } catch (e) { showError('Could not load your usage.'); }
+}
+
+function renderFreeCard(isCurrent) {
+  const existing = $('free-card-slot');
+  if (existing) existing.remove();
+  const slot = document.createElement('div');
+  slot.id = 'free-card-slot';
+  slot.innerHTML = planCardHTML({
+    name: 'Starter', price: 'Free', per: '', buyable: false, current: isCurrent,
+    features: [
+      `${freeImages} image credits`, 'Compression + WebP conversion',
+      'AI ALT text labeling', 'AI image file renaming', 'Usage report',
+      'One-time, for the life of the install',
+    ],
+  });
+  planList.prepend(slot.firstElementChild);
+}
+
+async function loadPlans() {
+  try {
+    const res = await fetch('/api/billing/plans');
+    const data = await res.json();
+    if (!data.ok) { showError(data.error); return; }
+    data.plans.forEach(p => {
+      const wrap = document.createElement('div');
+      wrap.innerHTML = planCardHTML({
+        name: p.label, price: `$${p.price}`, per: ' one-time', buyable: true,
+        planId: p.id, features: p.features,
+      });
+      const card = wrap.firstElementChild;
+      card.querySelector('button').addEventListener('click', e => buyPlan(p.id, e.target));
+      planList.appendChild(card);
+    });
+  } catch (e) { showError('Could not load plans.'); }
+}
+
+async function loadShop() {
+  try {
+    const res = await fetch('/api/test-connection', { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) shopTag.textContent = data.shop_name;
+  } catch (e) { /* non-critical */ }
+}
+
+async function buyPlan(planId, btn) {
+  hideError();
+  btn.disabled = true;
+  btn.textContent = 'Starting checkout…';
+  try {
+    const res = await fetch('/api/billing/purchase', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan_id: planId }),
+    });
+    const data = await res.json();
+    if (!data.ok) { showError(data.error); btn.disabled = false; btn.textContent = 'Buy this pack'; return; }
+    window.location.href = data.confirmation_url;
+  } catch (e) {
+    showError('Could not start checkout.');
+    btn.disabled = false; btn.textContent = 'Buy this pack';
+  }
+}
+
+loadShop();
+loadUsage();
+loadPlans();
+</script>
+</body>
+</html>

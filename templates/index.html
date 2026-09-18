@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Image Compactor — Shopify</title>
+<meta name="shopify-api-key" content="{{ shopify_api_key }}">
+<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+<title>Image Optimizer  — Shopify</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Karla:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -35,29 +37,55 @@
   }
   @media (prefers-reduced-motion: reduce) { .spore { animation:none; opacity:.35; } * { transition:none !important; } }
 
-  .wrap { position:relative; z-index:1; max-width:900px; margin:0 auto; padding:64px 24px 90px; }
-  header { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
-  h1 {
-    font-family:var(--display); font-weight:500; font-size:46px; letter-spacing:.14em;
-    text-transform:uppercase; margin:0; color:#bfeef0;
-    text-shadow:0 0 26px rgba(116,232,224,.35), 0 0 60px rgba(116,232,224,.14);
-  }
   .tag {
     font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--fog);
     padding:6px 13px; border:1px solid var(--line); border-radius:100px; background:rgba(9,32,40,.6);
   }
-  .sub { color:var(--fog); font-size:14.5px; margin:10px 0 30px; max-width:60ch; line-height:1.55; }
 
-  /* ---- tabs ---- */
-  .tabs { display:flex; gap:8px; margin-bottom:22px; border-bottom:1px solid var(--line); }
-  .tab {
-    font-family:var(--display); font-size:17px; font-weight:600; letter-spacing:.14em;
-    text-transform:uppercase; background:none; border:none; color:var(--fog);
-    padding:10px 4px; margin-right:22px; cursor:pointer; border-bottom:2px solid transparent;
-    transition:color .18s ease, border-color .18s ease;
+  /* ---- shell / sidebar ---- */
+  .shell { position:relative; z-index:1; display:flex; align-items:flex-start; min-height:100vh; }
+  .sidebar {
+    width:252px; flex:none; padding:30px 18px; display:flex; flex-direction:column; gap:24px;
+    border-right:1px solid var(--line); background:rgba(6,20,25,.55); backdrop-filter:blur(6px);
+    position:sticky; top:0; height:100vh; overflow-y:auto;
   }
-  .tab:hover { color:var(--mist); }
-  .tab.active { color:var(--glow); border-bottom-color:var(--glow); }
+  .brand h1 {
+    font-family:var(--display); font-weight:500; font-size:21px; letter-spacing:.1em;
+    text-transform:uppercase; margin:0; color:#bfeef0; line-height:1.3;
+    text-shadow:0 0 20px rgba(116,232,224,.3);
+  }
+  .side-conn { display:flex; flex-direction:column; gap:9px; font-size:12.5px; padding:14px; border:1px solid var(--line); border-radius:12px; background:rgba(5,17,22,.5); }
+  .side-conn .row1 { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .side-conn #conn-text { font-family:var(--mono); font-size:11.5px; }
+  .side-conn .link-btn { padding:0; font-size:11px; }
+
+  .side-nav { display:flex; flex-direction:column; gap:3px; }
+  .side-nav-label { font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--fog); margin:14px 4px 4px; }
+  .side-nav-label:first-child { margin-top:0; }
+  .side-link {
+    display:flex; align-items:center; gap:11px; text-align:left; background:none; border:none;
+    color:var(--fog); font-family:var(--body); font-weight:600; font-size:13.5px; padding:10px 12px;
+    border-radius:9px; cursor:pointer; text-decoration:none; width:100%;
+    transition:background .15s ease, color .15s ease;
+  }
+  .side-link:hover { color:var(--mist); background:rgba(116,232,224,.06); }
+  .side-link.active { color:var(--glow); background:rgba(116,232,224,.1); }
+  .side-link .ic {
+    width:24px; height:24px; flex:none; display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-weight:700; font-size:12px; border-radius:7px;
+    border:1px solid var(--line); background:rgba(255,255,255,.03);
+  }
+  .side-link.active .ic { border-color:var(--glow-deep); color:var(--glow); }
+
+  .side-usage { margin-top:auto; padding-top:16px; border-top:1px solid var(--line); font-size:11px; }
+  .side-usage .row1 { display:flex; justify-content:space-between; margin-bottom:8px; color:var(--fog); font-family:var(--mono); font-size:10.5px; }
+  .side-usage a { color:var(--glow); text-decoration:none; font-family:var(--mono); font-size:10.5px; display:block; margin-top:8px; }
+  .side-usage a:hover { text-decoration:underline; }
+
+  .content { flex:1; min-width:0; padding:44px 40px 90px; }
+  .content-inner { max-width:820px; margin:0 auto; transition:max-width .15s ease; }
+  .content-inner.wide { max-width:1180px; }
+  .sub { color:var(--fog); font-size:14.5px; margin:0 0 26px; max-width:60ch; line-height:1.55; }
 
   .panel {
     background:linear-gradient(180deg, rgba(18,54,67,.82), rgba(11,36,45,.82));
@@ -83,9 +111,13 @@
     color:var(--fog); cursor:pointer; transition:all .18s ease;
   }
   .seg:hover { color:var(--mist); border-color:var(--glow-deep); }
-  .seg.active { color:#08222a; background:var(--glow); border-color:var(--glow); box-shadow:0 0 20px rgba(116,232,224,.35); }
+  .seg.active {
+    color:var(--glow); background:rgba(116,232,224,.12); border-color:var(--glow);
+    font-weight:700; box-shadow:inset 0 0 0 1px var(--glow);
+  }
+  .seg.active::before { content:'\2713  '; }
 
-  select, input[type=number] {
+  select, input[type=number], input[type=text] {
     width:100%; background:rgba(6,20,25,.65); border:1px solid var(--line); color:var(--mist);
     padding:11px 13px; border-radius:9px; font-family:var(--mono); font-size:13px;
   }
@@ -124,6 +156,23 @@
   .badge.none { color:var(--fog); border-color:var(--line); background:rgba(127,162,169,.07); }
   .picker-empty { padding:26px 15px; color:var(--fog); font-size:13px; text-align:center; }
 
+  .p-expand {
+    background:none; border:none; color:var(--fog); font-family:var(--mono);
+    font-size:11px; cursor:pointer; padding:5px 8px; flex:none; border-radius:5px;
+    white-space:nowrap;
+  }
+  .p-expand:hover { color:var(--glow); background:rgba(116,232,224,.06); }
+  .p-expand.open { color:var(--glow); }
+  .p-images {
+    display:flex; flex-wrap:wrap; gap:9px; padding:11px 15px 15px 64px;
+    background:rgba(4,14,18,.4); border-bottom:1px solid rgba(27,69,83,.7);
+  }
+  .pi-cell { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; width:52px; }
+  .pi-cell input { accent-color:var(--glow); width:14px; height:14px; }
+  .pi-thumb { width:44px; height:44px; border-radius:6px; object-fit:cover; background:var(--panel-soft); border:1px solid var(--line); }
+  .pi-thumb.is-optimized { opacity:.6; }
+  .pi-status { font-family:var(--mono); font-size:9px; color:var(--fog); text-transform:uppercase; letter-spacing:.03em; }
+
   .controls { display:flex; gap:26px; flex-wrap:wrap; margin-bottom:20px; }
   .field { flex:1; min-width:190px; }
   .field label { display:block; font-size:11.5px; color:var(--fog); margin-bottom:10px; font-family:var(--mono); letter-spacing:.04em; }
@@ -132,6 +181,27 @@
   .toggle { display:flex; align-items:flex-start; gap:11px; margin-bottom:16px; cursor:pointer; font-size:13.5px; }
   .toggle input { accent-color:var(--ember); width:16px; height:16px; margin-top:2px; flex:none; }
   .toggle .hint { display:block; color:var(--fog); font-size:12px; margin-top:4px; line-height:1.5; }
+
+  /* ---- crop and transform ---- */
+  .crop-block { margin-bottom:16px; }
+  .crop-block > label { display:block; font-size:11.5px; color:var(--fog); margin-bottom:10px; font-family:var(--mono); letter-spacing:.04em; }
+  .crop-list { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:rgba(5,17,22,.6); }
+  .crop-row {
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:12px 15px; border-bottom:1px solid rgba(27,69,83,.7); cursor:pointer;
+    font-size:13.5px; transition:background .15s ease, color .15s ease;
+  }
+  .crop-row:last-child { border-bottom:none; }
+  .crop-row:hover { background:rgba(116,232,224,.05); }
+  .crop-row.active { color:var(--glow); background:rgba(116,232,224,.08); font-weight:600; }
+  .crop-row .check { font-family:var(--mono); color:var(--glow); font-weight:700; visibility:hidden; }
+  .crop-row.active .check { visibility:visible; }
+  .crop-freeform-inputs {
+    display:flex; align-items:center; gap:10px; padding:12px 15px;
+    border-bottom:1px solid rgba(27,69,83,.7); background:rgba(5,17,22,.4);
+  }
+  .crop-freeform-inputs input { width:80px; }
+  .crop-freeform-inputs span { color:var(--fog); font-family:var(--mono); }
 
   button {
     font-family:var(--body); font-weight:600; font-size:14px; border:none; border-radius:10px;
@@ -158,6 +228,30 @@
   .mini .n.ember { color:var(--ember); }
   .mini .l { font-size:10.5px; color:var(--fog); margin-top:3px; letter-spacing:.08em; text-transform:uppercase; }
 
+  /* ---- tool pages: left picker/preview, right controls ---- */
+  .tool-layout { display:grid; grid-template-columns:minmax(240px,360px) 1fr; gap:28px; align-items:start; }
+  .tool-left { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  .tool-right { display:flex; flex-direction:column; gap:4px; min-width:0; }
+  @media (max-width:860px) { .tool-layout { grid-template-columns:1fr; } }
+
+  .picker-load-area { padding:16px; border:1px dashed var(--line); border-radius:10px; background:rgba(5,17,22,.4); text-align:center; }
+  .picker-load-area p { margin:0 0 12px; color:var(--fog); font-size:12.5px; }
+
+  .ai-tool-row {
+    display:flex; align-items:flex-start; gap:14px; padding:14px 16px; margin-bottom:10px;
+    border:1px solid var(--line); border-radius:10px; background:rgba(5,17,22,.5);
+    cursor:pointer; transition:border-color .18s ease;
+  }
+  .ai-tool-row:hover { border-color:var(--glow-deep); }
+  .ai-tool-row input { accent-color:var(--glow); width:16px; height:16px; margin-top:3px; flex:none; }
+  .ai-tool-icon {
+    font-family:var(--mono); font-weight:700; font-size:15px; color:var(--glow); flex:none;
+    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line); border-radius:8px; background:rgba(116,232,224,.06);
+  }
+  .ai-tool-text { display:flex; flex-direction:column; gap:4px; font-size:13.5px; }
+  .ai-tool-text .hint { color:var(--fog); font-size:12px; line-height:1.5; }
+
   /* ---- report ---- */
   .report-list { border:1px solid var(--line); border-radius:10px; max-height:520px; overflow-y:auto; background:rgba(5,17,22,.6); }
   .r-product { border-bottom:1px solid rgba(27,69,83,.7); padding:15px 16px; }
@@ -165,11 +259,12 @@
   .r-head { display:flex; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
   .r-title { flex:1; font-size:14px; min-width:150px; }
   .r-images { display:flex; gap:10px; flex-wrap:wrap; }
-  .r-img { position:relative; width:62px; height:62px; border-radius:8px; overflow:hidden; border:1px solid var(--line); background:var(--panel-soft); }
+  .r-img { position:relative; width:62px; height:62px; border-radius:8px; overflow:hidden; border:1px solid var(--line); background:var(--panel-soft); cursor:pointer; }
   .r-img img { width:100%; height:100%; object-fit:cover; display:block; }
   .r-img.done { border-color:rgba(143,191,106,.7); box-shadow:0 0 12px rgba(143,191,106,.18); }
   .r-img.pending { border-color:rgba(224,121,79,.55); }
   .r-img:not(.done) img { opacity:.62; }
+  .r-img.picked { outline:2px solid var(--glow); outline-offset:2px; box-shadow:0 0 14px rgba(116,232,224,.45); }
   .r-mark {
     position:absolute; right:3px; bottom:3px; width:17px; height:17px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
@@ -199,167 +294,614 @@
   }
   .note { color:var(--fog); font-size:12px; margin:14px 0 0; line-height:1.55; }
   footer { text-align:center; color:var(--fog); font-size:11.5px; margin-top:44px; letter-spacing:.04em; }
+  @media (max-width:860px) {
+    .shell { flex-direction:column; }
+    .sidebar { width:100%; height:auto; position:relative; flex-direction:row; flex-wrap:wrap; align-items:center; }
+    .side-nav { flex-direction:row; flex-wrap:wrap; }
+    .side-usage { margin-top:0; border-top:none; padding-top:0; }
+    .content { padding:26px 18px 60px; }
+  }
   @media (max-width:720px) { .grid4 { grid-template-columns:repeat(2,1fr); } }
-  @media (max-width:600px) { h1 { font-size:34px; } .meter { gap:26px; } .tab { font-size:14px; margin-right:14px; } }
 </style>
 </head>
 <body>
 <div class="spores" id="spores" aria-hidden="true"></div>
 
-<div class="wrap">
-  <header>
-    <h1>Image Compactor</h1>
-    <span class="tag" id="shop-tag">not connected</span>
-  </header>
-  <p class="sub">Shrinks product image file sizes and pushes the optimized version back — in place. Images optimized in an earlier run are skipped automatically.</p>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><h1>Image<br>Optimizer</h1></div>
 
-  <div class="error-banner" id="error-banner"></div>
-
-  <div class="tabs">
-    <button class="tab active" data-view="run">Run</button>
-    <button class="tab" data-view="report">Image report</button>
-  </div>
-
-  <!-- ============ RUN VIEW ============ -->
-  <div id="view-run">
-    <div class="panel">
-      <h2>Connection</h2>
-      <div class="row">
-        <div>
-          <span class="status-dot" id="conn-dot"></span>
-          <span id="conn-text" style="font-family:var(--mono); font-size:13px;">Checking .env credentials…</span>
-        </div>
-        <button class="btn-ghost" id="test-btn">Test connection</button>
+    <div class="side-conn">
+      <div class="row1" style="display:none;">
+        <span><span class="status-dot" id="conn-dot"></span><span id="conn-text">Checking…</span></span>
+      </div>
+      <div class="row1">
+        <span class="tag" id="shop-tag">not connected</span>
+        <button class="link-btn" id="logout-btn" style="display:none;"></button>
+      </div>
+      <button class="btn-ghost" id="test-btn" style="padding:8px 0; font-size:12px; display:none;">Test connection</button>
+      <div id="install-area" class="hidden">
+        <input type="text" id="install-shop" placeholder="your-store.myshopify.com" style="margin-bottom:8px;">
+        <button class="btn-primary" id="install-btn" style="width:100%; padding:9px 0; font-size:12.5px;">Connect store</button>
       </div>
     </div>
 
-    <div class="panel">
-      <h2>What to optimize</h2>
-      <div class="segmented">
-        <button class="seg active" data-scope="store">Entire store</button>
-        <button class="seg" data-scope="collection">A collection</button>
-      </div>
+    <nav class="side-nav">
+      <div class="side-nav-label">AI labeling</div>
+      <button class="side-link" data-view="ai" data-ai-mode="alt"><span class="ic">Aa</span>Image ALT text</button>
+      <button class="side-link" data-view="ai" data-ai-mode="name"><span class="ic">&#128196;</span>Image file name</button>
+      <button class="side-link" data-view="ai-report"><span class="ic">Rp</span>Label report</button>
 
-      <div id="collection-area" class="hidden">
-        <div class="field">
-          <label>Collection</label>
-          <select id="collection-select"><option value="">Loading collections…</option></select>
+      <div class="side-nav-label">Optimize</div>
+      <button class="side-link active" data-view="run"><span class="ic">Cm</span>Compress Images</button>
+      <button class="side-link" data-view="report"><span class="ic">Rp</span>Image report</button>
+
+      <div class="side-nav-label">Image Tools</div>
+      <button class="side-link" data-view="enhance"><span class="ic">En</span>Enhance</button>
+      <button class="side-link" data-view="crop"><span class="ic">Cr</span>Crop &amp; transform</button>
+      <button class="side-link" data-view="resize"><span class="ic">Rz</span>Resize</button>
+      <button class="side-link" data-view="draw"><span class="ic">Dr</span>Draw</button>
+      <button class="side-link" data-view="color-bg"><span class="ic">Bg</span>Color background</button>
+      <button class="side-link" data-view="generate"><span class="ic">Ge</span>Generate</button>
+
+      <div class="side-nav-label">Billing</div>
+      <a class="side-link" href="/plans"><span class="ic">$</span>Plans</a>
+    </nav>
+
+    <div class="side-usage">
+      <div class="row1"><span id="usage-text">Loading…</span><span id="usage-count"></span></div>
+      <div class="bar-track"><div class="bar-fill" id="usage-bar"></div></div>
+      <a href="/plans">Manage plan &rarr;</a>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="content-inner">
+      <p class="sub">Shrinks product image file sizes and pushes the optimized version back — in place. Images optimized in an earlier run are skipped automatically.</p>
+
+      <div class="error-banner" id="error-banner"></div>
+
+      <!-- ============ RUN VIEW ============ -->
+      <div id="view-run">
+        <div class="panel">
+          <h2>What to optimize</h2>
+          <div class="segmented">
+            <button class="seg active" data-scope="store">Entire store</button>
+            <button class="seg" data-scope="collection">A collection</button>
+          </div>
+
+          <div id="collection-area" class="hidden">
+            <div class="field">
+              <label>Collection</label>
+              <select id="collection-select"><option value="">Loading collections…</option></select>
+            </div>
+
+            <div class="picker-bar">
+              <span class="picker-count" id="picker-count">No products loaded</span>
+              <span>
+                <button class="link-btn" id="select-pending">Only unoptimized</button>
+                <button class="link-btn" id="select-all">Select all</button>
+                <button class="link-btn" id="select-none">Clear</button>
+              </span>
+            </div>
+            <div class="product-list" id="product-list">
+              <div class="picker-empty">Choose a collection to list its products.</div>
+            </div>
+          </div>
         </div>
 
-        <div class="picker-bar">
-          <span class="picker-count" id="picker-count">No products loaded</span>
-          <span>
-            <button class="link-btn" id="select-pending">Only unoptimized</button>
-            <button class="link-btn" id="select-all">Select all</button>
-            <button class="link-btn" id="select-none">Clear</button>
-          </span>
+        <div class="panel">
+          <h2>Settings</h2>
+          <div class="controls">
+            <div class="field">
+              <label>Quality — <span class="val" id="quality-val">75</span></label>
+              <input type="range" id="quality" min="30" max="95" value="75">
+            </div>
+          </div>
+          <p class="note" style="margin:-8px 0 20px;">Crop &amp; transform and Resize settings now live under Enhance in the sidebar.</p>
+          <label class="toggle">
+            <input type="checkbox" id="force-webp">
+            <span>Convert to WebP
+              <span class="hint">Re-encodes every image as WebP. Shopify's CDN already serves WebP to browsers that support it, so this mainly changes what's stored, not what shoppers download.</span>
+            </span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="redo">
+            <span>Re-optimize everything
+              <span class="hint">Ignores the record of past runs and processes every image again. Use this after lowering the quality setting — otherwise leave it off. To redo just a few specific images, use the checkmarks in Image report instead.</span>
+            </span>
+          </label>
+          <div class="row">
+            <button class="btn-primary" id="start-btn">Optimize images</button>
+            <button class="btn-ghost" id="stop-btn" style="display:none;">Stop</button>
+          </div>
         </div>
-        <div class="product-list" id="product-list">
-          <div class="picker-empty">Choose a collection to list its products.</div>
+
+        <div class="panel">
+          <h2>Progress</h2>
+          <div class="meter">
+            <div class="stat"><div class="num" id="before-num">0 KB</div><div class="label">Before</div></div>
+            <div class="stat"><div class="num" id="after-num">0 KB</div><div class="label">After</div></div>
+            <div class="stat"><div class="num saved" id="saved-num">0 KB</div><div class="label">Saved</div></div>
+          </div>
+          <div class="bar-track"><div class="bar-fill" id="bar-fill"></div></div>
+          <div class="grid4">
+            <div class="mini"><div class="n" id="mini-products">0 / 0</div><div class="l">Products</div></div>
+            <div class="mini"><div class="n" id="mini-images">0 / 0</div><div class="l">Images</div></div>
+            <div class="mini"><div class="n moss" id="mini-done">0</div><div class="l">Done before</div></div>
+            <div class="mini"><div class="n" id="mini-status">Idle</div><div class="l">Status</div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Log</h2>
+          <div class="log" id="log"></div>
         </div>
       </div>
-    </div>
 
-    <div class="panel">
-      <h2>Settings</h2>
-      <div class="controls">
-        <div class="field">
-          <label>Quality — <span class="val" id="quality-val">75</span></label>
-          <input type="range" id="quality" min="30" max="95" value="75">
+      <!-- ============ AI METADATA VIEW ============ -->
+      <div id="view-ai" class="hidden">
+        <div class="panel">
+          <h2>AI-generated labels</h2>
+          <p class="note" style="margin:0 0 18px;">
+            Reads each product's first image with Gemini and writes what it sees. That same ALT text (and filename, if enabled) is then applied to every image on the product — the assumption is all of a product's photos show the same item.
+          </p>
+
+          <label class="ai-tool-row">
+            <input type="checkbox" id="ai-update-alt" checked>
+            <span class="ai-tool-icon">Aa</span>
+            <span class="ai-tool-text">
+              <b>Update ALT text</b>
+              <span class="hint">Safe — metadata only, no URL changes.</span>
+            </span>
+          </label>
+          <label class="ai-tool-row">
+            <input type="checkbox" id="ai-rename-files">
+            <span class="ai-tool-icon">&#128196;</span>
+            <span class="ai-tool-text">
+              <b>Rename image files</b>
+              <span class="hint">Re-uploads each image under a new filename — this changes its CDN URL. Anything linking to the old image URL (other sites, ads, cached pages) breaks; Shopify does not redirect old URLs to new ones.</span>
+            </span>
+          </label>
+
+          <h2 style="margin-top:28px;">What to label</h2>
+          <div class="segmented">
+            <button class="seg" data-ai-scope="collection">A collection</button>
+            <button class="seg active" data-ai-scope="store">Entire store</button>
+          </div>
+
+          <div id="ai-collection-area" class="hidden">
+            <div class="field">
+              <label>Collection</label>
+              <select id="ai-collection-select"><option value="">Loading collections…</option></select>
+            </div>
+
+            <div class="picker-bar">
+              <span class="picker-count" id="ai-picker-count">No products loaded</span>
+              <span>
+                <button class="link-btn" id="ai-select-all">Select all</button>
+                <button class="link-btn" id="ai-select-none">Clear</button>
+              </span>
+            </div>
+            <div class="product-list" id="ai-product-list">
+              <div class="picker-empty">Choose a collection to list its products.</div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:18px;">
+            <button class="btn-primary" id="ai-start-btn">Run AI labeling</button>
+            <button class="btn-ghost" id="ai-stop-btn" style="display:none;">Stop</button>
+          </div>
         </div>
-        <div class="field">
-          <label>Max width (px, optional)</label>
-          <input type="number" id="max-width" placeholder="e.g. 2048" min="200">
+
+        <div class="panel">
+          <h2>Progress</h2>
+          <div class="grid4">
+            <div class="mini"><div class="n" id="ai-mini-products">0 / 0</div><div class="l">Products</div></div>
+            <div class="mini"><div class="n moss" id="ai-mini-alt">0</div><div class="l">ALT updated</div></div>
+            <div class="mini"><div class="n" id="ai-mini-renamed">0</div><div class="l">Renamed</div></div>
+            <div class="mini"><div class="n ember" id="ai-mini-status">Idle</div><div class="l">Status</div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Log</h2>
+          <div class="log" id="ai-log"></div>
         </div>
       </div>
-      <label class="toggle">
-        <input type="checkbox" id="force-webp">
-        <span>Convert to WebP
-          <span class="hint">Re-encodes every image as WebP. Shopify's CDN already serves WebP to browsers that support it, so this mainly changes what's stored, not what shoppers download.</span>
-        </span>
-      </label>
-      <label class="toggle">
-        <input type="checkbox" id="redo">
-        <span>Re-optimize everything
-          <span class="hint">Ignores the record of past runs and processes every image again. Use this after lowering the quality setting — otherwise leave it off.</span>
-        </span>
-      </label>
-      <div class="row">
-        <button class="btn-primary" id="start-btn">Optimize images</button>
-        <button class="btn-ghost" id="stop-btn" style="display:none;">Stop</button>
-      </div>
-    </div>
 
-    <div class="panel">
-      <h2>Progress</h2>
-      <div class="meter">
-        <div class="stat"><div class="num" id="before-num">0 KB</div><div class="label">Before</div></div>
-        <div class="stat"><div class="num" id="after-num">0 KB</div><div class="label">After</div></div>
-        <div class="stat"><div class="num saved" id="saved-num">0 KB</div><div class="label">Saved</div></div>
-      </div>
-      <div class="bar-track"><div class="bar-fill" id="bar-fill"></div></div>
-      <div class="grid4">
-        <div class="mini"><div class="n" id="mini-products">0 / 0</div><div class="l">Products</div></div>
-        <div class="mini"><div class="n" id="mini-images">0 / 0</div><div class="l">Images</div></div>
-        <div class="mini"><div class="n moss" id="mini-done">0</div><div class="l">Done before</div></div>
-        <div class="mini"><div class="n" id="mini-status">Idle</div><div class="l">Status</div></div>
-      </div>
-    </div>
+      <!-- ============ AI LABEL REPORT VIEW ============ -->
+      <div id="view-ai-report" class="hidden">
+        <div class="panel">
+          <h2>Label coverage</h2>
+          <div class="row" style="margin-bottom:18px;">
+            <div class="field" style="max-width:340px;">
+              <label>Show</label>
+              <select id="ai-report-collection"><option value="">Entire store</option></select>
+            </div>
+            <button class="btn-ghost" id="ai-report-refresh">Refresh</button>
+          </div>
 
-    <div class="panel">
-      <h2>Log</h2>
-      <div class="log" id="log"></div>
-    </div>
-  </div>
+          <div class="bar-track"><div class="bar-fill moss" id="ai-report-bar"></div></div>
+          <div class="grid4">
+            <div class="mini"><div class="n" id="ai-rep-products">—</div><div class="l">Products</div></div>
+            <div class="mini"><div class="n" id="ai-rep-images">—</div><div class="l">Images</div></div>
+            <div class="mini"><div class="n moss" id="ai-rep-labeled">—</div><div class="l">Labeled</div></div>
+            <div class="mini"><div class="n ember" id="ai-rep-pending">—</div><div class="l">Not yet</div></div>
+          </div>
 
-  <!-- ============ REPORT VIEW ============ -->
-  <div id="view-report" class="hidden">
-    <div class="panel">
-      <h2>Coverage</h2>
-      <div class="row" style="margin-bottom:18px;">
-        <div class="field" style="max-width:340px;">
-          <label>Show</label>
-          <select id="report-collection"><option value="">Entire store</option></select>
+          <p class="note">
+            Shows each image's <b>current ALT text</b> right from Shopify, plus whether this app is the one that set it. The record of what this app has touched lives in a metafield (namespace <code>image_ai_labels</code>).
+            <button class="link-btn danger" id="ai-reset-ledger">Reset the record</button>
+          </p>
         </div>
-        <button class="btn-ghost" id="report-refresh">Refresh</button>
+
+        <div class="panel">
+          <h2>Every image</h2>
+          <div class="segmented">
+            <button class="seg active" data-ai-report-filter="all">All</button>
+            <button class="seg" data-ai-report-filter="pending">Not labeled</button>
+            <button class="seg" data-ai-report-filter="done">Labeled</button>
+          </div>
+          <div class="legend">
+            <span><i class="dot moss"></i> labeled by this app</span>
+            <span><i class="dot ember"></i> not labeled by this app</span>
+          </div>
+
+          <div class="report-list" id="ai-report-list" style="margin-top:14px;">
+            <div class="picker-empty">Press Refresh to load the report.</div>
+          </div>
+        </div>
       </div>
 
-      <div class="bar-track"><div class="bar-fill moss" id="report-bar"></div></div>
-      <div class="grid4">
-        <div class="mini"><div class="n" id="rep-products">—</div><div class="l">Products</div></div>
-        <div class="mini"><div class="n" id="rep-images">—</div><div class="l">Images</div></div>
-        <div class="mini"><div class="n moss" id="rep-done">—</div><div class="l">Optimized</div></div>
-        <div class="mini"><div class="n ember" id="rep-pending">—</div><div class="l">Not yet</div></div>
+      <!-- ============ REPORT VIEW ============ -->
+      <div id="view-report" class="hidden">
+        <div class="panel">
+          <h2>Coverage</h2>
+          <div class="row" style="margin-bottom:18px;">
+            <div class="field" style="max-width:340px;">
+              <label>Show</label>
+              <select id="report-collection"><option value="">Entire store</option></select>
+            </div>
+            <button class="btn-ghost" id="report-refresh">Refresh</button>
+          </div>
+
+          <div class="bar-track"><div class="bar-fill moss" id="report-bar"></div></div>
+          <div class="grid4">
+            <div class="mini"><div class="n" id="rep-products">—</div><div class="l">Products</div></div>
+            <div class="mini"><div class="n" id="rep-images">—</div><div class="l">Images</div></div>
+            <div class="mini"><div class="n moss" id="rep-done">—</div><div class="l">Optimized</div></div>
+            <div class="mini"><div class="n ember" id="rep-pending">—</div><div class="l">Not yet</div></div>
+          </div>
+
+          <p class="note">
+            The record lives in a metafield on your store (namespace <code>image_compactor</code>), created by this app on its first successful run. Shop-level metafields have no screen in the Shopify admin, so this page is where you see them.
+            <button class="link-btn danger" id="reset-ledger">Reset the record</button>
+          </p>
+        </div>
+
+        <div class="panel">
+          <h2>Every image</h2>
+          <div class="segmented">
+            <button class="seg active" data-filter="all">All</button>
+            <button class="seg" data-filter="pending">Not optimized</button>
+            <button class="seg" data-filter="done">Optimized</button>
+          </div>
+          <div class="legend">
+            <span><i class="dot moss"></i> optimized</span>
+            <span><i class="dot ember"></i> not optimized</span>
+          </div>
+
+          <div class="picker-bar">
+            <span class="picker-count" id="reopt-count">Click any image below to pick it for re-optimizing</span>
+            <span>
+              <button class="link-btn" id="reopt-clear">Clear</button>
+              <button class="btn-primary" id="reopt-btn" style="padding:9px 18px; font-size:12.5px;" disabled>Re-optimize selected</button>
+            </span>
+          </div>
+          <p class="note" style="margin-top:6px;">Uses the Quality/Resolution/Crop/WebP settings from the Run tab — even images already marked optimized will be redone. Handy when a product has 20 images and you only want to redo, say, 5 of them.</p>
+
+          <div class="report-list" id="report-list" style="margin-top:14px;">
+            <div class="picker-empty">Press Refresh to load the report.</div>
+          </div>
+        </div>
       </div>
 
-      <p class="note">
-        The record lives in a metafield on your store (namespace <code>image_compactor</code>), created by this app on its first successful run. Shop-level metafields have no screen in the Shopify admin, so this page is where you see them.
-        <button class="link-btn danger" id="reset-ledger">Reset the record</button>
-      </p>
+      <!-- ============ ENHANCE VIEW ============ -->
+      <div id="view-enhance" class="hidden">
+        <div class="panel">
+          <h2>Enhance</h2>
+          <p class="note" style="margin:0 0 20px;">Pick image(s), adjust brightness, contrast, and other tone controls, then apply for real.</p>
+
+          <div class="tool-layout">
+            <div class="tool-left">
+              <div class="picker-mount" id="enhance-picker-mount"></div>
+              <span class="picker-count">Preview (first selected image)</span>
+              <img id="enhance-preview-img" alt="" style="width:100%; max-height:220px; object-fit:contain; border:1px solid var(--line); border-radius:10px; background:#0a2029; display:block;">
+            </div>
+            <div class="tool-right">
+              <div class="row" style="margin-bottom:4px;">
+                <button class="btn-ghost" id="enhance-auto" style="padding:9px 18px; font-size:12.5px;">Auto enhance</button>
+              </div>
+              <div class="controls" id="enhance-sliders"></div>
+              <div class="row" style="margin-top:16px;">
+                <button class="btn-primary" id="enhance-apply-btn">Apply to selected images</button>
+                <span class="picker-count" id="enhance-status"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ CROP & TRANSFORM VIEW ============ -->
+      <div id="view-crop" class="hidden">
+        <div class="panel">
+          <h2>Crop &amp; transform</h2>
+          <p class="note" style="margin:0 0 20px;">Center-crops before resizing. "Original" leaves framing untouched. It's also picked up automatically the next time you run Compress Images or Re-optimize selected.</p>
+
+          <div class="tool-layout">
+            <div class="tool-left">
+              <div class="picker-mount" id="crop-picker-mount"></div>
+              <span class="picker-count">Live preview (first selected image)</span>
+              <div id="crop-preview-box" style="width:100%; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:rgba(5,17,22,.6);">
+                <img id="crop-preview-img" alt="" style="width:100%; height:100%; display:block; object-fit:contain; object-position:center;">
+              </div>
+            </div>
+            <div class="tool-right">
+              <div class="segmented" id="crop-orientation">
+                <button class="seg active" data-orientation="landscape">Landscape</button>
+                <button class="seg" data-orientation="portrait">Portrait</button>
+              </div>
+              <div class="crop-block">
+                <label>Aspect ratio</label>
+                <div class="crop-list" id="crop-list"></div>
+              </div>
+              <div class="row" style="margin-top:16px;">
+                <button class="btn-primary" id="crop-apply-btn">Apply to selected images</button>
+                <span class="picker-count" id="crop-status"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ RESIZE VIEW ============ -->
+      <div id="view-resize" class="hidden">
+        <div class="panel">
+          <h2>Resize dimensions</h2>
+          <p class="note" style="margin:0 0 20px;">
+            Sets a target box the image is fit into. Only "Contain" is actually applied when you save — Cover and Pad affect the preview only in this version.
+          </p>
+
+          <div class="tool-layout">
+            <div class="tool-left">
+              <div class="picker-mount" id="resize-picker-mount"></div>
+              <span class="picker-count">Live preview — box shape matches your target size, image scaled to fit inside it</span>
+              <div id="resize-preview-box" style="width:100%; max-width:220px; border:1px dashed var(--line); border-radius:8px; display:flex; align-items:center; justify-content:center; background:rgba(5,17,22,.6); overflow:hidden;">
+                <img id="resize-preview-img" alt="" style="width:100%; height:100%; object-fit:contain; display:block;">
+              </div>
+            </div>
+            <div class="tool-right">
+              <div class="controls">
+                <div class="field">
+                  <label>Max width — <span class="val" id="resize-w-val">1024</span>px</label>
+                  <input type="range" id="resize-w" min="200" max="4000" step="50" value="1024">
+                </div>
+                <div class="field">
+                  <label>Max height — <span class="val" id="resize-h-val">1024</span>px</label>
+                  <input type="range" id="resize-h" min="200" max="4000" step="50" value="1024">
+                </div>
+              </div>
+
+              <label class="toggle">
+                <input type="checkbox" id="resize-lock" checked>
+                <span>Lock aspect ratio
+                  <span class="hint">Moving one slider adjusts the other so the image is never stretched.</span>
+                </span>
+              </label>
+
+              <div class="field" style="max-width:260px; margin-bottom:16px;">
+                <label>Fit mode</label>
+                <select id="resize-fit">
+                  <option value="contain">Contain — fit inside the box</option>
+                  <option value="cover">Cover — fill the box, crop overflow</option>
+                  <option value="pad">Pad — fit inside, fill gaps with the background color</option>
+                </select>
+              </div>
+
+              <div class="row">
+                <button class="btn-primary" id="resize-apply-btn">Apply to selected images</button>
+                <span class="picker-count" id="resize-status"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ DRAW VIEW ============ -->
+      <div id="view-draw" class="hidden">
+        <div class="panel">
+          <h2>Draw on image</h2>
+          <p class="note" style="margin:0 0 18px;">
+            Pick one image, sketch callouts, arrows, or notes on it, then save the marked-up copy back to your store.
+          </p>
+
+          <div class="tool-layout">
+            <div class="tool-left">
+              <div class="picker-mount" id="draw-picker-mount"></div>
+            </div>
+            <div class="tool-right">
+              <div class="picker-bar" style="margin-top:0;">
+                <span class="picker-count" id="draw-tool-label">Pen selected</span>
+                <span>
+                  <button class="link-btn" id="draw-undo">Undo</button>
+                  <button class="link-btn danger" id="draw-clear">Clear</button>
+                </span>
+              </div>
+
+              <div class="segmented" id="draw-tools">
+                <button class="seg active" data-tool="pen">Pen</button>
+                <button class="seg" data-tool="line">Line</button>
+                <button class="seg" data-tool="rect">Rectangle</button>
+                <button class="seg" data-tool="text">Text</button>
+                <button class="seg" data-tool="eraser">Eraser</button>
+              </div>
+
+              <div class="controls">
+                <div class="field" style="max-width:220px;">
+                  <label>Stroke color</label>
+                  <input type="color" id="draw-color" value="#74e8e0" style="height:42px; padding:4px; cursor:pointer;">
+                </div>
+                <div class="field">
+                  <label>Brush size — <span class="val" id="draw-size-val">4</span>px</label>
+                  <input type="range" id="draw-size" min="1" max="24" value="4">
+                </div>
+              </div>
+
+              <div style="border:1px solid var(--line); border-radius:10px; overflow:hidden; background:rgba(5,17,22,.6);">
+                <canvas id="draw-canvas" width="760" height="420" style="width:100%; height:auto; display:block; cursor:crosshair; touch-action:none;"></canvas>
+              </div>
+              <p class="note">Select an image on the left to load it onto the canvas — nothing is uploaded until you save.</p>
+              <div class="row" style="margin-top:16px;">
+                <button class="btn-ghost" id="draw-download">Download PNG</button>
+                <button class="btn-primary" id="draw-save-product" disabled title="Select an image above first">Save to product image</button>
+                <span class="picker-count" id="draw-status"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ COLOR BACKGROUND VIEW ============ -->
+      <div id="view-color-bg" class="hidden">
+        <div class="panel">
+          <h2>Background color</h2>
+          <p class="note" style="margin:0 0 18px;">
+            Removes the background of the image(s) you pick, then replaces it with a flat color or leaves it transparent.
+          </p>
+
+          <div class="tool-layout">
+            <div class="tool-left">
+              <div class="picker-mount" id="colorbg-picker-mount"></div>
+              <span class="picker-count">Live preview (first selected image)</span>
+              <div id="colorbg-preview" style="width:100%; height:220px; border:1px solid var(--line); border-radius:10px; background:#0a2029; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                <img id="colorbg-preview-img" alt="" style="max-width:100%; max-height:100%; object-fit:contain;">
+              </div>
+              <span class="picker-count" id="colorbg-preview-status"></span>
+            </div>
+            <div class="tool-right">
+              <div class="segmented" id="colorbg-mode">
+                <button class="seg active" data-bgmode="solid">Solid color</button>
+                <button class="seg" data-bgmode="transparent">Transparent</button>
+                <button class="seg" data-bgmode="match" disabled title="Not available yet — there's no reliable way to read your theme's background color from here">Match theme background</button>
+              </div>
+
+              <div id="colorbg-solid-area">
+                <div class="controls">
+                  <div class="field" style="max-width:220px;">
+                    <label>Background color</label>
+                    <input type="color" id="colorbg-color" value="#0a2029" style="height:42px; padding:4px; cursor:pointer;">
+                  </div>
+                  <div class="field">
+                    <label>Edge softness — <span class="val" id="colorbg-feather-val">2</span>px</label>
+                    <input type="range" id="colorbg-feather" min="0" max="12" value="2">
+                  </div>
+                </div>
+
+                <div class="crop-block">
+                  <label>Quick swatches</label>
+                  <div class="row" id="colorbg-swatches" style="gap:10px; flex-wrap:wrap; justify-content:flex-start;"></div>
+                </div>
+              </div>
+
+              <div class="row" style="margin-top:16px;">
+                <button class="btn-primary" id="colorbg-apply-btn">Apply to selected images</button>
+                <span class="picker-count" id="colorbg-status"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ GENERATE VIEW ============ -->
+      <div id="view-generate" class="hidden">
+        <div class="panel">
+          <h2>Generate product image</h2>
+          <p class="note" style="margin:0 0 18px;">
+            Pick one image slot to replace, describe a shot, then generate and use the result.
+          </p>
+
+          <div class="tool-layout">
+            <div class="tool-left">
+              <div class="picker-mount" id="generate-picker-mount"></div>
+              <div id="generate-result-wrap" style="display:none;">
+                <img id="generate-result-img" alt="" style="width:100%; border-radius:10px; border:1px solid var(--line); display:block;">
+              </div>
+            </div>
+            <div class="tool-right">
+              <div class="field" style="margin-bottom:16px;">
+                <label>Prompt</label>
+                <textarea id="generate-prompt" rows="3" placeholder="e.g. matte ceramic mug on a linen surface, soft daylight, front angle" style="width:100%; background:rgba(6,20,25,.65); border:1px solid var(--line); color:var(--mist); padding:11px 13px; border-radius:9px; font-family:var(--body); font-size:13.5px; resize:vertical;"></textarea>
+              </div>
+
+              <div class="controls">
+                <div class="field">
+                  <label>Style</label>
+                  <select id="generate-style">
+                    <option value="studio">Studio — plain backdrop</option>
+                    <option value="lifestyle">Lifestyle — in a scene</option>
+                    <option value="flatlay">Flat lay</option>
+                    <option value="closeup">Macro close-up</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Aspect ratio</label>
+                  <select id="generate-ratio">
+                    <option value="1:1">Square (1:1)</option>
+                    <option value="4:5">Portrait (4:5)</option>
+                    <option value="3:2">Landscape (3:2)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row">
+                <button class="btn-primary" id="generate-btn">Generate</button>
+                <button class="btn-ghost" id="generate-use-btn" style="display:none;">Use This Image</button>
+                <button class="btn-ghost" id="generate-clear" style="display:none;">Clear result</button>
+              </div>
+
+              <p class="note" id="generate-note" style="display:none;">This calls a real image-generation API and doesn't save to your store until you click "Use This Image".</p>
+              <span class="picker-count" id="generate-status"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>Connect your store via OAuth · originals are replaced and cannot be restored</footer>
     </div>
-
-    <div class="panel">
-      <h2>Every image</h2>
-      <div class="segmented">
-        <button class="seg active" data-filter="all">All</button>
-        <button class="seg" data-filter="pending">Not optimized</button>
-        <button class="seg" data-filter="done">Optimized</button>
-      </div>
-      <div class="legend">
-        <span><i class="dot moss"></i> optimized</span>
-        <span><i class="dot ember"></i> not optimized</span>
-      </div>
-      <div class="report-list" id="report-list">
-        <div class="picker-empty">Press Refresh to load the report.</div>
-      </div>
-    </div>
-  </div>
-
-  <footer>Runs locally · credentials read from .env · originals are replaced and cannot be restored</footer>
+  </main>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
+
+// Every API call goes through here instead of raw fetch(). Inside Shopify
+// Admin's iframe, App Bridge exposes window.shopify.idToken() — a fresh
+// short-lived session token proving which shop this request is for, since
+// third-party cookies don't reliably work in that context. Outside the
+// iframe (local/ngrok testing, or the classic OAuth flow) window.shopify
+// is absent and this behaves exactly like a plain fetch() — the backend
+// falls back to the session cookie in that case (see current_shop() in
+// shopify_auth.py).
+async function apiFetch(url, opts = {}) {
+  const headers = { ...(opts.headers || {}) };
+  if (window.shopify && window.shopify.idToken) {
+    try {
+      headers.Authorization = `Bearer ${await window.shopify.idToken()}`;
+    } catch (e) { /* not actually embedded — fall through to cookie auth */ }
+  }
+  return fetch(url, { ...opts, headers });
+}
 
 (function () {
   const layer = $('spores');
@@ -377,20 +919,130 @@ const $ = id => document.getElementById(id);
 })();
 
 const qualityEl = $('quality'), qualityVal = $('quality-val');
-const maxWidthEl = $('max-width'), forceWebpEl = $('force-webp'), redoEl = $('redo');
+const forceWebpEl = $('force-webp'), redoEl = $('redo');
 const startBtn = $('start-btn'), stopBtn = $('stop-btn'), testBtn = $('test-btn');
 const connDot = $('conn-dot'), connText = $('conn-text'), shopTag = $('shop-tag');
+const installArea = $('install-area'), installShop = $('install-shop'), installBtn = $('install-btn');
+const logoutBtn = $('logout-btn');
+const usageText = $('usage-text'), usageCount = $('usage-count'), usageBar = $('usage-bar');
 const errorBanner = $('error-banner'), logEl = $('log');
 const collectionArea = $('collection-area'), collectionSelect = $('collection-select');
 const productList = $('product-list'), pickerCount = $('picker-count');
 const reportList = $('report-list'), reportCollection = $('report-collection');
+const aiCollectionArea = $('ai-collection-area'), aiCollectionSelect = $('ai-collection-select');
+const aiProductList = $('ai-product-list'), aiPickerCount = $('ai-picker-count');
+const aiReportList = $('ai-report-list'), aiReportCollection = $('ai-report-collection');
 
 let scope = 'store';
 let products = [];
 let selected = new Set();
+let imageOverrides = new Map(); // productId -> Set of image ids to include (only set when not "all")
 let collectionsLoaded = false;
 let reportData = null;
 let reportFilter = 'all';
+let rePick = new Map(); // imageId -> productId, for the Image report re-optimize picker
+
+/* ---------- crop and transform ---------- */
+const RATIO_GROUPS = {
+  landscape: [['3', '2'], ['5', '4'], ['7', '5'], ['16', '9']],
+  portrait: [['2', '3'], ['4', '5'], ['5', '7'], ['9', '16']],
+};
+let cropOrientation = 'landscape';
+let cropSelection = 'original'; // 'original' | 'square' | 'W:H' | 'freeform'
+let cropFreeformW = '';
+let cropFreeformH = '';
+let cropPicker = null;
+let cropPickerInit = false;
+
+const cropListEl = $('crop-list');
+
+function renderCropList() {
+  const rows = [{ key: 'original', label: 'Original' }, { key: 'square', label: 'Square' }];
+  RATIO_GROUPS[cropOrientation].forEach(([w, h]) => rows.push({ key: `${w}:${h}`, label: `${w}:${h}` }));
+  rows.push({ key: 'freeform', label: 'Freeform' });
+
+  cropListEl.innerHTML = '';
+  rows.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'crop-row' + (cropSelection === r.key ? ' active' : '');
+    const label = document.createElement('span');
+    label.textContent = r.label;
+    const check = document.createElement('span');
+    check.className = 'check';
+    check.textContent = '\u2713';
+    row.append(label, check);
+    row.addEventListener('click', () => { cropSelection = r.key; renderCropList(); });
+    cropListEl.appendChild(row);
+
+    if (r.key === 'freeform' && cropSelection === 'freeform') {
+      const ff = document.createElement('div');
+      ff.className = 'crop-freeform-inputs';
+      ff.innerHTML = `
+        <input type="number" id="crop-ff-w" placeholder="W" min="1" value="${cropFreeformW}">
+        <span>:</span>
+        <input type="number" id="crop-ff-h" placeholder="H" min="1" value="${cropFreeformH}">
+      `;
+      cropListEl.appendChild(ff);
+      $('crop-ff-w').addEventListener('input', e => { cropFreeformW = e.target.value; refreshCropPreview(); });
+      $('crop-ff-h').addEventListener('input', e => { cropFreeformH = e.target.value; refreshCropPreview(); });
+      // Don't let typing in the number inputs re-toggle the row.
+      ff.addEventListener('click', e => e.stopPropagation());
+    }
+  });
+  refreshCropPreview();
+}
+renderCropList();
+
+function refreshCropPreview() {
+  const box = $('crop-preview-box'), img = $('crop-preview-img');
+  const im = cropPicker ? cropPicker.firstSelectedImage() : null;
+  img.src = im ? thumb(im.src, 600) : '';
+  const ratio = currentCropRatio();
+  if (ratio) {
+    const [w, h] = ratio.split(':').map(Number);
+    box.style.aspectRatio = `${w} / ${h}`;
+    img.style.objectFit = 'cover';
+  } else {
+    box.style.aspectRatio = 'auto';
+    img.style.objectFit = 'contain';
+  }
+}
+
+document.querySelectorAll('#crop-orientation .seg').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#crop-orientation .seg').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const nextOrientation = btn.dataset.orientation;
+    // If a numbered ratio is selected, carry it over to its counterpart in
+    // the new orientation (3:2 landscape <-> 2:3 portrait) rather than
+    // resetting the pick back to "Original".
+    if (/^\d+:\d+$/.test(cropSelection)) {
+      const otherGroup = RATIO_GROUPS[cropOrientation];
+      const idx = otherGroup.findIndex(([w, h]) => `${w}:${h}` === cropSelection);
+      if (idx > -1) {
+        const [w, h] = RATIO_GROUPS[nextOrientation][idx];
+        cropSelection = `${w}:${h}`;
+      }
+    }
+    cropOrientation = nextOrientation;
+    renderCropList();
+  });
+});
+
+function currentCropRatio() {
+  if (cropSelection === 'original') return null;
+  if (cropSelection === 'square') return '1:1';
+  if (cropSelection === 'freeform') {
+    return (cropFreeformW && cropFreeformH) ? `${cropFreeformW}:${cropFreeformH}` : null;
+  }
+  return cropSelection; // already "W:H"
+}
+
+let aiScope = 'store';
+let aiProducts = [];
+let aiSelected = new Set();
+let aiReportData = null;
+let aiReportFilter = 'all';
 
 qualityEl.addEventListener('input', () => qualityVal.textContent = qualityEl.value);
 
@@ -405,15 +1057,659 @@ function thumb(src, px) {
   return src.replace(/(\.[a-zA-Z]+)(\?|$)/, `_${px}x${px}$1$2`);
 }
 
-/* ---------- tabs ---------- */
-document.querySelectorAll('.tab').forEach(t => {
+/* ================= Shared per-tool product/image picker ================= */
+let cachedCollections = null;
+let extraCollectionSelects = [];
+
+function populateCollectionSelect(sel, collections) {
+  if (!collections.length) {
+    sel.innerHTML = '<option value="">No collections found</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">Choose a collection…</option>';
+  collections.forEach(c => {
+    const label = c.products_count != null ? `${c.title} (${c.products_count})` : c.title;
+    const opt = document.createElement('option');
+    opt.value = c.id; opt.textContent = label;
+    sel.appendChild(opt);
+  });
+}
+
+function mountPicker(mountElId, opts) {
+  const multi = opts && opts.multi !== false;
+  const onChange = (opts && opts.onChange) || (() => {});
+  const root = $(mountElId);
+  root.innerHTML = `
+    <div class="segmented" data-scope-toggle>
+      <button type="button" class="seg active" data-scope="store">Entire store</button>
+      <button type="button" class="seg" data-scope="collection">A collection</button>
+    </div>
+    <div class="hidden" data-collection-area style="margin-bottom:18px;">
+      <div class="field" style="max-width:340px;">
+        <label>Collection</label>
+        <select data-collection-select><option value="">Loading collections…</option></select>
+      </div>
+    </div>
+    <div class="picker-load-area" data-load-area>
+      <p>Nothing is fetched until you ask for it — loading your whole store up front is what was making this slow.</p>
+      <button type="button" class="btn-ghost" data-load-btn style="padding:9px 18px; font-size:12.5px;">Load images</button>
+    </div>
+    <div class="picker-bar hidden" data-picker-bar>
+      <span class="picker-count" data-count>No products loaded</span>
+      <span>
+        <button type="button" class="link-btn" data-select-all>Select all</button>
+        <button type="button" class="link-btn" data-select-none>Clear</button>
+      </span>
+    </div>
+    <div class="report-list hidden" data-list style="margin-top:0;">
+      <div class="picker-empty">Loading products…</div>
+    </div>
+  `;
+
+  const scopeToggle = root.querySelector('[data-scope-toggle]');
+  const collectionArea = root.querySelector('[data-collection-area]');
+  const collectionSelect = root.querySelector('[data-collection-select]');
+  const loadArea = root.querySelector('[data-load-area]');
+  const loadBtn = root.querySelector('[data-load-btn]');
+  const pickerBar = root.querySelector('[data-picker-bar]');
+  const countEl = root.querySelector('[data-count]');
+  const listEl = root.querySelector('[data-list]');
+  const selectAllBtn = root.querySelector('[data-select-all]');
+  const selectNoneBtn = root.querySelector('[data-select-none]');
+  selectAllBtn.classList.toggle('hidden', !multi);
+
+  extraCollectionSelects.push(collectionSelect);
+  if (cachedCollections) populateCollectionSelect(collectionSelect, cachedCollections);
+
+  let products = [];
+  let selected = new Map(); // imageId -> productId
+
+  function load(collectionId) {
+    loadArea.classList.add('hidden');
+    pickerBar.classList.remove('hidden');
+    listEl.classList.remove('hidden');
+    listEl.innerHTML = '<div class="picker-empty">Loading products…</div>';
+    countEl.textContent = 'Loading…';
+    const qs = collectionId ? ('?collection_id=' + encodeURIComponent(collectionId)) : '';
+    apiFetch('/api/products' + qs).then(r => r.json()).then(data => {
+      if (!data.ok) { showError(data.error); return; }
+      products = data.products;
+      selected.clear();
+      render();
+    }).catch(() => showError('Could not load products.'));
+  }
+
+  function render() {
+    const withImages = products.filter(p => p.images && p.images.length);
+    if (!withImages.length) {
+      listEl.innerHTML = '<div class="picker-empty">No images found.</div>';
+      updateCount();
+      return;
+    }
+    listEl.innerHTML = '';
+    withImages.forEach(p => {
+      const box = document.createElement('div');
+      box.className = 'r-product';
+      const head = document.createElement('div');
+      head.className = 'r-head';
+      const title = document.createElement('span');
+      title.className = 'r-title';
+      title.textContent = p.title;
+      head.appendChild(title);
+      box.appendChild(head);
+
+      const strip = document.createElement('div');
+      strip.className = 'r-images';
+      p.images.forEach(im => {
+        const cell = document.createElement('div');
+        cell.className = 'r-img' + (selected.has(im.id) ? ' picked' : '');
+        const img = document.createElement('img');
+        img.src = thumb(im.src, 120);
+        img.loading = 'lazy';
+        img.alt = '';
+        cell.title = 'Click to select';
+        cell.appendChild(img);
+        cell.addEventListener('click', () => {
+          if (selected.has(im.id)) {
+            selected.delete(im.id);
+          } else {
+            if (!multi) selected.clear();
+            selected.set(im.id, p.id);
+          }
+          render();
+          onChange(selected);
+        });
+        strip.appendChild(cell);
+      });
+      box.appendChild(strip);
+      listEl.appendChild(box);
+    });
+    updateCount();
+  }
+
+  function updateCount() {
+    const total = products.reduce((n, p) => n + (p.images ? p.images.length : 0), 0);
+    const n = selected.size;
+    countEl.innerHTML = total
+      ? `${total} image${total === 1 ? '' : 's'} available · <b>${n}</b> selected`
+      : 'No products loaded';
+  }
+
+  selectAllBtn.addEventListener('click', () => {
+    if (!multi) return;
+    selected.clear();
+    products.forEach(p => (p.images || []).forEach(im => selected.set(im.id, p.id)));
+    render();
+    onChange(selected);
+  });
+  selectNoneBtn.addEventListener('click', () => {
+    selected.clear();
+    render();
+    onChange(selected);
+  });
+
+  scopeToggle.querySelectorAll('.seg').forEach(btn => {
+    btn.addEventListener('click', () => {
+      scopeToggle.querySelectorAll('.seg').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const scope = btn.dataset.scope;
+      collectionArea.classList.toggle('hidden', scope !== 'collection');
+      // Nothing loads on scope change alone — "Entire store" waits for the
+      // Load button, "A collection" waits for an actual collection pick.
+      // This is deliberate: fetching the whole catalog just for opening a
+      // tool page was the real cause of the slowness reported.
+      loadArea.classList.toggle('hidden', scope !== 'store');
+      pickerBar.classList.add('hidden');
+      listEl.classList.add('hidden');
+      products = [];
+      selected.clear();
+      onChange(selected);
+      if (scope === 'collection' && !collectionsLoaded) loadCollections();
+    });
+  });
+  loadBtn.addEventListener('click', () => load(null));
+  collectionSelect.addEventListener('change', () => {
+    if (collectionSelect.value) load(collectionSelect.value);
+  });
+
+  return {
+    getSelected: () => selected,
+    getProducts: () => products,
+    firstSelectedImage() {
+      if (!selected.size) return null;
+      const [imageId, productId] = selected.entries().next().value;
+      const p = products.find(x => x.id === productId);
+      const im = p && (p.images || []).find(i => i.id === imageId);
+      return im ? { ...im, productId, productTitle: p.title } : null;
+    },
+  };
+}
+
+/* ---------- Resize ---------- */
+let resizePicker = null;
+let resizePickerInit = false;
+let resizeLockRatio = parseInt($('resize-w').value, 10) / parseInt($('resize-h').value, 10);
+
+function initResizePage() {
+  if (resizePickerInit) return;
+  resizePickerInit = true;
+  resizePicker = mountPicker('resize-picker-mount', { multi: true, onChange: refreshResizePreview });
+}
+
+function refreshResizePreview() {
+  const im = resizePicker && resizePicker.firstSelectedImage();
+  $('resize-preview-img').src = im ? thumb(im.src, 400) : '';
+}
+
+function updateResizePreview() {
+  const w = parseInt($('resize-w').value, 10), h = parseInt($('resize-h').value, 10);
+  $('resize-preview-box').style.aspectRatio = `${w} / ${h}`;
+}
+$('resize-w').addEventListener('input', () => {
+  const w = parseInt($('resize-w').value, 10);
+  $('resize-w-val').textContent = w;
+  if ($('resize-lock').checked) {
+    const h = Math.round(w / resizeLockRatio);
+    $('resize-h').value = h; $('resize-h-val').textContent = h;
+  } else {
+    resizeLockRatio = w / parseInt($('resize-h').value, 10);
+  }
+  updateResizePreview();
+});
+$('resize-h').addEventListener('input', () => {
+  const h = parseInt($('resize-h').value, 10);
+  $('resize-h-val').textContent = h;
+  if ($('resize-lock').checked) {
+    const w = Math.round(h * resizeLockRatio);
+    $('resize-w').value = w; $('resize-w-val').textContent = w;
+  } else {
+    resizeLockRatio = parseInt($('resize-w').value, 10) / h;
+  }
+  updateResizePreview();
+});
+$('resize-lock').addEventListener('change', () => {
+  if ($('resize-lock').checked) resizeLockRatio = parseInt($('resize-w').value, 10) / parseInt($('resize-h').value, 10);
+});
+updateResizePreview();
+
+$('resize-apply-btn').addEventListener('click', async () => {
+  const sel = resizePicker.getSelected();
+  if (!sel.size) { showError('Select at least one image above.'); return; }
+  hideError();
+  $('resize-status').textContent = 'Applying…';
+  const body = {
+    scope: 'products',
+    product_ids: [...new Set(sel.values())],
+    image_ids: [...sel.keys()],
+    quality: parseInt(qualityEl.value, 10),
+    max_width: parseInt($('resize-w').value, 10),
+    max_height: parseInt($('resize-h').value, 10),
+    force_webp: forceWebpEl.checked,
+    redo: true,
+    crop_ratio: currentCropRatio(),
+  };
+  try {
+    const res = await apiFetch('/api/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!data.ok) {
+      if (data.quota_exceeded) { window.location.href = '/plans'; return; }
+      showError(data.error);
+      $('resize-status').textContent = '';
+      return;
+    }
+    $('resize-status').textContent = 'Started — check Compress Images for progress.';
+  } catch (e) {
+    showError('Could not start the resize.');
+    $('resize-status').textContent = '';
+  }
+});
+
+/* ---------- Color background ---------- */
+let colorbgPicker = null;
+let colorbgPickerInit = false;
+let colorbgCutoutCache = new Map(); // imageId -> base64 PNG cutout, so re-selecting the same image is instant
+let colorbgCutoutImg = null; // the currently-loaded cutout, ready for canvas compositing
+
+function initColorbgPage() {
+  if (colorbgPickerInit) return;
+  colorbgPickerInit = true;
+  colorbgPicker = mountPicker('colorbg-picker-mount', { multi: true, onChange: refreshColorbgPreview });
+}
+
+async function refreshColorbgPreview() {
+  const im = colorbgPicker.firstSelectedImage();
+  colorbgCutoutImg = null;
+  if (!im) {
+    $('colorbg-preview-img').src = '';
+    $('colorbg-preview-status').textContent = '';
+    return;
+  }
+  $('colorbg-preview-img').src = thumb(im.src, 400); // original, shown instantly while the cutout prepares
+  if (colorbgCutoutCache.has(im.id)) {
+    loadCutoutImage(colorbgCutoutCache.get(im.id));
+    return;
+  }
+  $('colorbg-preview-status').textContent = 'Preparing live preview (removing background — this can take a few seconds)…';
+  try {
+    const res = await apiFetch('/api/edit/color-bg/cutout', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: im.productId, image_id: im.id }),
+    });
+    const data = await res.json();
+    if (!data.ok) { $('colorbg-preview-status').textContent = data.error || 'Could not prepare a preview.'; return; }
+    colorbgCutoutCache.set(im.id, data.cutout_base64);
+    loadCutoutImage(data.cutout_base64);
+  } catch (e) {
+    $('colorbg-preview-status').textContent = 'Could not prepare a preview.';
+  }
+}
+
+function loadCutoutImage(base64) {
+  const img = new Image();
+  img.onload = () => {
+    colorbgCutoutImg = img;
+    $('colorbg-preview-status').textContent = '';
+    renderColorbgLivePreview();
+  };
+  img.src = `data:image/png;base64,${base64}`;
+}
+
+function renderColorbgLivePreview() {
+  if (!colorbgCutoutImg) return; // still on the plain "before" image — nothing to composite yet
+  const active = document.querySelector('#colorbg-mode .seg.active');
+  const mode = active ? active.dataset.bgmode : 'solid';
+  const color = $('colorbg-color').value;
+  const feather = parseInt($('colorbg-feather').value, 10);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = colorbgCutoutImg.naturalWidth;
+  canvas.height = colorbgCutoutImg.naturalHeight;
+  const ctx = canvas.getContext('2d');
+
+  if (mode === 'transparent') {
+    const tile = Math.max(8, Math.round(canvas.width / 24));
+    for (let y = 0; y < canvas.height; y += tile) {
+      for (let x = 0; x < canvas.width; x += tile) {
+        ctx.fillStyle = ((x / tile + y / tile) % 2 === 0) ? '#123643' : '#0a2029';
+        ctx.fillRect(x, y, tile, tile);
+      }
+    }
+  } else {
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  if (feather) ctx.filter = `blur(${feather / 3}px)`;
+  ctx.drawImage(colorbgCutoutImg, 0, 0);
+  ctx.filter = 'none';
+
+  $('colorbg-preview-img').src = canvas.toDataURL('image/png');
+}
+
+(function () {
+  const solidArea = $('colorbg-solid-area');
+  const colorEl = $('colorbg-color'), featherEl = $('colorbg-feather'), featherVal = $('colorbg-feather-val');
+  const swatchWrap = $('colorbg-swatches');
+  const swatches = ['#0a2029', '#f4f1ea', '#111111', '#e0794f', '#8fbf6a', '#dcefee'];
+
+  swatches.forEach(hex => {
+    const sw = document.createElement('button');
+    sw.type = 'button';
+    sw.className = 'btn-ghost';
+    sw.style.cssText = `width:34px; height:34px; padding:0; border-radius:8px; background:${hex}; border-color:var(--line);`;
+    sw.title = hex;
+    sw.addEventListener('click', () => { colorEl.value = hex; renderColorbgLivePreview(); });
+    swatchWrap.appendChild(sw);
+  });
+
+  colorEl.addEventListener('input', renderColorbgLivePreview);
+  featherEl.addEventListener('input', () => { featherVal.textContent = featherEl.value; renderColorbgLivePreview(); });
+
+  document.querySelectorAll('#colorbg-mode .seg').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      document.querySelectorAll('#colorbg-mode .seg').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      solidArea.classList.toggle('hidden', btn.dataset.bgmode !== 'solid');
+      renderColorbgLivePreview();
+    });
+  });
+})();
+
+$('colorbg-apply-btn').addEventListener('click', async () => {
+  const sel = colorbgPicker.getSelected();
+  if (!sel.size) { showError('Select at least one image above.'); return; }
+  const mode = document.querySelector('#colorbg-mode .seg.active').dataset.bgmode;
+  hideError();
+  $('colorbg-status').textContent = 'Removing background — this can take a few seconds per image…';
+  const body = {
+    product_ids: [...sel.values()],
+    image_ids: [...sel.keys()],
+    mode,
+    color: $('colorbg-color').value,
+    feather: parseInt($('colorbg-feather').value, 10),
+  };
+  try {
+    const res = await apiFetch('/api/edit/color-bg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!data.ok) {
+      if (data.quota_exceeded) { window.location.href = '/plans'; return; }
+      showError(data.error);
+      $('colorbg-status').textContent = '';
+      return;
+    }
+    $('colorbg-status').textContent = `Updated ${data.updated.length} image(s).` + (data.failed.length ? ` ${data.failed.length} failed.` : '');
+    loadUsage();
+  } catch (e) {
+    showError('Could not apply the background change.');
+    $('colorbg-status').textContent = '';
+  }
+});
+
+/* ---------- Generate (real image-generation call) ---------- */
+let generatePicker = null;
+let generatePickerInit = false;
+let generatedImageBase64 = null;
+
+function initGeneratePage() {
+  if (generatePickerInit) return;
+  generatePickerInit = true;
+  generatePicker = mountPicker('generate-picker-mount', { multi: false });
+}
+
+$('generate-btn').addEventListener('click', async () => {
+  const im = generatePicker.firstSelectedImage();
+  if (!im) { showError('Select an image slot above first.'); return; }
+  const prompt = $('generate-prompt').value.trim();
+  if (!prompt) { $('generate-prompt').focus(); return; }
+  hideError();
+  $('generate-status').textContent = 'Generating…';
+  $('generate-use-btn').style.display = 'none';
+  try {
+    const res = await apiFetch('/api/edit/generate/preview', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product_title: im.productTitle, prompt,
+        style: $('generate-style').value, ratio: $('generate-ratio').value,
+      }),
+    });
+    const data = await res.json();
+    if (!data.ok) { showError(data.error); $('generate-status').textContent = ''; return; }
+    generatedImageBase64 = data.image_base64;
+    $('generate-result-img').src = `data:${data.mime_type};base64,${data.image_base64}`;
+    $('generate-result-wrap').style.display = 'block';
+    $('generate-note').style.display = 'block';
+    $('generate-clear').style.display = 'inline-block';
+    $('generate-use-btn').style.display = 'inline-block';
+    $('generate-status').textContent = '';
+  } catch (e) {
+    showError('Generation failed.');
+    $('generate-status').textContent = '';
+  }
+});
+
+$('generate-clear').addEventListener('click', () => {
+  generatedImageBase64 = null;
+  $('generate-result-wrap').style.display = 'none';
+  $('generate-note').style.display = 'none';
+  $('generate-clear').style.display = 'none';
+  $('generate-use-btn').style.display = 'none';
+});
+
+$('generate-use-btn').addEventListener('click', async () => {
+  const im = generatePicker.firstSelectedImage();
+  if (!im || !generatedImageBase64) return;
+  hideError();
+  $('generate-status').textContent = 'Saving…';
+  try {
+    const res = await apiFetch('/api/edit/generate/use', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: im.productId, image_id: im.id, image_base64: generatedImageBase64 }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      if (data.quota_exceeded) { window.location.href = '/plans'; return; }
+      showError(data.error);
+      $('generate-status').textContent = '';
+      return;
+    }
+    $('generate-status').textContent = 'Saved to your store.';
+    loadUsage();
+  } catch (e) {
+    showError('Could not save the generated image.');
+    $('generate-status').textContent = '';
+  }
+});
+
+/* ---------- Enhance (real per-image PIL adjustments) ---------- */
+let enhancePicker = null;
+let enhancePickerInit = false;
+let enhanceValues = {};
+const ENHANCE_FIELDS = [
+  ['brightness', 'Brightness', -50, 50, 0],
+  ['contrast', 'Contrast', -50, 50, 0],
+  ['sharpness', 'Sharpness', -50, 50, 0],
+  ['saturation', 'Saturation', -50, 50, 0],
+  ['exposure', 'Exposure', -50, 50, 0],
+  ['clarity', 'Clarity', -50, 50, 0],
+  ['noise', 'Noise reduction', 0, 100, 0],
+];
+
+function initEnhancePage() {
+  if (enhancePickerInit) return;
+  enhancePickerInit = true;
+  enhancePicker = mountPicker('enhance-picker-mount', { multi: true, onChange: refreshEnhancePreview });
+  resetEnhanceSliders();
+}
+
+function refreshEnhancePreview() {
+  const im = enhancePicker.firstSelectedImage();
+  $('enhance-preview-img').src = im ? thumb(im.src, 400) : '';
+  applyEnhanceFilterPreview();
+}
+
+function applyEnhanceFilterPreview() {
+  const b = 1 + (enhanceValues.brightness + enhanceValues.exposure) / 100;
+  const c = 1 + enhanceValues.contrast / 100;
+  const s = 1 + enhanceValues.saturation / 100;
+  $('enhance-preview-img').style.filter = `brightness(${b}) contrast(${c}) saturate(${s})`;
+}
+
+function renderEnhanceSliders() {
+  const wrap = $('enhance-sliders');
+  wrap.innerHTML = '';
+  ENHANCE_FIELDS.forEach(([key, label, min, max]) => {
+    const field = document.createElement('div');
+    field.className = 'field';
+    field.innerHTML = `<label>${label} — <span class="val">${enhanceValues[key]}</span></label>
+      <input type="range" min="${min}" max="${max}" value="${enhanceValues[key]}">`;
+    const input = field.querySelector('input');
+    const val = field.querySelector('.val');
+    input.addEventListener('input', () => {
+      enhanceValues[key] = parseInt(input.value, 10);
+      val.textContent = enhanceValues[key];
+      applyEnhanceFilterPreview();
+    });
+    wrap.appendChild(field);
+  });
+}
+
+function resetEnhanceSliders() {
+  ENHANCE_FIELDS.forEach(([key, , , , def]) => enhanceValues[key] = def);
+  renderEnhanceSliders();
+  applyEnhanceFilterPreview();
+}
+
+$('enhance-auto').addEventListener('click', () => {
+  enhanceValues = { brightness: 8, contrast: 12, sharpness: 15, saturation: 10, exposure: 5, clarity: 10, noise: 20 };
+  renderEnhanceSliders();
+  applyEnhanceFilterPreview();
+});
+
+$('enhance-apply-btn').addEventListener('click', async () => {
+  const sel = enhancePicker.getSelected();
+  if (!sel.size) { showError('Select at least one image above.'); return; }
+  hideError();
+  $('enhance-status').textContent = 'Applying…';
+  const body = { product_ids: [...sel.values()], image_ids: [...sel.keys()], values: enhanceValues };
+  try {
+    const res = await apiFetch('/api/edit/enhance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!data.ok) {
+      if (data.quota_exceeded) { window.location.href = '/plans'; return; }
+      showError(data.error);
+      $('enhance-status').textContent = '';
+      return;
+    }
+    $('enhance-status').textContent = `Updated ${data.updated.length} image(s).` + (data.failed.length ? ` ${data.failed.length} failed.` : '');
+    loadUsage();
+  } catch (e) {
+    showError('Could not apply the enhancement.');
+    $('enhance-status').textContent = '';
+  }
+});
+
+/* ---------- Crop (uses the existing global crop state + its own picker) ---------- */
+function initCropPage() {
+  if (cropPickerInit) return;
+  cropPickerInit = true;
+  cropPicker = mountPicker('crop-picker-mount', { multi: true, onChange: refreshCropPreview });
+}
+
+$('crop-apply-btn').addEventListener('click', async () => {
+  const sel = cropPicker.getSelected();
+  if (!sel.size) { showError('Select at least one image above.'); return; }
+  const ratio = currentCropRatio();
+  if (!ratio) { showError('Pick a crop ratio other than "Original" first.'); return; }
+  hideError();
+  $('crop-status').textContent = 'Applying…';
+  const body = {
+    scope: 'products',
+    product_ids: [...new Set(sel.values())],
+    image_ids: [...sel.keys()],
+    quality: parseInt(qualityEl.value, 10),
+    max_width: null,
+    max_height: null,
+    force_webp: forceWebpEl.checked,
+    redo: true,
+    crop_ratio: ratio,
+  };
+  try {
+    const res = await apiFetch('/api/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!data.ok) {
+      if (data.quota_exceeded) { window.location.href = '/plans'; return; }
+      showError(data.error);
+      $('crop-status').textContent = '';
+      return;
+    }
+    $('crop-status').textContent = 'Started — check Compress Images for progress.';
+  } catch (e) {
+    showError('Could not start the crop.');
+    $('crop-status').textContent = '';
+  }
+});
+
+
+/* ---------- sidebar nav ---------- */
+document.querySelectorAll('.side-link[data-view]').forEach(t => {
   t.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.side-link[data-view]').forEach(x => x.classList.remove('active'));
     t.classList.add('active');
-    const isReport = t.dataset.view === 'report';
-    $('view-run').classList.toggle('hidden', isReport);
-    $('view-report').classList.toggle('hidden', !isReport);
-    if (isReport) {
+    const view = t.dataset.view;
+    $('view-run').classList.toggle('hidden', view !== 'run');
+    $('view-ai').classList.toggle('hidden', view !== 'ai');
+    $('view-ai-report').classList.toggle('hidden', view !== 'ai-report');
+    $('view-report').classList.toggle('hidden', view !== 'report');
+    $('view-enhance').classList.toggle('hidden', view !== 'enhance');
+    $('view-crop').classList.toggle('hidden', view !== 'crop');
+    $('view-resize').classList.toggle('hidden', view !== 'resize');
+    $('view-draw').classList.toggle('hidden', view !== 'draw');
+    $('view-color-bg').classList.toggle('hidden', view !== 'color-bg');
+    $('view-generate').classList.toggle('hidden', view !== 'generate');
+
+    document.querySelector('.content-inner').classList.toggle(
+      'wide', ['enhance', 'crop', 'resize', 'draw', 'color-bg', 'generate'].includes(view)
+    );
+
+    if (view === 'draw') initDrawCanvas();
+    if (view === 'enhance') initEnhancePage();
+    if (view === 'crop') initCropPage();
+    if (view === 'resize') initResizePage();
+    if (view === 'color-bg') initColorbgPage();
+    if (view === 'generate') initGeneratePage();
+
+    if (view === 'ai' && t.dataset.aiMode) {
+      const wantRename = t.dataset.aiMode === 'name';
+      aiUpdateAlt.checked = !wantRename;
+      aiRenameFiles.checked = wantRename;
+    }
+    if (view === 'ai' && !collectionsLoaded) loadCollections();
+    if (view === 'ai-report') {
+      if (!collectionsLoaded) loadCollections();
+      if (!aiReportData) loadAiReport();
+    }
+    if (view === 'report') {
       if (!collectionsLoaded) loadCollections();
       if (!reportData) loadReport();
     }
@@ -431,25 +1727,36 @@ document.querySelectorAll('.seg[data-scope]').forEach(btn => {
   });
 });
 
+document.querySelectorAll('.seg[data-ai-scope]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.seg[data-ai-scope]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    aiScope = btn.dataset.aiScope;
+    aiCollectionArea.classList.toggle('hidden', aiScope !== 'collection');
+    if (aiScope === 'collection' && !collectionsLoaded) loadCollections();
+  });
+});
+
 async function loadCollections() {
   try {
-    const res = await fetch('/api/collections');
+    const res = await apiFetch('/api/collections');
     const data = await res.json();
     if (!data.ok) { showError(data.error); return; }
     collectionsLoaded = true;
-    collectionSelect.innerHTML = '<option value="">Choose a collection…</option>';
+    cachedCollections = data.collections;
     reportCollection.innerHTML = '<option value="">Entire store</option>';
+    aiReportCollection.innerHTML = '<option value="">Entire store</option>';
+    populateCollectionSelect(collectionSelect, data.collections);
+    populateCollectionSelect(aiCollectionSelect, data.collections);
+    extraCollectionSelects.forEach(sel => populateCollectionSelect(sel, data.collections));
     data.collections.forEach(c => {
       const label = c.products_count != null ? `${c.title} (${c.products_count})` : c.title;
-      [collectionSelect, reportCollection].forEach(sel => {
+      [reportCollection, aiReportCollection].forEach(sel => {
         const opt = document.createElement('option');
         opt.value = c.id; opt.textContent = label;
         sel.appendChild(opt);
       });
     });
-    if (!data.collections.length) {
-      collectionSelect.innerHTML = '<option value="">No collections found</option>';
-    }
   } catch (e) { showError('Could not load collections.'); }
 }
 
@@ -457,14 +1764,19 @@ collectionSelect.addEventListener('change', () => {
   if (collectionSelect.value) loadProducts(collectionSelect.value);
 });
 
+aiCollectionSelect.addEventListener('change', () => {
+  if (aiCollectionSelect.value) aiLoadProducts(aiCollectionSelect.value);
+});
+
 async function loadProducts(collectionId) {
   productList.innerHTML = '<div class="picker-empty">Loading products…</div>';
   pickerCount.textContent = 'Loading…';
   try {
-    const res = await fetch('/api/products?collection_id=' + encodeURIComponent(collectionId));
+    const res = await apiFetch('/api/products?collection_id=' + encodeURIComponent(collectionId));
     const data = await res.json();
     if (!data.ok) { showError(data.error); productList.innerHTML = ''; return; }
     products = data.products;
+    imageOverrides.clear();
     const pending = products.filter(p => !p.fully_done);
     selected = new Set((pending.length ? pending : products).map(p => p.id));
     renderProducts();
@@ -478,7 +1790,7 @@ function renderProducts() {
   }
   productList.innerHTML = '';
   products.forEach(p => {
-    const row = document.createElement('label');
+    const row = document.createElement('div');
     row.className = 'p-row' + (p.fully_done ? ' is-done' : '');
 
     const cb = document.createElement('input');
@@ -492,12 +1804,18 @@ function renderProducts() {
     const img = document.createElement('img');
     img.className = 'p-thumb';
     if (p.thumbnail) img.src = thumb(p.thumbnail, 72);
+    img.addEventListener('click', () => cb.click());
 
     const title = document.createElement('span');
     title.className = 'p-title';
     title.textContent = p.title;
+    title.addEventListener('click', () => cb.click());
 
     row.append(cb, img, title);
+
+    const customBadge = document.createElement('span');
+    customBadge.className = 'badge partial hidden';
+    customBadge.textContent = 'custom pick';
 
     if (p.fully_done) {
       const b = document.createElement('span');
@@ -507,30 +1825,158 @@ function renderProducts() {
       b.className = 'badge partial'; b.textContent = `${p.done_count}/${p.image_count} done`;
       row.appendChild(b);
     }
+    row.appendChild(customBadge);
 
     const meta = document.createElement('span');
     meta.className = 'p-meta';
     meta.textContent = p.image_count + (p.image_count === 1 ? ' image' : ' images');
     row.appendChild(meta);
 
+    const expandBtn = document.createElement('button');
+    expandBtn.type = 'button';
+    expandBtn.className = 'p-expand';
+    expandBtn.textContent = '\u25B8 images';
+    if (!p.images || !p.images.length) expandBtn.classList.add('hidden');
+    row.appendChild(expandBtn);
+
     productList.appendChild(row);
+
+    const acc = document.createElement('div');
+    acc.className = 'p-images hidden';
+    productList.appendChild(acc);
+
+    let imagesBuilt = false;
+    expandBtn.addEventListener('click', () => {
+      const isOpen = !acc.classList.contains('hidden');
+      if (isOpen) {
+        acc.classList.add('hidden');
+        expandBtn.classList.remove('open');
+        expandBtn.textContent = '\u25B8 images';
+      } else {
+        if (!imagesBuilt) { renderProductImages(p, acc, customBadge); imagesBuilt = true; }
+        acc.classList.remove('hidden');
+        expandBtn.classList.add('open');
+        expandBtn.textContent = '\u25BE images';
+      }
+    });
+
+    customBadge.classList.toggle('hidden', !imageOverrides.has(p.id));
   });
   updateCount();
+}
+
+function renderProductImages(p, container, customBadge) {
+  container.innerHTML = '';
+  const allIds = p.images.map(im => im.id);
+  const chosen = imageOverrides.get(p.id) || new Set(allIds);
+  p.images.forEach(im => {
+    const cell = document.createElement('label');
+    cell.className = 'pi-cell';
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = chosen.has(im.id);
+    cb.addEventListener('change', () => {
+      let set = imageOverrides.get(p.id);
+      if (!set) { set = new Set(allIds); imageOverrides.set(p.id, set); }
+      cb.checked ? set.add(im.id) : set.delete(im.id);
+      if (set.size === allIds.length) imageOverrides.delete(p.id);
+      customBadge.classList.toggle('hidden', !imageOverrides.has(p.id));
+      updateCount();
+    });
+
+    const img = document.createElement('img');
+    img.className = 'pi-thumb' + (im.optimized ? ' is-optimized' : '');
+    img.src = thumb(im.src, 60);
+    img.loading = 'lazy';
+    img.alt = '';
+
+    const status = document.createElement('span');
+    status.className = 'pi-status';
+    status.textContent = im.optimized ? 'done' : 'pending';
+
+    cell.append(cb, img, status);
+    container.appendChild(cell);
+  });
 }
 
 function updateCount() {
   if (!products.length) { pickerCount.textContent = 'No products loaded'; return; }
   const chosen = products.filter(p => selected.has(p.id));
-  const images = chosen.reduce((s, p) => s + p.image_count, 0);
-  const done = chosen.reduce((s, p) => s + p.done_count, 0);
+  let images = 0, done = 0, customCount = 0;
+  chosen.forEach(p => {
+    const override = imageOverrides.get(p.id);
+    if (override) { images += override.size; customCount++; }
+    else { images += p.image_count; done += p.done_count; }
+  });
   pickerCount.innerHTML =
     `<b>${selected.size}</b> of ${products.length} products · ${images - done} images to do` +
-    (done ? ` <span class="done-note">· ${done} already optimized</span>` : '');
+    (done ? ` <span class="done-note">· ${done} already optimized</span>` : '') +
+    (customCount ? ` <span class="done-note">· ${customCount} with custom image picks</span>` : '');
 }
 
-$('select-all').addEventListener('click', () => { selected = new Set(products.map(p => p.id)); renderProducts(); });
-$('select-none').addEventListener('click', () => { selected = new Set(); renderProducts(); });
+$('select-all').addEventListener('click', () => { selected = new Set(products.map(p => p.id)); imageOverrides.clear(); renderProducts(); });
+$('select-none').addEventListener('click', () => { selected = new Set(); imageOverrides.clear(); renderProducts(); });
+
+/* ---------- AI view: its own collection/product picker ---------- */
+async function aiLoadProducts(collectionId) {
+  aiProductList.innerHTML = '<div class="picker-empty">Loading products…</div>';
+  aiPickerCount.textContent = 'Loading…';
+  try {
+    const res = await apiFetch('/api/products?collection_id=' + encodeURIComponent(collectionId));
+    const data = await res.json();
+    if (!data.ok) { showError(data.error); aiProductList.innerHTML = ''; return; }
+    aiProducts = data.products;
+    aiSelected = new Set(aiProducts.map(p => p.id));
+    aiRenderProducts();
+  } catch (e) { showError('Could not load products.'); }
+}
+
+function aiRenderProducts() {
+  if (!aiProducts.length) {
+    aiProductList.innerHTML = '<div class="picker-empty">This collection has no products.</div>';
+    aiUpdateCount(); return;
+  }
+  aiProductList.innerHTML = '';
+  aiProducts.forEach(p => {
+    const row = document.createElement('label');
+    row.className = 'p-row';
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = aiSelected.has(p.id);
+    cb.addEventListener('change', () => {
+      cb.checked ? aiSelected.add(p.id) : aiSelected.delete(p.id);
+      aiUpdateCount();
+    });
+
+    const img = document.createElement('img');
+    img.className = 'p-thumb';
+    if (p.thumbnail) img.src = thumb(p.thumbnail, 72);
+
+    const title = document.createElement('span');
+    title.className = 'p-title';
+    title.textContent = p.title;
+
+    const meta = document.createElement('span');
+    meta.className = 'p-meta';
+    meta.textContent = p.image_count + (p.image_count === 1 ? ' image' : ' images');
+
+    row.append(cb, img, title, meta);
+    aiProductList.appendChild(row);
+  });
+  aiUpdateCount();
+}
+
+function aiUpdateCount() {
+  if (!aiProducts.length) { aiPickerCount.textContent = 'No products loaded'; return; }
+  aiPickerCount.innerHTML = `<b>${aiSelected.size}</b> of ${aiProducts.length} products selected`;
+}
+
+$('ai-select-all').addEventListener('click', () => { aiSelected = new Set(aiProducts.map(p => p.id)); aiRenderProducts(); });
+$('ai-select-none').addEventListener('click', () => { aiSelected = new Set(); aiRenderProducts(); });
 $('select-pending').addEventListener('click', () => {
+  imageOverrides.clear();
   selected = new Set(products.filter(p => !p.fully_done).map(p => p.id)); renderProducts();
 });
 
@@ -551,7 +1997,7 @@ async function loadReport() {
   reportList.innerHTML = '<div class="picker-empty">Loading — this reads every product, so give it a moment…</div>';
   const cid = reportCollection.value;
   try {
-    const res = await fetch('/api/report' + (cid ? '?collection_id=' + encodeURIComponent(cid) : ''));
+    const res = await apiFetch('/api/report' + (cid ? '?collection_id=' + encodeURIComponent(cid) : ''));
     const data = await res.json();
     if (!data.ok) { showError(data.error); reportList.innerHTML = ''; return; }
     hideError();
@@ -606,7 +2052,7 @@ function renderReport() {
     strip.className = 'r-images';
     p.shown.forEach(im => {
       const cell = document.createElement('div');
-      cell.className = 'r-img ' + (im.optimized ? 'done' : 'pending');
+      cell.className = 'r-img ' + (im.optimized ? 'done' : 'pending') + (rePick.has(im.id) ? ' picked' : '');
 
       const img = document.createElement('img');
       img.src = thumb(im.src, 120);
@@ -617,11 +2063,18 @@ function renderReport() {
       mark.className = 'r-mark ' + (im.optimized ? 'done' : 'pending');
       mark.textContent = im.optimized ? '✓' : '·';
 
-      cell.title = im.optimized
+      cell.title = (im.optimized
         ? `Optimized ${new Date(im.optimized_at).toLocaleString()}`
         : (im.known_but_changed
             ? 'Changed since it was optimized — will be processed again'
-            : 'Not optimized yet');
+            : 'Not optimized yet')) + ' — click to pick for re-optimizing';
+
+      cell.addEventListener('click', () => {
+        if (rePick.has(im.id)) rePick.delete(im.id);
+        else rePick.set(im.id, p.id);
+        cell.classList.toggle('picked');
+        updateReoptCount();
+      });
 
       cell.append(img, mark);
       strip.appendChild(cell);
@@ -631,10 +2084,52 @@ function renderReport() {
   });
 }
 
+function updateReoptCount() {
+  const n = rePick.size;
+  $('reopt-count').textContent = n
+    ? `${n} image${n === 1 ? '' : 's'} selected for re-optimizing`
+    : 'Click any image below to pick it for re-optimizing';
+  $('reopt-btn').disabled = !n;
+}
+
+$('reopt-clear').addEventListener('click', () => { rePick.clear(); updateReoptCount(); renderReport(); });
+
+$('reopt-btn').addEventListener('click', async () => {
+  if (!rePick.size) return;
+  hideError();
+  const body = {
+    scope: 'products',
+    product_ids: [...new Set(rePick.values())],
+    image_ids: [...rePick.keys()],
+    quality: parseInt(qualityEl.value, 10),
+    max_width: null,
+    max_height: null,
+    force_webp: forceWebpEl.checked,
+    redo: false,
+    crop_ratio: currentCropRatio(),
+  };
+  const res = await apiFetch('/api/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!data.ok) {
+    if (data.quota_exceeded) { window.location.href = '/plans'; return; }
+    showError(data.error);
+    return;
+  }
+  rePick.clear();
+  document.querySelector('.side-link[data-view="run"]').click();
+  startBtn.disabled = true;
+  stopBtn.style.display = 'inline-block';
+  poll();
+});
+
 $('reset-ledger').addEventListener('click', async () => {
   if (!confirm('Forget which images have been optimized? The next run will process everything again.')) return;
   try {
-    const res = await fetch('/api/ledger', { method: 'DELETE' });
+    const res = await apiFetch('/api/ledger', { method: 'DELETE' });
     const data = await res.json();
     if (!data.ok) { showError(data.error); return; }
     hideError();
@@ -643,44 +2138,219 @@ $('reset-ledger').addEventListener('click', async () => {
   } catch (e) { showError('Could not reset the record.'); }
 });
 
+/* ---------- AI label report ---------- */
+document.querySelectorAll('.seg[data-ai-report-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.seg[data-ai-report-filter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    aiReportFilter = btn.dataset.aiReportFilter;
+    renderAiReport();
+  });
+});
+
+$('ai-report-refresh').addEventListener('click', loadAiReport);
+aiReportCollection.addEventListener('change', loadAiReport);
+
+async function loadAiReport() {
+  aiReportList.innerHTML = '<div class="picker-empty">Loading — this reads every product, so give it a moment…</div>';
+  const cid = aiReportCollection.value;
+  try {
+    const res = await apiFetch('/api/ai/report' + (cid ? '?collection_id=' + encodeURIComponent(cid) : ''));
+    const data = await res.json();
+    if (!data.ok) { showError(data.error); aiReportList.innerHTML = ''; return; }
+    hideError();
+    aiReportData = data;
+    const t = data.totals;
+    $('ai-rep-products').textContent = t.products;
+    $('ai-rep-images').textContent = t.images;
+    $('ai-rep-labeled').textContent = t.labeled;
+    $('ai-rep-pending').textContent = t.pending;
+    $('ai-report-bar').style.width = (t.images ? Math.round(100 * t.labeled / t.images) : 0) + '%';
+    renderAiReport();
+  } catch (e) { showError('Could not load the report.'); }
+}
+
+function renderAiReport() {
+  if (!aiReportData) return;
+  const wanted = aiReportData.products
+    .map(p => ({
+      ...p,
+      shown: p.images.filter(im =>
+        aiReportFilter === 'all' ? true :
+        aiReportFilter === 'done' ? im.labeled : !im.labeled),
+    }))
+    .filter(p => p.shown.length);
+
+  if (!wanted.length) {
+    aiReportList.innerHTML = '<div class="picker-empty">Nothing matches this filter.</div>';
+    return;
+  }
+
+  aiReportList.innerHTML = '';
+  wanted.forEach(p => {
+    const box = document.createElement('div');
+    box.className = 'r-product';
+
+    const head = document.createElement('div');
+    head.className = 'r-head';
+    const title = document.createElement('span');
+    title.className = 'r-title';
+    title.textContent = p.title;
+
+    const badge = document.createElement('span');
+    const total = p.images.length;
+    if (p.labeled_count === total) { badge.className = 'badge'; badge.textContent = 'all labeled'; }
+    else if (p.labeled_count === 0) { badge.className = 'badge none'; badge.textContent = 'none yet'; }
+    else { badge.className = 'badge partial'; badge.textContent = `${p.labeled_count}/${total} done`; }
+
+    head.append(title, badge);
+    box.appendChild(head);
+
+    const strip = document.createElement('div');
+    strip.className = 'r-images';
+    p.shown.forEach(im => {
+      const cell = document.createElement('div');
+      cell.className = 'r-img ' + (im.labeled ? 'done' : 'pending');
+
+      const img = document.createElement('img');
+      img.src = thumb(im.src, 120);
+      img.loading = 'lazy';
+      img.alt = im.current_alt || '';
+
+      const mark = document.createElement('span');
+      mark.className = 'r-mark ' + (im.labeled ? 'done' : 'pending');
+      mark.textContent = im.labeled ? '✓' : '·';
+
+      const altPart = im.current_alt ? `ALT: "${im.current_alt}"` : 'No ALT text set';
+      cell.title = im.labeled
+        ? `${altPart}\nLabeled by this app ${new Date(im.labeled_at).toLocaleString()}${im.renamed ? ' (renamed)' : ''}`
+        : `${altPart}\nNot labeled by this app`;
+
+      cell.append(img, mark);
+      strip.appendChild(cell);
+    });
+    box.appendChild(strip);
+    aiReportList.appendChild(box);
+  });
+}
+
+$('ai-reset-ledger').addEventListener('click', async () => {
+  if (!confirm('Forget the AI label record? This does not undo any ALT text or renames already applied — it only resets the "labeled by this app" bookkeeping.')) return;
+  try {
+    const res = await apiFetch('/api/ai/ledger', { method: 'DELETE' });
+    const data = await res.json();
+    if (!data.ok) { showError(data.error); return; }
+    hideError();
+    loadAiReport();
+  } catch (e) { showError('Could not reset the record.'); }
+});
+
 /* ---------- job ---------- */
 async function testConnection() {
   connDot.className = 'status-dot';
   connText.textContent = 'Testing…';
   try {
-    const res = await fetch('/api/test-connection', { method: 'POST' });
+    const res = await apiFetch('/api/test-connection', { method: 'POST' });
     const data = await res.json();
     if (data.ok) {
       connDot.className = 'status-dot live';
       connText.textContent = 'Connected';
       shopTag.textContent = data.shop_name;
+      installArea.classList.add('hidden');
+      logoutBtn.style.display = 'inline-block';
       hideError();
+      loadUsage();
     } else {
       connDot.className = 'status-dot err';
       connText.textContent = 'Not connected';
+      shopTag.textContent = 'not connected';
+      installArea.classList.remove('hidden');
+      logoutBtn.style.display = 'none';
       showError(data.error);
     }
   } catch (e) {
     connDot.className = 'status-dot err';
     connText.textContent = 'Not connected';
+    installArea.classList.remove('hidden');
+    logoutBtn.style.display = 'none';
     showError('Could not reach the server.');
   }
+}
+
+function normalizeShop(raw) {
+  let shop = raw.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  if (shop && !shop.endsWith('.myshopify.com')) shop += '.myshopify.com';
+  return shop;
+}
+
+function goInstall() {
+  const shop = normalizeShop(installShop.value);
+  if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) {
+    showError('Enter a valid store domain, e.g. your-store.myshopify.com');
+    return;
+  }
+  window.location.href = '/auth?shop=' + encodeURIComponent(shop);
+}
+
+installBtn.addEventListener('click', goInstall);
+installShop.addEventListener('keydown', e => { if (e.key === 'Enter') goInstall(); });
+
+logoutBtn.addEventListener('click', async () => {
+  await apiFetch('/auth/logout', { method: 'POST' });
+  testConnection();
+});
+
+/* ---------- usage ---------- */
+async function loadUsage() {
+  try {
+    const res = await apiFetch('/api/billing/usage');
+    const data = await res.json();
+    if (!data.ok) return;
+    const total = data.free + data.credits;
+    const doneCount = Math.min(data.used, total);
+    usageText.textContent = data.credits
+      ? `${data.free} free + ${data.credits} bought`
+      : `${data.free} free images`;
+    usageCount.textContent = `${data.remaining} left`;
+    usageBar.style.width = (total ? Math.round(100 * doneCount / total) : 100) + '%';
+    usageBar.classList.toggle('moss', data.remaining > 0);
+  } catch (e) { /* non-critical — leave the panel as-is */ }
 }
 
 async function startJob() {
   hideError();
   const body = {
     quality: parseInt(qualityEl.value, 10),
-    max_width: maxWidthEl.value ? parseInt(maxWidthEl.value, 10) : null,
+    max_width: null,
+    max_height: null,
     force_webp: forceWebpEl.checked,
     redo: redoEl.checked,
     scope: scope,
+    crop_ratio: currentCropRatio(),
   };
 
   if (scope === 'collection') {
     if (!collectionSelect.value) { showError('Choose a collection first.'); return; }
     if (!selected.size) { showError('Select at least one product.'); return; }
-    if (selected.size === products.length) {
+
+    const hasCustomPicks = [...selected].some(id => imageOverrides.has(id));
+
+    if (hasCustomPicks) {
+      // At least one selected product has specific images picked rather than
+      // "all images" — send an explicit image_ids list covering every
+      // selected product (its override set, or all its images if it wasn't
+      // customized) so nothing outside the picks gets touched.
+      body.scope = 'products';
+      body.product_ids = [...selected];
+      const imageIds = [];
+      selected.forEach(pid => {
+        const product = products.find(pr => pr.id === pid);
+        if (!product) return;
+        const chosen = imageOverrides.get(pid);
+        (chosen ? [...chosen] : product.images.map(im => im.id)).forEach(iid => imageIds.push(iid));
+      });
+      body.image_ids = imageIds;
+    } else if (selected.size === products.length) {
       body.collection_id = collectionSelect.value;
     } else {
       body.scope = 'products';
@@ -688,19 +2358,23 @@ async function startJob() {
     }
   }
 
-  const res = await fetch('/api/start', {
+  const res = await apiFetch('/api/start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
   const data = await res.json();
-  if (!data.ok) { showError(data.error); return; }
+  if (!data.ok) {
+    if (data.quota_exceeded) { window.location.href = '/plans'; return; }
+    showError(data.error);
+    return;
+  }
   startBtn.disabled = true;
   stopBtn.style.display = 'inline-block';
   poll();
 }
 
-async function stopJob() { await fetch('/api/stop', { method: 'POST' }); }
+async function stopJob() { await apiFetch('/api/stop', { method: 'POST' }); }
 
 let polling = null;
 let wasRunning = false;
@@ -715,7 +2389,7 @@ function renderLogLine(line) {
 
 async function poll() {
   if (polling) clearTimeout(polling);
-  const res = await fetch('/api/status');
+  const res = await apiFetch('/api/status');
   const s = await res.json();
 
   $('mini-products').textContent = `${s.processed_products} / ${s.total_products}`;
@@ -744,14 +2418,300 @@ async function poll() {
     startBtn.disabled = false;
     stopBtn.style.display = 'none';
     if (s.status === 'error') showError('Job failed — check the log for details.');
-    // A finished run changes the report, so drop the cached copy.
-    if (wasRunning) { wasRunning = false; reportData = null; }
+    // A finished run changes the report and usage totals, so drop the cache.
+    if (wasRunning) {
+      wasRunning = false;
+      reportData = null;
+      loadUsage();
+      if (s.quota_exceeded) { setTimeout(() => { window.location.href = '/plans'; }, 1800); }
+    }
   }
 }
+
+/* ---------- AI metadata job ---------- */
+const aiStartBtn = $('ai-start-btn'), aiStopBtn = $('ai-stop-btn');
+const aiUpdateAlt = $('ai-update-alt'), aiRenameFiles = $('ai-rename-files');
+const aiLogEl = $('ai-log');
+let aiPolling = null;
+let aiWasRunning = false;
+
+function aiScopeBody() {
+  const body = { scope: aiScope, update_alt: aiUpdateAlt.checked, rename_files: aiRenameFiles.checked };
+  if (aiScope === 'collection') {
+    if (!aiCollectionSelect.value) { showError('Choose a collection first.'); return null; }
+    if (!aiSelected.size) { showError('Select at least one product.'); return null; }
+    if (aiSelected.size === aiProducts.length) {
+      body.collection_id = aiCollectionSelect.value;
+    } else {
+      body.scope = 'products';
+      body.product_ids = [...aiSelected];
+    }
+  }
+  return body;
+}
+
+async function startAiJob() {
+  hideError();
+  if (!aiUpdateAlt.checked && !aiRenameFiles.checked) {
+    showError('Pick at least one: update ALT text or rename files.');
+    return;
+  }
+  if (aiRenameFiles.checked) {
+    const ok = confirm(
+      'Rename image files?\n\n' +
+      'Re-uploads each image under a new filename — this changes its CDN URL. ' +
+      'Anything linking to the old image URL (other sites, ads, cached pages) breaks; ' +
+      'Shopify does not redirect old URLs to new ones.\n\n' +
+      'Continue?'
+    );
+    if (!ok) return;
+  }
+  const body = aiScopeBody();
+  if (!body) return;
+
+  const res = await apiFetch('/api/ai/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!data.ok) {
+    if (data.quota_exceeded) { window.location.href = '/plans'; return; }
+    showError(data.error);
+    return;
+  }
+  aiStartBtn.disabled = true;
+  aiStopBtn.style.display = 'inline-block';
+  pollAi();
+}
+
+async function stopAiJob() { await apiFetch('/api/ai/stop', { method: 'POST' }); }
+
+async function pollAi() {
+  if (aiPolling) clearTimeout(aiPolling);
+  const res = await apiFetch('/api/ai/status');
+  const s = await res.json();
+
+  $('ai-mini-products').textContent = `${s.processed_products} / ${s.total_products}`;
+  $('ai-mini-alt').textContent = s.updated_alt;
+  $('ai-mini-renamed').textContent = s.renamed_images;
+  $('ai-mini-status').textContent = s.status.charAt(0).toUpperCase() + s.status.slice(1);
+
+  aiLogEl.innerHTML = '';
+  s.log.forEach(line => aiLogEl.appendChild(renderLogLine(line)));
+  aiLogEl.scrollTop = aiLogEl.scrollHeight;
+
+  const running = s.status === 'running';
+  if (running) {
+    aiWasRunning = true;
+    aiPolling = setTimeout(pollAi, 1500);
+  } else {
+    aiStartBtn.disabled = false;
+    aiStopBtn.style.display = 'none';
+    if (s.status === 'error') showError('AI labeling job failed — check the log for details.');
+    if (aiWasRunning) {
+      aiWasRunning = false;
+      aiReportData = null;
+      loadUsage();
+      if (s.quota_exceeded) { setTimeout(() => { window.location.href = '/plans'; }, 1800); }
+    }
+  }
+}
+
+aiStartBtn.addEventListener('click', startAiJob);
+aiStopBtn.addEventListener('click', stopAiJob);
 
 startBtn.addEventListener('click', startJob);
 stopBtn.addEventListener('click', stopJob);
 testBtn.addEventListener('click', testConnection);
+
+/* ---------- Draw (loads the real selected image, saves for real) ---------- */
+let drawInitDone = false;
+let drawPicker = null;
+let drawCanvasEl = null, drawCtx = null;
+let drawHistory = [];
+let drawCurrentImage = null; // { id, productId, src }
+
+function initDrawCanvas() {
+  if (drawInitDone) return;
+  drawInitDone = true;
+
+  drawCanvasEl = $('draw-canvas');
+  drawCtx = drawCanvasEl.getContext('2d');
+  const canvas = drawCanvasEl, ctx = drawCtx;
+  const colorEl = $('draw-color'), sizeEl = $('draw-size'), sizeVal = $('draw-size-val');
+  const toolLabel = $('draw-tool-label');
+  let tool = 'pen';
+  let drawing = false;
+  let startX = 0, startY = 0;
+  let snapshot = null;
+
+  ctx.fillStyle = 'rgba(5,17,22,0.001)';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  drawPushHistory();
+
+  drawPicker = mountPicker('draw-picker-mount', { multi: false, onChange: onDrawSelectionChange });
+
+  function pos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (clientX - rect.left) * (canvas.width / rect.width),
+      y: (clientY - rect.top) * (canvas.height / rect.height),
+    };
+  }
+
+  document.querySelectorAll('#draw-tools .seg').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#draw-tools .seg').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      tool = btn.dataset.tool;
+      toolLabel.textContent = btn.textContent + ' selected';
+    });
+  });
+
+  sizeEl.addEventListener('input', () => sizeVal.textContent = sizeEl.value);
+
+  function startDraw(e) {
+    e.preventDefault();
+    const p = pos(e);
+    drawing = true;
+    startX = p.x; startY = p.y;
+    ctx.strokeStyle = colorEl.value;
+    ctx.fillStyle = colorEl.value;
+    ctx.lineWidth = parseInt(sizeEl.value, 10);
+
+    if (tool === 'pen' || tool === 'eraser') {
+      ctx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+    } else if (tool === 'line' || tool === 'rect') {
+      snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    } else if (tool === 'text') {
+      drawing = false;
+      const txt = prompt('Text to place on the image:');
+      if (txt) {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.font = (14 + parseInt(sizeEl.value, 10) * 2) + 'px Karla, sans-serif';
+        ctx.fillText(txt, p.x, p.y);
+        drawPushHistory();
+      }
+    }
+  }
+
+  function moveDraw(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = pos(e);
+    if (tool === 'pen' || tool === 'eraser') {
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    } else if (tool === 'line') {
+      ctx.putImageData(snapshot, 0, 0);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    } else if (tool === 'rect') {
+      ctx.putImageData(snapshot, 0, 0);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeRect(startX, startY, p.x - startX, p.y - startY);
+    }
+  }
+
+  function endDraw() {
+    if (!drawing) return;
+    drawing = false;
+    drawPushHistory();
+  }
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', moveDraw);
+  window.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('touchstart', startDraw, { passive: false });
+  canvas.addEventListener('touchmove', moveDraw, { passive: false });
+  canvas.addEventListener('touchend', endDraw);
+
+  $('draw-undo').addEventListener('click', () => {
+    if (drawHistory.length > 1) {
+      drawHistory.pop();
+      ctx.putImageData(drawHistory[drawHistory.length - 1], 0, 0);
+    }
+  });
+  $('draw-clear').addEventListener('click', () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawPushHistory();
+  });
+  $('draw-download').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.download = 'marked-up-image.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  });
+}
+
+function drawPushHistory() {
+  drawHistory.push(drawCtx.getImageData(0, 0, drawCanvasEl.width, drawCanvasEl.height));
+  if (drawHistory.length > 20) drawHistory.shift();
+}
+
+function onDrawSelectionChange() {
+  const im = drawPicker.firstSelectedImage();
+  drawCurrentImage = im;
+  $('draw-save-product').disabled = !im;
+  $('draw-save-product').title = im ? '' : 'Select an image above first';
+  if (!im) {
+    drawCtx.clearRect(0, 0, drawCanvasEl.width, drawCanvasEl.height);
+    drawHistory = [];
+    drawPushHistory();
+    return;
+  }
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    drawCtx.clearRect(0, 0, drawCanvasEl.width, drawCanvasEl.height);
+    const scale = Math.min(drawCanvasEl.width / img.width, drawCanvasEl.height / img.height);
+    const w = img.width * scale, h = img.height * scale;
+    const x = (drawCanvasEl.width - w) / 2, y = (drawCanvasEl.height - h) / 2;
+    drawCtx.drawImage(img, x, y, w, h);
+    drawHistory = [];
+    drawPushHistory();
+  };
+  img.onerror = () => showError('Could not load that image onto the canvas.');
+  img.src = thumb(im.src, 800);
+}
+
+$('draw-save-product').addEventListener('click', async () => {
+  if (!drawCurrentImage) return;
+  hideError();
+  $('draw-status').textContent = 'Saving…';
+  try {
+    const res = await apiFetch('/api/edit/draw', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        product_id: drawCurrentImage.productId,
+        image_id: drawCurrentImage.id,
+        image_data_url: drawCanvasEl.toDataURL('image/png'),
+      }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      if (data.quota_exceeded) { window.location.href = '/plans'; return; }
+      showError(data.error);
+      $('draw-status').textContent = '';
+      return;
+    }
+    $('draw-status').textContent = 'Saved to your store.';
+    loadUsage();
+  } catch (e) {
+    showError('Could not save the drawing.');
+    $('draw-status').textContent = '';
+  }
+});
 
 testConnection();
 poll();

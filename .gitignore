@@ -1,5 +1,12 @@
+.env
 venv/
+__pycache__/
+*.pyc
+shops.db
+shops.db-shm
+shops.db-walvenv/
 .env
 __pycache__/
 *.pyc
 .DS_Store
+shops.db
