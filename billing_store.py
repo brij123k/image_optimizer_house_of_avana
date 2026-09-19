@@ -107,12 +107,3 @@ def list_purchases(shop):
         "WHERE shop = ? ORDER BY created_at DESC", (shop,)
     ).fetchall()
     return [dict(r) for r in rows]
-
-
-def delete_shop_data(shop):
-    """Erases every billing record for a shop — called from the shop/redact
-    GDPR webhook once Shopify confirms the merchant's data should be purged."""
-    c = _conn()
-    c.execute("DELETE FROM usage WHERE shop = ?", (shop,))
-    c.execute("DELETE FROM purchases WHERE shop = ?", (shop,))
-    c.commit()

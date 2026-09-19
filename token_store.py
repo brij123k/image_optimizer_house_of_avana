@@ -9,7 +9,12 @@ import sqlite3
 import threading
 from datetime import datetime, timezone
 
-DB_PATH = os.environ.get("SHOP_DB_PATH", "shops.db")
+# Anchored to this file's own directory, not the current working directory —
+# a relative path here would silently try to open/create shops.db wherever
+# the process happened to be launched *from*, which breaks the moment the
+# server is started from a different terminal/cwd than usual.
+_DEFAULT_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "shops.db")
+DB_PATH = os.environ.get("SHOP_DB_PATH") or _DEFAULT_DB_PATH
 
 _LOCAL = threading.local()
 
@@ -20,10 +25,6 @@ def _conn():
         new_file = not os.path.exists(DB_PATH)
         conn = sqlite3.connect(DB_PATH, timeout=10)
         conn.row_factory = sqlite3.Row
-        # WAL lets one thread write while others read without "database is
-        # locked" errors — matters once multiple merchants hit the app
-        # (and multiple gunicorn workers) at the same time.
-        conn.execute("PRAGMA journal_mode=WAL")
         if new_file:
             try:
                 os.chmod(DB_PATH, 0o600)
@@ -38,6 +39,11 @@ def _conn():
                 updated_at    TEXT NOT NULL
             )
         """)
+        # Expiring offline tokens: added later, so migrate older DBs in place.
+        cols = {r["name"] for r in conn.execute("PRAGMA table_info(shops)")}
+        for col in ("refresh_token", "expires_at", "refresh_expires_at"):
+            if col not in cols:
+                conn.execute(f"ALTER TABLE shops ADD COLUMN {col} TEXT")
         conn.commit()
         _LOCAL.conn = conn
     return _LOCAL.conn
@@ -49,18 +55,24 @@ def conn():
     return _conn()
 
 
-def save_shop(shop, access_token, scope=None):
-    """Insert or update a shop's token. Re-installing overwrites the old one."""
+def save_shop(shop, access_token, scope=None, refresh_token=None,
+              expires_at=None, refresh_expires_at=None):
+    """Insert or update a shop's token. Re-installing overwrites the old one.
+    expires_at / refresh_expires_at are ISO timestamps (expiring offline tokens)."""
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     conn = _conn()
     conn.execute("""
-        INSERT INTO shops (shop, access_token, scope, installed_at, updated_at)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO shops (shop, access_token, scope, installed_at, updated_at,
+                           refresh_token, expires_at, refresh_expires_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(shop) DO UPDATE SET
-            access_token = excluded.access_token,
-            scope        = excluded.scope,
-            updated_at   = excluded.updated_at
-    """, (shop, access_token, scope, now, now))
+            access_token       = excluded.access_token,
+            scope              = COALESCE(excluded.scope, shops.scope),
+            updated_at         = excluded.updated_at,
+            refresh_token      = excluded.refresh_token,
+            expires_at         = excluded.expires_at,
+            refresh_expires_at = excluded.refresh_expires_at
+    """, (shop, access_token, scope, now, now, refresh_token, expires_at, refresh_expires_at))
     conn.commit()
 
 

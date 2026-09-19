@@ -36,33 +36,27 @@ GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_M
 MIME_BY_FORMAT = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp", "GIF": "image/gif"}
 EXT_BY_FORMAT = {"JPEG": "jpg", "PNG": "png", "WEBP": "webp", "GIF": "gif"}
 
-# Job state, keyed by shop domain — see app.py's _job_state for why this
-# can't be one shared global dict once more than one merchant uses the app.
-_JOBS_LOCK = threading.Lock()
-_JOBS = {}
+STATE_LOCK = threading.Lock()
+STATE = {
+    "status": "idle",  # idle | running | done | error | stopped
+    "started_at": None,
+    "finished_at": None,
+    "total_products": 0,
+    "processed_products": 0,
+    "updated_alt": 0,
+    "renamed_images": 0,
+    "failed_products": 0,
+    "log": [],
+    "stop_requested": False,
+    "quota_exceeded": False,
+}
 
 
-def _blank_state():
-    return {
-        "status": "idle",  # idle | running | done | error | stopped
-        "started_at": None,
-        "finished_at": None,
-        "total_products": 0,
-        "processed_products": 0,
-        "updated_alt": 0,
-        "renamed_images": 0,
-        "failed_products": 0,
-        "log": [],
-        "stop_requested": False,
-        "quota_exceeded": False,
-    }
-
-
-def _job_state(shop):
-    with _JOBS_LOCK:
-        if shop not in _JOBS:
-            _JOBS[shop] = _blank_state()
-        return _JOBS[shop]
+def _log(msg):
+    stamp = datetime.now().strftime("%H:%M:%S")
+    with STATE_LOCK:
+        STATE["log"].append(f"[{stamp}] {msg}")
+        STATE["log"] = STATE["log"][-300:]
 
 
 def _gemini_key():
@@ -134,16 +128,8 @@ LEDGER_FLUSH_EVERY = 25
 
 def run_ai_job(domain, token, scope="store", collection_id=None, product_ids=None,
                 update_alt=True, rename_files=False):
-    state = _job_state(domain)
-
-    def _log(msg):
-        stamp = datetime.now().strftime("%H:%M:%S")
-        with _JOBS_LOCK:
-            state["log"].append(f"[{stamp}] {msg}")
-            state["log"] = state["log"][-300:]
-
-    with _JOBS_LOCK:
-        state.update({
+    with STATE_LOCK:
+        STATE.update({
             "status": "running",
             "started_at": datetime.now().isoformat(timespec="seconds"),
             "finished_at": None,
@@ -178,8 +164,8 @@ def run_ai_job(domain, token, scope="store", collection_id=None, product_ids=Non
         products = _resolve_products(client, scope, collection_id, product_ids)
         products = [p for p in products if p.get("images")]
 
-        with _JOBS_LOCK:
-            state["total_products"] = len(products)
+        with STATE_LOCK:
+            STATE["total_products"] = len(products)
         total_images = sum(len(p["images"]) for p in products)
         _log(f"Found {len(products)} products with images to label.")
 
@@ -191,9 +177,9 @@ def run_ai_job(domain, token, scope="store", collection_id=None, product_ids=Non
             )
 
         for product in products:
-            with _JOBS_LOCK:
-                if state["stop_requested"]:
-                    state["status"] = "stopped"
+            with STATE_LOCK:
+                if STATE["stop_requested"]:
+                    STATE["status"] = "stopped"
                     flush_ledger()
                     _log("Stopped.")
                     return
@@ -209,8 +195,8 @@ def run_ai_job(domain, token, scope="store", collection_id=None, product_ids=Non
 
                 for idx, image in enumerate(images, start=1):
                     if quota_left <= 0:
-                        with _JOBS_LOCK:
-                            state["quota_exceeded"] = True
+                        with STATE_LOCK:
+                            STATE["quota_exceeded"] = True
                         continue
 
                     touched = False
@@ -225,15 +211,15 @@ def run_ai_job(domain, token, scope="store", collection_id=None, product_ids=Non
                             alt=meta["alt_text"] if update_alt else None,
                         )
                         touched = True
-                        with _JOBS_LOCK:
-                            state["renamed_images"] += 1
+                        with STATE_LOCK:
+                            STATE["renamed_images"] += 1
                             if update_alt:
-                                state["updated_alt"] += 1
+                                STATE["updated_alt"] += 1
                     elif update_alt:
                         client.update_image_alt(product["id"], image["id"], meta["alt_text"])
                         touched = True
-                        with _JOBS_LOCK:
-                            state["updated_alt"] += 1
+                        with STATE_LOCK:
+                            STATE["updated_alt"] += 1
 
                     if touched:
                         # One credit per image touched this run, no matter how many
@@ -254,20 +240,20 @@ def run_ai_job(domain, token, scope="store", collection_id=None, product_ids=Non
                 _log(f"Labeled: {title} — \"{meta['alt_text']}\" ({len(images)} image(s))")
 
             except Exception as exc:  # noqa: BLE001 - keep going on per-product failure
-                with _JOBS_LOCK:
-                    state["failed_products"] += 1
+                with STATE_LOCK:
+                    STATE["failed_products"] += 1
                 _log(f"Failed: {title} — {exc}")
 
             finally:
-                with _JOBS_LOCK:
-                    state["processed_products"] += 1
+                with STATE_LOCK:
+                    STATE["processed_products"] += 1
 
         flush_ledger()
-        with _JOBS_LOCK:
-            state["status"] = "done"
-            state["finished_at"] = datetime.now().isoformat(timespec="seconds")
-            quota_hit = state["quota_exceeded"]
-        summary = f"Done. Labeled {state['processed_products']} products."
+        with STATE_LOCK:
+            STATE["status"] = "done"
+            STATE["finished_at"] = datetime.now().isoformat(timespec="seconds")
+            quota_hit = STATE["quota_exceeded"]
+        summary = f"Done. Labeled {STATE['processed_products']} products."
         if quota_hit:
             summary += " Your plan limit was reached — buy an image pack to label the rest."
         _log(summary)
@@ -277,34 +263,28 @@ def run_ai_job(domain, token, scope="store", collection_id=None, product_ids=Non
             flush_ledger()
         except Exception:  # noqa: BLE001
             pass
-        with _JOBS_LOCK:
-            state["status"] = "error"
-            state["finished_at"] = datetime.now().isoformat(timespec="seconds")
+        with STATE_LOCK:
+            STATE["status"] = "error"
+            STATE["finished_at"] = datetime.now().isoformat(timespec="seconds")
         _log(f"Error: {exc}")
 
 
 @ai_bp.route("/api/ai/status")
 def ai_status():
-    try:
-        domain, _token = current_credentials()
-    except PermissionError:
-        return jsonify(_blank_state())
-    state = _job_state(domain)
-    with _JOBS_LOCK:
-        return jsonify(dict(state))
+    with STATE_LOCK:
+        return jsonify(dict(STATE))
 
 
 @ai_bp.route("/api/ai/start", methods=["POST"])
 def ai_start():
+    with STATE_LOCK:
+        if STATE["status"] == "running":
+            return jsonify({"ok": False, "error": "An AI labeling job is already running."}), 409
+
     try:
         domain, token = current_credentials()
     except PermissionError as exc:
         return jsonify({"ok": False, "error": str(exc)}), 401
-
-    state = _job_state(domain)
-    with _JOBS_LOCK:
-        if state["status"] == "running":
-            return jsonify({"ok": False, "error": "An AI labeling job is already running."}), 409
 
     if not os.environ.get("GEMINI_API_KEY"):
         return jsonify({"ok": False, "error": "Missing GEMINI_API_KEY. Set it in .env."}), 400
@@ -345,13 +325,8 @@ def ai_start():
 
 @ai_bp.route("/api/ai/stop", methods=["POST"])
 def ai_stop():
-    try:
-        domain, _token = current_credentials()
-    except PermissionError as exc:
-        return jsonify({"ok": False, "error": str(exc)}), 401
-    state = _job_state(domain)
-    with _JOBS_LOCK:
-        state["stop_requested"] = True
+    with STATE_LOCK:
+        STATE["stop_requested"] = True
     return jsonify({"ok": True})
 
 

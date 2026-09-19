@@ -23,15 +23,6 @@ if not app.secret_key:
         "Missing FLASK_SECRET_KEY. Set it in .env — generate one with: "
         "python -c \"import secrets; print(secrets.token_hex(32))\""
     )
-# Harden the session cookie for production. Secure requires HTTPS (true for
-# both the ngrok tunnel used in dev and any real deployment) — set
-# SESSION_COOKIE_SECURE=false in .env only if you ever need to test over
-# plain HTTP directly against a LAN IP.
-app.config.update(
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE", "true").lower() != "false",
-)
 app.register_blueprint(auth_bp)
 app.register_blueprint(billing_bp)
 app.register_blueprint(ai_bp)
@@ -62,44 +53,33 @@ def _parse_crop_ratio(raw):
         raise ValueError("crop_ratio values must be positive.")
     return (w, h)
 
-# Job state, keyed by shop domain — every merchant using the app at the same
-# time gets their own progress/log, instead of all sharing one global job
-# (which would make Shop B's screen show Shop A's run, or block Shop B from
-# starting anything while Shop A has a job going).
-_JOBS_LOCK = threading.Lock()
-_JOBS = {}
+STATE_LOCK = threading.Lock()
+STATE = {
+    "status": "idle",  # idle | scanning | running | done | error | stopped
+    "started_at": None,
+    "finished_at": None,
+    "total_products": 0,
+    "processed_products": 0,
+    "total_images": 0,
+    "processed_images": 0,
+    "optimized_images": 0,
+    "skipped_images": 0,
+    "already_done_images": 0,
+    "failed_images": 0,
+    "bytes_before": 0,
+    "bytes_after": 0,
+    "log": [],
+    "shop_name": None,
+    "stop_requested": False,
+    "quota_exceeded": False,
+}
 
 
-def _blank_state():
-    return {
-        "status": "idle",  # idle | scanning | running | done | error | stopped
-        "started_at": None,
-        "finished_at": None,
-        "total_products": 0,
-        "processed_products": 0,
-        "total_images": 0,
-        "processed_images": 0,
-        "optimized_images": 0,
-        "skipped_images": 0,
-        "already_done_images": 0,
-        "failed_images": 0,
-        "bytes_before": 0,
-        "bytes_after": 0,
-        "log": [],
-        "shop_name": None,
-        "stop_requested": False,
-        "quota_exceeded": False,
-    }
-
-
-def _job_state(shop):
-    """Returns this shop's job state, creating a fresh one on first use. One
-    lock guards the outer dict of per-shop states — these are quick dict
-    operations, so contention across unrelated shops' jobs is a non-issue."""
-    with _JOBS_LOCK:
-        if shop not in _JOBS:
-            _JOBS[shop] = _blank_state()
-        return _JOBS[shop]
+def log(msg):
+    stamp = datetime.now().strftime("%H:%M:%S")
+    with STATE_LOCK:
+        STATE["log"].append(f"[{stamp}] {msg}")
+        STATE["log"] = STATE["log"][-300:]  # cap log length
 
 
 def get_client():
@@ -135,16 +115,8 @@ def is_done(image, ledger):
 def run_optimization(domain, token, quality, max_width, max_height=None, force_webp=False, redo=False,
                      scope="store", collection_id=None, product_ids=None, image_ids=None,
                      crop_ratio=None):
-    state = _job_state(domain)
-
-    def log(msg):
-        stamp = datetime.now().strftime("%H:%M:%S")
-        with _JOBS_LOCK:
-            state["log"].append(f"[{stamp}] {msg}")
-            state["log"] = state["log"][-300:]  # cap log length
-
-    with _JOBS_LOCK:
-        state.update({
+    with STATE_LOCK:
+        STATE.update({
             "status": "scanning",
             "started_at": datetime.now().isoformat(timespec="seconds"),
             "finished_at": None,
@@ -181,8 +153,8 @@ def run_optimization(domain, token, quality, max_width, max_height=None, force_w
         version = os.environ.get("SHOPIFY_API_VERSION", "2026-07")
         client = ShopifyClient(domain, token, version)
         shop_name = client.verify_connection()
-        with _JOBS_LOCK:
-            state["shop_name"] = shop_name
+        with STATE_LOCK:
+            STATE["shop_name"] = shop_name
 
         ledger = {} if redo else client.load_ledger()
         if redo:
@@ -207,9 +179,9 @@ def run_optimization(domain, token, quality, max_width, max_height=None, force_w
             1 for p in products for im in p.get("images", [])
             if redo or only_ids is not None or not is_done(im, ledger)
         )
-        with _JOBS_LOCK:
-            state["total_products"] = len(products)
-            state["total_images"] = total_images
+        with STATE_LOCK:
+            STATE["total_products"] = len(products)
+            STATE["total_images"] = total_images
         log(f"Found {len(products)} products, {total_images} images — {pending} need work.")
 
         quota_left = billing_store.remaining(domain)
@@ -219,13 +191,13 @@ def run_optimization(domain, token, quality, max_width, max_height=None, force_w
                 f"Optimizing what fits, then stopping — buy a pack to do the rest."
             )
 
-        with _JOBS_LOCK:
-            state["status"] = "running"
+        with STATE_LOCK:
+            STATE["status"] = "running"
 
         for product in products:
-            with _JOBS_LOCK:
-                if state["stop_requested"]:
-                    state["status"] = "stopped"
+            with STATE_LOCK:
+                if STATE["stop_requested"]:
+                    STATE["status"] = "stopped"
                     flush_ledger()
                     log("Stopped. Progress so far has been saved.")
                     return
@@ -236,16 +208,16 @@ def run_optimization(domain, token, quality, max_width, max_height=None, force_w
                 title = product.get("title", f"Product {product['id']}")
 
                 if not redo and only_ids is None and is_done(image, ledger):
-                    with _JOBS_LOCK:
-                        state["already_done_images"] += 1
-                        state["processed_images"] += 1
+                    with STATE_LOCK:
+                        STATE["already_done_images"] += 1
+                        STATE["processed_images"] += 1
                     continue  # no download, no API call — nothing to do
 
                 if quota_left <= 0:
-                    with _JOBS_LOCK:
-                        state["skipped_images"] += 1
-                        state["processed_images"] += 1
-                        state["quota_exceeded"] = True
+                    with STATE_LOCK:
+                        STATE["skipped_images"] += 1
+                        STATE["processed_images"] += 1
+                        STATE["quota_exceeded"] = True
                     log(f"Skip (plan limit reached): {title} — buy an image pack to continue.")
                     continue
 
@@ -255,8 +227,8 @@ def run_optimization(domain, token, quality, max_width, max_height=None, force_w
                     already_webp = src.split("?")[0].lower().endswith(".webp")
 
                     if original_size < SKIP_BELOW_BYTES and not (force_webp and not already_webp):
-                        with _JOBS_LOCK:
-                            state["skipped_images"] += 1
+                        with STATE_LOCK:
+                            STATE["skipped_images"] += 1
                         log(f"Skip (already small, {original_size // 1024}KB): {title}")
                         continue
 
@@ -271,8 +243,8 @@ def run_optimization(domain, token, quality, max_width, max_height=None, force_w
                         force_webp and not already_webp and saved > 0
                     )
                     if not worth_writing:
-                        with _JOBS_LOCK:
-                            state["skipped_images"] += 1
+                        with STATE_LOCK:
+                            STATE["skipped_images"] += 1
                         log(f"Skip (no meaningful savings): {title}")
                         continue
 
@@ -286,10 +258,10 @@ def run_optimization(domain, token, quality, max_width, max_height=None, force_w
                     quota_left -= 1
                     billing_store.record_usage(domain, 1)
 
-                    with _JOBS_LOCK:
-                        state["optimized_images"] += 1
-                        state["bytes_before"] += original_size
-                        state["bytes_after"] += new_size
+                    with STATE_LOCK:
+                        STATE["optimized_images"] += 1
+                        STATE["bytes_before"] += original_size
+                        STATE["bytes_after"] += new_size
                     log(
                         f"Optimized: {title} — {original_size // 1024}KB -> "
                         f"{new_size // 1024}KB ({100 * saved / original_size:.0f}% smaller, {out_format})"
@@ -299,26 +271,26 @@ def run_optimization(domain, token, quality, max_width, max_height=None, force_w
                         flush_ledger()
 
                 except Exception as exc:  # noqa: BLE001 - keep going on per-image failure
-                    with _JOBS_LOCK:
-                        state["failed_images"] += 1
+                    with STATE_LOCK:
+                        STATE["failed_images"] += 1
                     log(f"Failed: {title} ({image_id}) — {exc}")
 
                 finally:
-                    with _JOBS_LOCK:
-                        state["processed_images"] += 1
+                    with STATE_LOCK:
+                        STATE["processed_images"] += 1
                     time.sleep(0.4)  # gentle pacing for Shopify's rate limits
 
-            with _JOBS_LOCK:
-                state["processed_products"] += 1
+            with STATE_LOCK:
+                STATE["processed_products"] += 1
 
         flush_ledger()
-        with _JOBS_LOCK:
-            state["status"] = "done"
-            state["finished_at"] = datetime.now().isoformat(timespec="seconds")
-            saved_total = state["bytes_before"] - state["bytes_after"]
-            optimized = state["optimized_images"]
-            already = state["already_done_images"]
-            quota_hit = state["quota_exceeded"]
+        with STATE_LOCK:
+            STATE["status"] = "done"
+            STATE["finished_at"] = datetime.now().isoformat(timespec="seconds")
+            saved_total = STATE["bytes_before"] - STATE["bytes_after"]
+            optimized = STATE["optimized_images"]
+            already = STATE["already_done_images"]
+            quota_hit = STATE["quota_exceeded"]
         summary = f"Done. Optimized {optimized} images, saved {saved_total // 1024}KB total."
         if already:
             summary += f" Skipped {already} already optimized in earlier runs."
@@ -331,30 +303,20 @@ def run_optimization(domain, token, quality, max_width, max_height=None, force_w
             flush_ledger()
         except Exception:  # noqa: BLE001
             pass
-        with _JOBS_LOCK:
-            state["status"] = "error"
-            state["finished_at"] = datetime.now().isoformat(timespec="seconds")
+        with STATE_LOCK:
+            STATE["status"] = "error"
+            STATE["finished_at"] = datetime.now().isoformat(timespec="seconds")
         log(f"Error: {exc}")
-
-
-@app.after_request
-def _allow_shopify_iframe(response):
-    """Shopify Admin embeds this app in an iframe — nothing here blocks that
-    by default, but review checks that the app explicitly allows it."""
-    response.headers["Content-Security-Policy"] = (
-        "frame-ancestors https://*.myshopify.com https://admin.shopify.com;"
-    )
-    return response
 
 
 @app.route("/")
 def index():
-    return render_template("index.html", shopify_api_key=os.environ.get("SHOPIFY_API_KEY", ""))
+    return render_template("index.html")
 
 
 @app.route("/plans")
 def plans_page():
-    return render_template("plans.html", shopify_api_key=os.environ.get("SHOPIFY_API_KEY", ""))
+    return render_template("plans.html")
 
 
 @app.route("/api/test-connection", methods=["POST"])
@@ -475,15 +437,14 @@ def reset_ledger():
 
 @app.route("/api/start", methods=["POST"])
 def start():
+    with STATE_LOCK:
+        if STATE["status"] in ("scanning", "running"):
+            return jsonify({"ok": False, "error": "A job is already running."}), 409
+
     try:
         domain, token = current_credentials()
     except PermissionError as exc:
         return jsonify({"ok": False, "error": str(exc)}), 401
-
-    state = _job_state(domain)
-    with _JOBS_LOCK:
-        if state["status"] in ("scanning", "running"):
-            return jsonify({"ok": False, "error": "A job is already running."}), 409
 
     if billing_store.remaining(domain) <= 0:
         return jsonify({
@@ -534,30 +495,17 @@ def start():
 
 @app.route("/api/stop", methods=["POST"])
 def stop():
-    try:
-        domain, _token = current_credentials()
-    except PermissionError as exc:
-        return jsonify({"ok": False, "error": str(exc)}), 401
-    state = _job_state(domain)
-    with _JOBS_LOCK:
-        state["stop_requested"] = True
+    with STATE_LOCK:
+        STATE["stop_requested"] = True
     return jsonify({"ok": True})
 
 
 @app.route("/api/status")
 def status():
-    try:
-        domain, _token = current_credentials()
-    except PermissionError:
-        # Not connected yet — nothing to show, but the frontend polls this
-        # unconditionally on load, so hand back a blank-but-valid shape
-        # rather than an error it doesn't expect.
-        return jsonify(_blank_state())
-    state = _job_state(domain)
-    with _JOBS_LOCK:
-        return jsonify(dict(state))
+    with STATE_LOCK:
+        return jsonify(dict(STATE))
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5078))
+    port = int(os.environ.get("PORT", 5089))
     app.run(host="0.0.0.0", port=port, debug=True)

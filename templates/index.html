@@ -3,8 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="shopify-api-key" content="{{ shopify_api_key }}">
-<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
 <title>Image Optimizer  — Shopify</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -885,24 +883,6 @@
 <script>
 const $ = id => document.getElementById(id);
 
-// Every API call goes through here instead of raw fetch(). Inside Shopify
-// Admin's iframe, App Bridge exposes window.shopify.idToken() — a fresh
-// short-lived session token proving which shop this request is for, since
-// third-party cookies don't reliably work in that context. Outside the
-// iframe (local/ngrok testing, or the classic OAuth flow) window.shopify
-// is absent and this behaves exactly like a plain fetch() — the backend
-// falls back to the session cookie in that case (see current_shop() in
-// shopify_auth.py).
-async function apiFetch(url, opts = {}) {
-  const headers = { ...(opts.headers || {}) };
-  if (window.shopify && window.shopify.idToken) {
-    try {
-      headers.Authorization = `Bearer ${await window.shopify.idToken()}`;
-    } catch (e) { /* not actually embedded — fall through to cookie auth */ }
-  }
-  return fetch(url, { ...opts, headers });
-}
-
 (function () {
   const layer = $('spores');
   for (let i = 0; i < 16; i++) {
@@ -1131,7 +1111,7 @@ function mountPicker(mountElId, opts) {
     listEl.innerHTML = '<div class="picker-empty">Loading products…</div>';
     countEl.textContent = 'Loading…';
     const qs = collectionId ? ('?collection_id=' + encodeURIComponent(collectionId)) : '';
-    apiFetch('/api/products' + qs).then(r => r.json()).then(data => {
+    fetch('/api/products' + qs).then(r => r.json()).then(data => {
       if (!data.ok) { showError(data.error); return; }
       products = data.products;
       selected.clear();
@@ -1309,7 +1289,7 @@ $('resize-apply-btn').addEventListener('click', async () => {
     crop_ratio: currentCropRatio(),
   };
   try {
-    const res = await apiFetch('/api/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const res = await fetch('/api/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const data = await res.json();
     if (!data.ok) {
       if (data.quota_exceeded) { window.location.href = '/plans'; return; }
@@ -1351,7 +1331,7 @@ async function refreshColorbgPreview() {
   }
   $('colorbg-preview-status').textContent = 'Preparing live preview (removing background — this can take a few seconds)…';
   try {
-    const res = await apiFetch('/api/edit/color-bg/cutout', {
+    const res = await fetch('/api/edit/color-bg/cutout', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ product_id: im.productId, image_id: im.id }),
     });
@@ -1450,7 +1430,7 @@ $('colorbg-apply-btn').addEventListener('click', async () => {
     feather: parseInt($('colorbg-feather').value, 10),
   };
   try {
-    const res = await apiFetch('/api/edit/color-bg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const res = await fetch('/api/edit/color-bg', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const data = await res.json();
     if (!data.ok) {
       if (data.quota_exceeded) { window.location.href = '/plans'; return; }
@@ -1486,7 +1466,7 @@ $('generate-btn').addEventListener('click', async () => {
   $('generate-status').textContent = 'Generating…';
   $('generate-use-btn').style.display = 'none';
   try {
-    const res = await apiFetch('/api/edit/generate/preview', {
+    const res = await fetch('/api/edit/generate/preview', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         product_title: im.productTitle, prompt,
@@ -1522,7 +1502,7 @@ $('generate-use-btn').addEventListener('click', async () => {
   hideError();
   $('generate-status').textContent = 'Saving…';
   try {
-    const res = await apiFetch('/api/edit/generate/use', {
+    const res = await fetch('/api/edit/generate/use', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ product_id: im.productId, image_id: im.id, image_base64: generatedImageBase64 }),
     });
@@ -1613,7 +1593,7 @@ $('enhance-apply-btn').addEventListener('click', async () => {
   $('enhance-status').textContent = 'Applying…';
   const body = { product_ids: [...sel.values()], image_ids: [...sel.keys()], values: enhanceValues };
   try {
-    const res = await apiFetch('/api/edit/enhance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const res = await fetch('/api/edit/enhance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const data = await res.json();
     if (!data.ok) {
       if (data.quota_exceeded) { window.location.href = '/plans'; return; }
@@ -1655,7 +1635,7 @@ $('crop-apply-btn').addEventListener('click', async () => {
     crop_ratio: ratio,
   };
   try {
-    const res = await apiFetch('/api/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const res = await fetch('/api/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const data = await res.json();
     if (!data.ok) {
       if (data.quota_exceeded) { window.location.href = '/plans'; return; }
@@ -1739,7 +1719,7 @@ document.querySelectorAll('.seg[data-ai-scope]').forEach(btn => {
 
 async function loadCollections() {
   try {
-    const res = await apiFetch('/api/collections');
+    const res = await fetch('/api/collections');
     const data = await res.json();
     if (!data.ok) { showError(data.error); return; }
     collectionsLoaded = true;
@@ -1772,7 +1752,7 @@ async function loadProducts(collectionId) {
   productList.innerHTML = '<div class="picker-empty">Loading products…</div>';
   pickerCount.textContent = 'Loading…';
   try {
-    const res = await apiFetch('/api/products?collection_id=' + encodeURIComponent(collectionId));
+    const res = await fetch('/api/products?collection_id=' + encodeURIComponent(collectionId));
     const data = await res.json();
     if (!data.ok) { showError(data.error); productList.innerHTML = ''; return; }
     products = data.products;
@@ -1923,7 +1903,7 @@ async function aiLoadProducts(collectionId) {
   aiProductList.innerHTML = '<div class="picker-empty">Loading products…</div>';
   aiPickerCount.textContent = 'Loading…';
   try {
-    const res = await apiFetch('/api/products?collection_id=' + encodeURIComponent(collectionId));
+    const res = await fetch('/api/products?collection_id=' + encodeURIComponent(collectionId));
     const data = await res.json();
     if (!data.ok) { showError(data.error); aiProductList.innerHTML = ''; return; }
     aiProducts = data.products;
@@ -1997,7 +1977,7 @@ async function loadReport() {
   reportList.innerHTML = '<div class="picker-empty">Loading — this reads every product, so give it a moment…</div>';
   const cid = reportCollection.value;
   try {
-    const res = await apiFetch('/api/report' + (cid ? '?collection_id=' + encodeURIComponent(cid) : ''));
+    const res = await fetch('/api/report' + (cid ? '?collection_id=' + encodeURIComponent(cid) : ''));
     const data = await res.json();
     if (!data.ok) { showError(data.error); reportList.innerHTML = ''; return; }
     hideError();
@@ -2108,7 +2088,7 @@ $('reopt-btn').addEventListener('click', async () => {
     redo: false,
     crop_ratio: currentCropRatio(),
   };
-  const res = await apiFetch('/api/start', {
+  const res = await fetch('/api/start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -2129,7 +2109,7 @@ $('reopt-btn').addEventListener('click', async () => {
 $('reset-ledger').addEventListener('click', async () => {
   if (!confirm('Forget which images have been optimized? The next run will process everything again.')) return;
   try {
-    const res = await apiFetch('/api/ledger', { method: 'DELETE' });
+    const res = await fetch('/api/ledger', { method: 'DELETE' });
     const data = await res.json();
     if (!data.ok) { showError(data.error); return; }
     hideError();
@@ -2155,7 +2135,7 @@ async function loadAiReport() {
   aiReportList.innerHTML = '<div class="picker-empty">Loading — this reads every product, so give it a moment…</div>';
   const cid = aiReportCollection.value;
   try {
-    const res = await apiFetch('/api/ai/report' + (cid ? '?collection_id=' + encodeURIComponent(cid) : ''));
+    const res = await fetch('/api/ai/report' + (cid ? '?collection_id=' + encodeURIComponent(cid) : ''));
     const data = await res.json();
     if (!data.ok) { showError(data.error); aiReportList.innerHTML = ''; return; }
     hideError();
@@ -2237,7 +2217,7 @@ function renderAiReport() {
 $('ai-reset-ledger').addEventListener('click', async () => {
   if (!confirm('Forget the AI label record? This does not undo any ALT text or renames already applied — it only resets the "labeled by this app" bookkeeping.')) return;
   try {
-    const res = await apiFetch('/api/ai/ledger', { method: 'DELETE' });
+    const res = await fetch('/api/ai/ledger', { method: 'DELETE' });
     const data = await res.json();
     if (!data.ok) { showError(data.error); return; }
     hideError();
@@ -2250,7 +2230,7 @@ async function testConnection() {
   connDot.className = 'status-dot';
   connText.textContent = 'Testing…';
   try {
-    const res = await apiFetch('/api/test-connection', { method: 'POST' });
+    const res = await fetch('/api/test-connection', { method: 'POST' });
     const data = await res.json();
     if (data.ok) {
       connDot.className = 'status-dot live';
@@ -2296,14 +2276,14 @@ installBtn.addEventListener('click', goInstall);
 installShop.addEventListener('keydown', e => { if (e.key === 'Enter') goInstall(); });
 
 logoutBtn.addEventListener('click', async () => {
-  await apiFetch('/auth/logout', { method: 'POST' });
+  await fetch('/auth/logout', { method: 'POST' });
   testConnection();
 });
 
 /* ---------- usage ---------- */
 async function loadUsage() {
   try {
-    const res = await apiFetch('/api/billing/usage');
+    const res = await fetch('/api/billing/usage');
     const data = await res.json();
     if (!data.ok) return;
     const total = data.free + data.credits;
@@ -2358,7 +2338,7 @@ async function startJob() {
     }
   }
 
-  const res = await apiFetch('/api/start', {
+  const res = await fetch('/api/start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -2374,7 +2354,7 @@ async function startJob() {
   poll();
 }
 
-async function stopJob() { await apiFetch('/api/stop', { method: 'POST' }); }
+async function stopJob() { await fetch('/api/stop', { method: 'POST' }); }
 
 let polling = null;
 let wasRunning = false;
@@ -2389,7 +2369,7 @@ function renderLogLine(line) {
 
 async function poll() {
   if (polling) clearTimeout(polling);
-  const res = await apiFetch('/api/status');
+  const res = await fetch('/api/status');
   const s = await res.json();
 
   $('mini-products').textContent = `${s.processed_products} / ${s.total_products}`;
@@ -2469,7 +2449,7 @@ async function startAiJob() {
   const body = aiScopeBody();
   if (!body) return;
 
-  const res = await apiFetch('/api/ai/start', {
+  const res = await fetch('/api/ai/start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -2485,11 +2465,11 @@ async function startAiJob() {
   pollAi();
 }
 
-async function stopAiJob() { await apiFetch('/api/ai/stop', { method: 'POST' }); }
+async function stopAiJob() { await fetch('/api/ai/stop', { method: 'POST' }); }
 
 async function pollAi() {
   if (aiPolling) clearTimeout(aiPolling);
-  const res = await apiFetch('/api/ai/status');
+  const res = await fetch('/api/ai/status');
   const s = await res.json();
 
   $('ai-mini-products').textContent = `${s.processed_products} / ${s.total_products}`;
@@ -2690,7 +2670,7 @@ $('draw-save-product').addEventListener('click', async () => {
   hideError();
   $('draw-status').textContent = 'Saving…';
   try {
-    const res = await apiFetch('/api/edit/draw', {
+    const res = await fetch('/api/edit/draw', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         product_id: drawCurrentImage.productId,

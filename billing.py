@@ -20,7 +20,7 @@ from flask import Blueprint, jsonify, redirect, request
 
 import billing_store
 import token_store
-from shopify_auth import current_shop, api_version
+from shopify_auth import current_shop, api_version, fresh_token
 from shopify_client import ShopifyClient
 
 billing_bp = Blueprint("billing", __name__)
@@ -77,7 +77,7 @@ def _test_mode():
 
 
 def _client_for(shop):
-    token = token_store.get_token(shop)
+    token = fresh_token(shop)
     if not token:
         raise PermissionError(f"{shop} hasn't installed the app.")
     return ShopifyClient(shop, token, api_version())
