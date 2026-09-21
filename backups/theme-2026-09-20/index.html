@@ -2,35 +2,31 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="manual-shop" content="{{ 'yes' if manual_shop else 'no' }}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Image Optimizer  — Shopify</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/loading.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Karla:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* one.GLOBE-inspired palette, sampled from the reference design */
-    --abyss:#0b111b; --deep:#0d1521; --panel-soft:#172233; --line:#1f2f45;
-    --mist:#eef3f8; --fog:#7f9ab2; --glow:#60d2fa; --glow-deep:#2a7fa3;
-    --mint:#6eeccf;
-    --ember:#e0794f; --danger:#ef6f5e; --moss:#6eeccf;
-    --display:'Space Grotesk',sans-serif; --body:'Inter',sans-serif; --mono:'Inter',sans-serif;
+    --abyss:#061419; --deep:#0a2029; --panel-soft:#123643; --line:#1b4553;
+    --mist:#dcefee; --fog:#7fa2a9; --glow:#74e8e0; --glow-deep:#2b7d78;
+    --ember:#e0794f; --danger:#ef6f5e; --moss:#8fbf6a;
+    --display:'Cormorant Garamond',serif; --body:'Karla',sans-serif; --mono:'JetBrains Mono',monospace;
   }
   * { box-sizing: border-box; }
   body {
     margin:0; min-height:100vh; color:var(--mist); font-family:var(--body);
     background:
-      radial-gradient(1100px 700px at 18% -8%, #12324a 0%, transparent 58%),
-      radial-gradient(900px 600px at 92% 8%, #0f2c40 0%, transparent 55%),
+      radial-gradient(1100px 700px at 18% -8%, #14414a 0%, transparent 58%),
+      radial-gradient(900px 600px at 92% 8%, #0f3b3f 0%, transparent 55%),
       linear-gradient(180deg, var(--deep) 0%, var(--abyss) 78%);
     background-attachment: fixed;
   }
   .spores { position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
   .spore {
     position:absolute; width:3px; height:3px; border-radius:50%; background:var(--glow); opacity:0;
-    box-shadow:0 0 8px var(--glow), 0 0 18px rgba(96,210,250,.55); animation:drift linear infinite;
+    box-shadow:0 0 8px var(--glow), 0 0 18px rgba(116,232,224,.55); animation:drift linear infinite;
   }
   @keyframes drift {
     0% { transform:translate3d(0,12vh,0) scale(.7); opacity:0; }
@@ -41,22 +37,22 @@
 
   .tag {
     font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--fog);
-    padding:6px 13px; border:1px solid var(--line); border-radius:100px; background:rgba(13,21,33,.6);
+    padding:6px 13px; border:1px solid var(--line); border-radius:100px; background:rgba(9,32,40,.6);
   }
 
   /* ---- shell / sidebar ---- */
   .shell { position:relative; z-index:1; display:flex; align-items:flex-start; min-height:100vh; }
   .sidebar {
     width:252px; flex:none; padding:30px 18px; display:flex; flex-direction:column; gap:24px;
-    border-right:1px solid var(--line); background:rgba(10,16,25,.55); backdrop-filter:blur(6px);
+    border-right:1px solid var(--line); background:rgba(6,20,25,.55); backdrop-filter:blur(6px);
     position:sticky; top:0; height:100vh; overflow-y:auto;
   }
   .brand h1 {
     font-family:var(--display); font-weight:500; font-size:21px; letter-spacing:.1em;
-    text-transform:uppercase; margin:0; color:#f5f5f5; line-height:1.3;
-    text-shadow:0 0 20px rgba(96,210,250,.3);
+    text-transform:uppercase; margin:0; color:#bfeef0; line-height:1.3;
+    text-shadow:0 0 20px rgba(116,232,224,.3);
   }
-  .side-conn { display:flex; flex-direction:column; gap:9px; font-size:12.5px; padding:14px; border:1px solid var(--line); border-radius:12px; background:rgba(9,14,22,.5); }
+  .side-conn { display:flex; flex-direction:column; gap:9px; font-size:12.5px; padding:14px; border:1px solid var(--line); border-radius:12px; background:rgba(5,17,22,.5); }
   .side-conn .row1 { display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .side-conn #conn-text { font-family:var(--mono); font-size:11.5px; }
   .side-conn .link-btn { padding:0; font-size:11px; }
@@ -70,8 +66,8 @@
     border-radius:9px; cursor:pointer; text-decoration:none; width:100%;
     transition:background .15s ease, color .15s ease;
   }
-  .side-link:hover { color:var(--mist); background:rgba(96,210,250,.06); }
-  .side-link.active { color:var(--glow); background:rgba(96,210,250,.1); }
+  .side-link:hover { color:var(--mist); background:rgba(116,232,224,.06); }
+  .side-link.active { color:var(--glow); background:rgba(116,232,224,.1); }
   .side-link .ic {
     width:24px; height:24px; flex:none; display:flex; align-items:center; justify-content:center;
     font-family:var(--mono); font-weight:700; font-size:12px; border-radius:7px;
@@ -90,37 +86,37 @@
   .sub { color:var(--fog); font-size:14.5px; margin:0 0 26px; max-width:60ch; line-height:1.55; }
 
   .panel {
-    background:linear-gradient(180deg, rgba(20,31,47,.82), rgba(14,22,34,.82));
+    background:linear-gradient(180deg, rgba(18,54,67,.82), rgba(11,36,45,.82));
     border:1px solid var(--line); border-radius:16px; padding:26px; margin-bottom:20px;
     backdrop-filter:blur(6px); box-shadow:0 18px 40px -28px rgba(0,0,0,.9);
   }
   .panel h2 {
     font-family:var(--display); font-size:19px; font-weight:600; letter-spacing:.18em;
     text-transform:uppercase; color:var(--glow); margin:0 0 20px; padding-bottom:12px;
-    border-bottom:1px solid rgba(96,210,250,.14);
+    border-bottom:1px solid rgba(116,232,224,.14);
   }
   .row { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
 
   .status-dot { width:9px; height:9px; border-radius:50%; background:var(--fog); display:inline-block; margin-right:9px; }
-  .status-dot.live { background:var(--glow); box-shadow:0 0 10px var(--glow),0 0 22px rgba(96,210,250,.6); animation:breathe 2s infinite; }
+  .status-dot.live { background:var(--glow); box-shadow:0 0 10px var(--glow),0 0 22px rgba(116,232,224,.6); animation:breathe 2s infinite; }
   .status-dot.err { background:var(--danger); box-shadow:0 0 10px rgba(239,111,94,.7); }
   @keyframes breathe { 0%,100% { opacity:1; } 50% { opacity:.35; } }
 
   .segmented { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
   .seg {
     font-family:var(--body); font-weight:500; font-size:13.5px; padding:11px 20px;
-    border-radius:10px; border:1px solid var(--line); background:rgba(10,16,25,.5);
+    border-radius:10px; border:1px solid var(--line); background:rgba(6,20,25,.5);
     color:var(--fog); cursor:pointer; transition:all .18s ease;
   }
   .seg:hover { color:var(--mist); border-color:var(--glow-deep); }
   .seg.active {
-    color:var(--glow); background:rgba(96,210,250,.12); border-color:var(--glow);
+    color:var(--glow); background:rgba(116,232,224,.12); border-color:var(--glow);
     font-weight:700; box-shadow:inset 0 0 0 1px var(--glow);
   }
   .seg.active::before { content:'\2713  '; }
 
   select, input[type=number], input[type=text] {
-    width:100%; background:rgba(10,16,25,.65); border:1px solid var(--line); color:var(--mist);
+    width:100%; background:rgba(6,20,25,.65); border:1px solid var(--line); color:var(--mist);
     padding:11px 13px; border-radius:9px; font-family:var(--mono); font-size:13px;
   }
   select:focus, input:focus { outline:2px solid var(--glow-deep); outline-offset:1px; }
@@ -137,12 +133,12 @@
   .link-btn:hover { color:var(--glow); }
   .link-btn.danger:hover { color:var(--danger); }
 
-  .product-list { border:1px solid var(--line); border-radius:10px; max-height:310px; overflow-y:auto; background:rgba(9,14,22,.6); }
+  .product-list { border:1px solid var(--line); border-radius:10px; max-height:310px; overflow-y:auto; background:rgba(5,17,22,.6); }
   .product-list::-webkit-scrollbar, .report-list::-webkit-scrollbar { width:9px; }
   .product-list::-webkit-scrollbar-thumb, .report-list::-webkit-scrollbar-thumb { background:var(--glow-deep); border-radius:5px; }
-  .p-row { display:flex; align-items:center; gap:13px; padding:11px 15px; border-bottom:1px solid rgba(31,47,69,.7); cursor:pointer; }
+  .p-row { display:flex; align-items:center; gap:13px; padding:11px 15px; border-bottom:1px solid rgba(27,69,83,.7); cursor:pointer; }
   .p-row:last-child { border-bottom:none; }
-  .p-row:hover { background:rgba(96,210,250,.05); }
+  .p-row:hover { background:rgba(116,232,224,.05); }
   .p-row.is-done .p-title { color:var(--fog); }
   .p-row input[type=checkbox] { accent-color:var(--glow); width:16px; height:16px; flex:none; }
   .p-thumb { width:36px; height:36px; border-radius:7px; object-fit:cover; background:var(--panel-soft); flex:none; }
@@ -152,10 +148,10 @@
   .badge {
     font-family:var(--mono); font-size:10px; letter-spacing:.06em; padding:3px 8px;
     border-radius:100px; flex:none; color:var(--moss);
-    border:1px solid rgba(110,236,207,.45); background:rgba(110,236,207,.09);
+    border:1px solid rgba(143,191,106,.45); background:rgba(143,191,106,.09);
   }
   .badge.partial { color:var(--ember); border-color:rgba(224,121,79,.45); background:rgba(224,121,79,.09); }
-  .badge.none { color:var(--fog); border-color:var(--line); background:rgba(127,154,178,.07); }
+  .badge.none { color:var(--fog); border-color:var(--line); background:rgba(127,162,169,.07); }
   .picker-empty { padding:26px 15px; color:var(--fog); font-size:13px; text-align:center; }
 
   .p-expand {
@@ -163,11 +159,11 @@
     font-size:11px; cursor:pointer; padding:5px 8px; flex:none; border-radius:5px;
     white-space:nowrap;
   }
-  .p-expand:hover { color:var(--glow); background:rgba(96,210,250,.06); }
+  .p-expand:hover { color:var(--glow); background:rgba(116,232,224,.06); }
   .p-expand.open { color:var(--glow); }
   .p-images {
     display:flex; flex-wrap:wrap; gap:9px; padding:11px 15px 15px 64px;
-    background:rgba(6,10,16,.4); border-bottom:1px solid rgba(31,47,69,.7);
+    background:rgba(4,14,18,.4); border-bottom:1px solid rgba(27,69,83,.7);
   }
   .pi-cell { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; width:52px; }
   .pi-cell input { accent-color:var(--glow); width:14px; height:14px; }
@@ -187,20 +183,20 @@
   /* ---- crop and transform ---- */
   .crop-block { margin-bottom:16px; }
   .crop-block > label { display:block; font-size:11.5px; color:var(--fog); margin-bottom:10px; font-family:var(--mono); letter-spacing:.04em; }
-  .crop-list { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:rgba(9,14,22,.6); }
+  .crop-list { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:rgba(5,17,22,.6); }
   .crop-row {
     display:flex; align-items:center; justify-content:space-between; gap:12px;
-    padding:12px 15px; border-bottom:1px solid rgba(31,47,69,.7); cursor:pointer;
+    padding:12px 15px; border-bottom:1px solid rgba(27,69,83,.7); cursor:pointer;
     font-size:13.5px; transition:background .15s ease, color .15s ease;
   }
   .crop-row:last-child { border-bottom:none; }
-  .crop-row:hover { background:rgba(96,210,250,.05); }
-  .crop-row.active { color:var(--glow); background:rgba(96,210,250,.08); font-weight:600; }
+  .crop-row:hover { background:rgba(116,232,224,.05); }
+  .crop-row.active { color:var(--glow); background:rgba(116,232,224,.08); font-weight:600; }
   .crop-row .check { font-family:var(--mono); color:var(--glow); font-weight:700; visibility:hidden; }
   .crop-row.active .check { visibility:visible; }
   .crop-freeform-inputs {
     display:flex; align-items:center; gap:10px; padding:12px 15px;
-    border-bottom:1px solid rgba(31,47,69,.7); background:rgba(9,14,22,.4);
+    border-bottom:1px solid rgba(27,69,83,.7); background:rgba(5,17,22,.4);
   }
   .crop-freeform-inputs input { width:80px; }
   .crop-freeform-inputs span { color:var(--fog); font-family:var(--mono); }
@@ -211,20 +207,20 @@
   }
   button:active { transform:scale(.97); }
   button:disabled { opacity:.35; cursor:not-allowed; box-shadow:none; }
-  .btn-primary { background:linear-gradient(180deg,#7be0fb,var(--glow)); color:#080b11; box-shadow:0 0 24px rgba(96,210,250,.3); }
-  .btn-primary:hover:not(:disabled) { box-shadow:0 0 34px rgba(96,210,250,.5); }
+  .btn-primary { background:linear-gradient(180deg,#8af2ea,var(--glow)); color:#04222a; box-shadow:0 0 24px rgba(116,232,224,.3); }
+  .btn-primary:hover:not(:disabled) { box-shadow:0 0 34px rgba(116,232,224,.5); }
   .btn-ghost { background:transparent; color:var(--fog); border:1px solid var(--line); }
   .btn-ghost:hover:not(:disabled) { color:var(--mist); border-color:var(--glow-deep); }
 
   .meter { display:flex; align-items:flex-end; gap:40px; margin-bottom:20px; flex-wrap:wrap; }
   .stat .num { font-family:var(--mono); font-size:33px; font-weight:700; line-height:1; }
-  .stat .num.saved { color:var(--glow); text-shadow:0 0 22px rgba(96,210,250,.4); }
+  .stat .num.saved { color:var(--glow); text-shadow:0 0 22px rgba(116,232,224,.4); }
   .stat .label { font-size:10.5px; color:var(--fog); text-transform:uppercase; letter-spacing:.14em; margin-top:8px; }
-  .bar-track { height:9px; background:rgba(9,14,22,.8); border-radius:100px; overflow:hidden; border:1px solid var(--line); }
-  .bar-fill { height:100%; width:0%; background:linear-gradient(90deg,var(--glow-deep),var(--glow)); box-shadow:0 0 16px rgba(96,210,250,.65); transition:width .45s ease; }
-  .bar-fill.moss { background:linear-gradient(90deg,#2f9c86,var(--moss)); box-shadow:0 0 16px rgba(110,236,207,.5); }
+  .bar-track { height:9px; background:rgba(5,17,22,.8); border-radius:100px; overflow:hidden; border:1px solid var(--line); }
+  .bar-fill { height:100%; width:0%; background:linear-gradient(90deg,var(--glow-deep),var(--glow)); box-shadow:0 0 16px rgba(116,232,224,.65); transition:width .45s ease; }
+  .bar-fill.moss { background:linear-gradient(90deg,#4b7a35,var(--moss)); box-shadow:0 0 16px rgba(143,191,106,.5); }
   .grid4 { display:grid; grid-template-columns:repeat(4,1fr); gap:13px; margin-top:20px; }
-  .mini { background:rgba(9,14,22,.55); border:1px solid var(--line); border-radius:10px; padding:13px 15px; }
+  .mini { background:rgba(5,17,22,.55); border:1px solid var(--line); border-radius:10px; padding:13px 15px; }
   .mini .n { font-family:var(--mono); font-size:17px; font-weight:700; }
   .mini .n.moss { color:var(--moss); }
   .mini .n.ember { color:var(--ember); }
@@ -236,12 +232,12 @@
   .tool-right { display:flex; flex-direction:column; gap:4px; min-width:0; }
   @media (max-width:860px) { .tool-layout { grid-template-columns:1fr; } }
 
-  .picker-load-area { padding:16px; border:1px dashed var(--line); border-radius:10px; background:rgba(9,14,22,.4); text-align:center; }
+  .picker-load-area { padding:16px; border:1px dashed var(--line); border-radius:10px; background:rgba(5,17,22,.4); text-align:center; }
   .picker-load-area p { margin:0 0 12px; color:var(--fog); font-size:12.5px; }
 
   .ai-tool-row {
     display:flex; align-items:flex-start; gap:14px; padding:14px 16px; margin-bottom:10px;
-    border:1px solid var(--line); border-radius:10px; background:rgba(9,14,22,.5);
+    border:1px solid var(--line); border-radius:10px; background:rgba(5,17,22,.5);
     cursor:pointer; transition:border-color .18s ease;
   }
   .ai-tool-row:hover { border-color:var(--glow-deep); }
@@ -249,29 +245,29 @@
   .ai-tool-icon {
     font-family:var(--mono); font-weight:700; font-size:15px; color:var(--glow); flex:none;
     width:30px; height:30px; display:flex; align-items:center; justify-content:center;
-    border:1px solid var(--line); border-radius:8px; background:rgba(96,210,250,.06);
+    border:1px solid var(--line); border-radius:8px; background:rgba(116,232,224,.06);
   }
   .ai-tool-text { display:flex; flex-direction:column; gap:4px; font-size:13.5px; }
   .ai-tool-text .hint { color:var(--fog); font-size:12px; line-height:1.5; }
 
   /* ---- report ---- */
-  .report-list { border:1px solid var(--line); border-radius:10px; max-height:520px; overflow-y:auto; background:rgba(9,14,22,.6); }
-  .r-product { border-bottom:1px solid rgba(31,47,69,.7); padding:15px 16px; }
+  .report-list { border:1px solid var(--line); border-radius:10px; max-height:520px; overflow-y:auto; background:rgba(5,17,22,.6); }
+  .r-product { border-bottom:1px solid rgba(27,69,83,.7); padding:15px 16px; }
   .r-product:last-child { border-bottom:none; }
   .r-head { display:flex; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
   .r-title { flex:1; font-size:14px; min-width:150px; }
   .r-images { display:flex; gap:10px; flex-wrap:wrap; }
   .r-img { position:relative; width:62px; height:62px; border-radius:8px; overflow:hidden; border:1px solid var(--line); background:var(--panel-soft); cursor:pointer; }
   .r-img img { width:100%; height:100%; object-fit:cover; display:block; }
-  .r-img.done { border-color:rgba(110,236,207,.7); box-shadow:0 0 12px rgba(110,236,207,.18); }
+  .r-img.done { border-color:rgba(143,191,106,.7); box-shadow:0 0 12px rgba(143,191,106,.18); }
   .r-img.pending { border-color:rgba(224,121,79,.55); }
   .r-img:not(.done) img { opacity:.62; }
-  .r-img.picked { outline:2px solid var(--glow); outline-offset:2px; box-shadow:0 0 14px rgba(96,210,250,.45); }
+  .r-img.picked { outline:2px solid var(--glow); outline-offset:2px; box-shadow:0 0 14px rgba(116,232,224,.45); }
   .r-mark {
     position:absolute; right:3px; bottom:3px; width:17px; height:17px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     font-family:var(--mono); font-size:10px; font-weight:700; line-height:1;
-    background:rgba(6,10,16,.9);
+    background:rgba(4,14,18,.9);
   }
   .r-mark.done { color:#0b1f08; background:var(--moss); }
   .r-mark.pending { color:#1f0e06; background:var(--ember); }
@@ -281,7 +277,7 @@
   .dot.moss { background:var(--moss); } .dot.ember { background:var(--ember); }
 
   .log {
-    background:rgba(6,10,16,.75); border:1px solid var(--line); border-radius:10px;
+    background:rgba(4,14,18,.75); border:1px solid var(--line); border-radius:10px;
     padding:16px 18px; height:230px; overflow-y:auto; font-family:var(--mono);
     font-size:12.5px; color:#a8c4c9; line-height:1.65;
   }
@@ -305,14 +301,14 @@
   }
   @media (max-width:720px) { .grid4 { grid-template-columns:repeat(2,1fr); } }
   .img-tip { position:fixed; z-index:9999; pointer-events:none; max-width:260px; padding:8px 10px; border-radius:8px;
-    background:#0d1521; border:1px solid var(--line); color:#e8f6ff; font-size:11.5px; line-height:1.5;
+    background:#0a2029; border:1px solid var(--line); color:#dff; font-size:11.5px; line-height:1.5;
     box-shadow:0 6px 24px rgba(0,0,0,.45); opacity:0; transition:opacity .12s; word-break:break-all; }
   .img-tip.show { opacity:1; }
   .img-tip b { color:#7fe6d6; font-weight:600; }
 
   .hist-bar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:16px; position:relative; }
   .range-btn { display:inline-flex; gap:8px; align-items:center; padding:9px 14px; border:1px solid var(--line); border-radius:10px;
-    background:rgba(13,21,33,.6); color:var(--mist); font:inherit; font-size:13.5px; cursor:pointer; }
+    background:rgba(9,32,40,.6); color:var(--mist); font:inherit; font-size:13.5px; cursor:pointer; }
   .range-btn:hover { border-color:var(--glow-deep); }
   .hist-stat { font-family:var(--mono); font-size:12px; color:var(--fog); }
   .hist-stat b { color:var(--glow); font-weight:600; }
@@ -325,7 +321,7 @@
   .rp-presets hr { border:0; border-top:1px solid var(--line); margin:6px 0; width:100%; }
   .rp-main { padding:14px; min-width:0; }
   .rp-inputs { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
-  .rp-inputs input { flex:1; min-width:0; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:rgba(13,21,33,.6); color:var(--mist); font:inherit; font-size:13px; color-scheme:dark; }
+  .rp-inputs input { flex:1; min-width:0; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:rgba(9,32,40,.6); color:var(--mist); font:inherit; font-size:13px; color-scheme:dark; }
   .rp-cals { display:flex; gap:18px; flex-wrap:wrap; }
   .rp-cal { width:224px; }
   .rp-head { display:flex; align-items:center; justify-content:space-between; font-size:13px; margin-bottom:6px; min-height:26px; }
@@ -334,14 +330,14 @@
   .rp-grid span.dow { text-align:center; font-size:10.5px; color:var(--fog); padding:4px 0; }
   .rp-day { height:30px; border:0; background:none; color:var(--mist); font:inherit; font-size:12.5px; cursor:pointer; border-radius:0; }
   .rp-day:disabled { color:#3b5a63; cursor:default; }
-  .rp-day.in { background:rgba(96,210,250,.13); }
-  .rp-day.edge { background:var(--glow); color:#080b11; font-weight:700; border-radius:8px; }
+  .rp-day.in { background:rgba(116,232,224,.13); }
+  .rp-day.edge { background:var(--glow); color:#04222a; font-weight:700; border-radius:8px; }
   .rp-foot { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
   .rp-foot button { padding:8px 16px; font-size:13px; }
   .h-table-wrap { overflow-x:auto; }
   .h-table { width:100%; border-collapse:collapse; font-size:13px; }
   .h-table th { text-align:left; font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--fog); padding:8px 10px; border-bottom:1px solid var(--line); }
-  .h-table td { padding:9px 10px; border-bottom:1px solid rgba(31,47,69,.5); vertical-align:top; }
+  .h-table td { padding:9px 10px; border-bottom:1px solid rgba(27,69,83,.5); vertical-align:top; }
   .h-table td.mono { font-family:var(--mono); font-size:12px; }
   .h-empty { padding:26px; text-align:center; color:var(--fog); }
   .h-pager { display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-top:12px; font-size:12.5px; color:var(--fog); }
@@ -349,127 +345,19 @@
   .preview-pane { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
   @media (max-width:860px) { .preview-pane { order:-1; } }
   .content-inner.is-dash > #owner-bar, .content-inner.is-dash > .sub { display:none !important; }
-  .content-inner:not(.is-run) > .sub { display:none !important; }
   .dash-hero h2 { font-family:var(--display); font-size:30px; margin:0 0 4px; font-weight:600; }
   .dash-hero p { margin:0 0 22px; color:var(--fog); font-size:13.5px; }
   .dash-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-bottom:18px; }
-  .dcard { border:1px solid var(--line); border-radius:14px; padding:16px 18px; background:rgba(13,21,33,.6); }
+  .dcard { border:1px solid var(--line); border-radius:14px; padding:16px 18px; background:rgba(9,32,40,.6); }
   .dcard .k { font-family:var(--mono); font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--fog); }
   .dcard .v { font-size:30px; margin-top:8px; color:var(--mist); }
   .dcard .s { font-size:12px; color:var(--fog); margin-top:4px; }
   .dash-two { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; }
   .grid2 { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
-  .sugg { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:11px 0; border-bottom:1px solid rgba(31,47,69,.5); font-size:13.5px; }
+  .sugg { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:11px 0; border-bottom:1px solid rgba(27,69,83,.5); font-size:13.5px; }
   .sugg:last-child { border-bottom:0; }
   .sugg .why { flex:1; min-width:200px; }
-  /* ===== one.GLOBE-inspired theme (override layer) ===== */
-  body {
-    background:
-      radial-gradient(900px 620px at 82% 26%, rgba(96,210,250,.11), transparent 62%),
-      radial-gradient(760px 520px at 8% -4%, rgba(110,236,207,.06), transparent 62%),
-      linear-gradient(180deg, #0b111b 0%, #0d1521 62%, #101b29 100%);
-    background-attachment: fixed;
-    font-feature-settings:'ss01','cv11';
-  }
-  body::before {
-    content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
-    background-image:
-      linear-gradient(rgba(96,210,250,.045) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(96,210,250,.045) 1px, transparent 1px);
-    background-size:72px 72px;
-    -webkit-mask-image:radial-gradient(ellipse at 50% 30%, #000 30%, transparent 85%);
-            mask-image:radial-gradient(ellipse at 50% 30%, #000 30%, transparent 85%);
-  }
-  h1, h2, h3 { font-family:var(--display); }
-  .tag {
-    font-family:var(--display); font-weight:600; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
-    color:var(--glow); background:rgba(96,210,250,.1); border:1px solid rgba(96,210,250,.35);
-  }
-  .btn-primary {
-    background:linear-gradient(90deg,#60d2fa,#6eeccf); color:#080b11; border-radius:999px;
-    font-family:var(--display); font-weight:600; box-shadow:0 0 28px rgba(96,210,250,.26);
-  }
-  .btn-primary:hover:not(:disabled) { box-shadow:0 0 40px rgba(96,210,250,.5); }
-  .btn-ghost {
-    border-radius:999px; background:transparent; color:#f5f5f5;
-    border:1px solid rgba(255,255,255,.13); font-family:var(--display); font-weight:500;
-  }
-  .btn-ghost:hover:not(:disabled) { color:var(--glow); border-color:rgba(96,210,250,.55); }
-  .seg { border-radius:999px; }
-  .panel {
-    background:linear-gradient(180deg, rgba(20,31,47,.74), rgba(13,21,33,.8));
-    border-radius:18px; border:1px solid rgba(127,154,178,.16);
-  }
-  .panel h2 {
-    font-family:var(--display); font-weight:600; font-size:20px; letter-spacing:-.01em;
-    text-transform:none; color:#f5f5f5; border-bottom:1px solid rgba(127,154,178,.16);
-  }
-  .stat .num, .mini .n, .dcard .v, .plan-price { font-family:var(--display); }
-  .stat .num.saved, .dcard .v { color:var(--glow); }
-  .dcard .v { color:#f5f5f5; }
-  .brand h1 {
-    font-family:var(--display); font-weight:700; font-size:21px; letter-spacing:-.01em;
-    text-transform:none; color:#f5f5f5; text-shadow:none;
-  }
-  .sidebar { background:rgba(9,14,22,.7); border-right:1px solid rgba(127,154,178,.14); }
-  .side-link.active { color:var(--glow); background:rgba(96,210,250,.1); }
-  .dash-hero h2 { font-family:var(--display); font-weight:700; letter-spacing:-.02em; font-size:34px; }
-  .chips { display:flex; flex-wrap:wrap; gap:8px; }
-  .chip { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px; font-size:12.5px; font-weight:500;
-    color:var(--glow); background:rgba(96,210,250,.1); border:1px solid rgba(96,210,250,.32); }
-  .chip i { font-style:normal; color:var(--fog); font-size:11px; }
-
-  /* highlight cards (Dashboard + Plans) */
-  .feat-hl { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; margin-bottom:18px; }
-  .feat {
-    position:relative; display:flex; gap:14px; align-items:flex-start; padding:16px 18px; border-radius:16px;
-    border:1px solid rgba(96,210,250,.42);
-    background:linear-gradient(135deg, rgba(96,210,250,.15), rgba(110,236,207,.06) 60%, rgba(13,21,33,.72));
-    box-shadow:0 0 30px -12px rgba(96,210,250,.4);
-  }
-  .feat .feat-ic {
-    flex:none; width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;
-    color:#080b11; background:linear-gradient(135deg,#60d2fa,#6eeccf); box-shadow:0 0 18px rgba(96,210,250,.35);
-  }
-  .feat .feat-body { min-width:0; flex:1; }
-  .feat h3 { margin:0 0 4px; font-size:16px; font-weight:600; color:#f5f5f5; padding-right:52px; }
-  .feat p { margin:0; font-size:13px; line-height:1.5; color:#b9c8d8; }
-  .feat b { color:#f5f5f5; font-weight:600; }
-  .feat-tag {
-    position:absolute; top:14px; right:14px; font-family:var(--display); font-size:10px; font-weight:700; letter-spacing:.12em;
-    text-transform:uppercase; color:#080b11; background:linear-gradient(90deg,#60d2fa,#6eeccf); padding:3px 10px; border-radius:999px;
-  }
-  .feat-stat { margin-top:8px; font-size:12px; font-weight:500; color:var(--mint); }
-  .feat-link { margin-top:8px; padding:0; background:none; border:0; color:var(--glow); font:inherit; font-size:12.5px; font-weight:600; cursor:pointer; }
-  .feat-link:hover { text-decoration:underline; }
-  .feat.solo { margin-top:4px; }
-  .sp-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
-  .sp-item { border:1px solid rgba(127,154,178,.18); border-radius:14px; padding:14px 16px; background:rgba(9,14,22,.45); }
-  .sp-item .top { display:flex; align-items:center; justify-content:space-between; gap:6px 10px; margin-bottom:6px; flex-wrap:wrap; }
-  .sp-item h4 { margin:0; font-size:14.5px; font-weight:600; color:#f5f5f5; font-family:var(--display); }
-  .sp-item p { margin:0; font-size:12.5px; line-height:1.5; color:var(--fog); }
-  .badge { flex:none; white-space:nowrap; padding:3px 10px; border-radius:999px; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; border:1px solid; }
-  .badge.on   { color:#6eeccf; border-color:rgba(110,236,207,.45); background:rgba(110,236,207,.1); }
-  .badge.off  { color:#e0794f; border-color:rgba(224,121,79,.45); background:rgba(224,121,79,.1); }
-  .badge.todo { color:#60d2fa; border-color:rgba(96,210,250,.45); background:rgba(96,210,250,.1); }
-  .badge.soon { color:#7f9ab2; border-color:rgba(127,154,178,.35); background:rgba(127,154,178,.08); }
-  .cs-overlay { position:fixed; inset:0; z-index:10001; display:flex; align-items:center; justify-content:center; padding:20px;
-    background:rgba(5,9,15,.72); backdrop-filter:blur(3px); animation:cs-fade .15s ease; }
-  @keyframes cs-fade { from { opacity:0; } to { opacity:1; } }
-  .cs-box { width:100%; max-width:460px; border-radius:20px; padding:26px 26px 22px; border:1px solid rgba(96,210,250,.35);
-    background:linear-gradient(180deg,#152134,#0d1521); box-shadow:0 24px 70px rgba(0,0,0,.6), 0 0 44px -14px rgba(96,210,250,.4); }
-  .cs-box h3 { margin:0 0 12px; font-family:var(--display); font-size:21px; color:#f5f5f5; }
-  .cs-box ul { margin:0 0 14px; padding-left:18px; color:var(--mist); font-size:14px; line-height:1.6; }
-  .cs-warn { margin:0 0 20px; padding:10px 12px; border-radius:12px; font-size:12.5px; line-height:1.5; color:#f0c9b8;
-    background:rgba(224,121,79,.1); border:1px solid rgba(224,121,79,.35); }
-  .cs-actions { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
-  .cs-actions button { padding:10px 22px; font-size:13.5px; }
-  .cs-toast { position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:10002; padding:11px 20px; border-radius:999px;
-    font-size:13px; color:#f5f5f5; background:rgba(13,21,33,.96); border:1px solid rgba(127,154,178,.4); box-shadow:0 10px 30px rgba(0,0,0,.5);
-    animation:cs-fade .15s ease; }
-  .show-more { display:block; margin:14px auto 4px; padding:9px 22px; font-size:13px; }
 </style>
-<script src="/static/loading.js"></script>
 </head>
 <body>
 <div class="spores" id="spores" aria-hidden="true"></div>
@@ -487,9 +375,6 @@
         <button class="link-btn" id="logout-btn" style="display:none;"></button>
       </div>
       <button class="btn-ghost" id="test-btn" style="padding:8px 0; font-size:12px; display:none;">Test connection</button>
-      <p id="open-from-shopify" class="hidden" style="margin:0; font-size:12px; line-height:1.5; color:var(--fog);">
-        Open this app from your Shopify admin: <b>Apps &rarr; image-optimizer</b>.
-      </p>
       <div id="install-area" class="hidden">
         <input type="text" id="install-shop" placeholder="your-store.myshopify.com" style="margin-bottom:8px;">
         <button class="btn-primary" id="install-btn" style="width:100%; padding:9px 0; font-size:12.5px;">Connect store</button>
@@ -503,13 +388,11 @@
       <div class="side-nav-label">AI labeling</div>
       <button class="side-link" data-view="ai" data-ai-mode="name"><span class="ic">&#128196;</span>Image file name</button>
       <button class="side-link" data-view="ai" data-ai-mode="alt"><span class="ic">Aa</span>Image ALT text</button>
-      <button class="side-link" data-view="keywords"><span class="ic">Kw</span>Keyword suggestions</button>
       <button class="side-link" data-view="ai-report"><span class="ic">Rp</span>Label report</button>
 
       <div class="side-nav-label">Optimize</div>
       <button class="side-link" data-view="run"><span class="ic">Cm</span>Compress Images</button>
       <button class="side-link" data-view="report"><span class="ic">Rp</span>Image report</button>
-      <button class="side-link" data-view="speed"><span class="ic">Sp</span>Store speed</button>
 
       <div class="side-nav-label">Image Tools</div>
       <button class="side-link" data-view="enhance"><span class="ic">En</span>Enhance</button>
@@ -574,27 +457,6 @@
           <p id="dash-sub">Loading your store…</p>
         </div>
 
-        <div class="feat-hl">
-          <div class="feat">
-            <span class="feat-tag">New</span>
-            <span class="feat-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5 12.5 20a2 2 0 0 1-2.8 0L3 13.3V4h9.3L20 11.7a1 1 0 0 1 0 .8Z"/><circle cx="7.6" cy="8.6" r="1.4"/></svg></span>
-            <div class="feat-body">
-              <h3>3 keywords per image</h3>
-              <p>AI picks the <b>3 best keywords</b> from each image. Use them in ALT text, blogs and content.</p>
-              <button class="feat-link" data-go="keywords" type="button">See my keywords &rarr;</button>
-            </div>
-          </div>
-          <div class="feat">
-            <span class="feat-tag">Smart</span>
-            <span class="feat-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.4 3 8.1 7.5 9.5 4.5-1.4 7.5-5.1 7.5-9.5V6L12 3Z"/><path d="m8.8 12.2 2.3 2.3 4.2-4.6"/></svg></span>
-            <div class="feat-body">
-              <h3>No keyword stuffing</h3>
-              <p>Our <b>stuffing checker</b> catches over-used keywords and rewrites them, so text stays natural.</p>
-              <div class="feat-stat" id="dc-stuff">No ALT texts checked yet.</div>
-            </div>
-          </div>
-        </div>
-
         <div class="dash-cards">
           <div class="dcard"><div class="k">Credits left</div><div class="v" id="dc-credits">—</div><div class="s" id="dc-credits-sub"></div></div>
           <div class="dcard"><div class="k">Images compressed</div><div class="v" id="dc-compressed">—</div><div class="s">lifetime</div></div>
@@ -632,10 +494,6 @@
             </div>
             <button class="btn-ghost" id="dc-label-report" style="padding:8px 16px; font-size:12.5px; margin-top:12px;">Open label report</button>
           </div>
-        </div>
-        <div class="panel">
-          <h2>Your top keywords</h2>
-          <div class="chips" id="dc-topkw"><span class="note" style="margin:0;">Nothing yet — run ALT text labeling and your keywords will appear here.</span></div>
         </div>
       </div>
 
@@ -720,28 +578,8 @@
       <div id="view-ai" class="hidden">
         <div class="panel">
           <h2>AI-generated labels</h2>
-          <div class="feat-hl">
-            <div class="feat">
-              <span class="feat-tag">New</span>
-              <span class="feat-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5 12.5 20a2 2 0 0 1-2.8 0L3 13.3V4h9.3L20 11.7a1 1 0 0 1 0 .8Z"/><circle cx="7.6" cy="8.6" r="1.4"/></svg></span>
-              <div class="feat-body">
-                <h3>3 keywords per image</h3>
-                <p>AI picks the <b>3 best keywords</b> from each image. Use them in ALT text, blogs and content.</p>
-                <button class="feat-link" data-go="keywords" type="button">See my keywords &rarr;</button>
-              </div>
-            </div>
-            <div class="feat">
-              <span class="feat-tag">Smart</span>
-              <span class="feat-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.4 3 8.1 7.5 9.5 4.5-1.4 7.5-5.1 7.5-9.5V6L12 3Z"/><path d="m8.8 12.2 2.3 2.3 4.2-4.6"/></svg></span>
-              <div class="feat-body">
-                <h3>No keyword stuffing</h3>
-                <p>Our <b>stuffing checker</b> catches over-used keywords and rewrites them, so text stays natural.</p>
-                
-              </div>
-            </div>
-          </div>
           <p class="note" style="margin:0 0 18px;">
-            Reads every image with Gemini and writes ALT text (and a file name, if enabled) for what that specific image shows — front view, close-up, lifestyle and so on — so no two images get the same text.
+            Reads each product's first image with Gemini and writes what it sees. That same ALT text (and filename, if enabled) is then applied to every image on the product — the assumption is all of a product's photos show the same item.
           </p>
 
           <label class="ai-tool-row">
@@ -851,85 +689,6 @@
         </div>
       </div>
 
-      <!-- ============ KEYWORD SUGGESTIONS VIEW ============ -->
-      <div id="view-keywords" class="hidden">
-        <div class="panel">
-          <h2>Keyword suggestions</h2>
-          <div class="feat-hl">
-            <div class="feat">
-              <span class="feat-tag">New</span>
-              <span class="feat-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5 12.5 20a2 2 0 0 1-2.8 0L3 13.3V4h9.3L20 11.7a1 1 0 0 1 0 .8Z"/><circle cx="7.6" cy="8.6" r="1.4"/></svg></span>
-              <div class="feat-body">
-                <h3>3 keywords per image</h3>
-                <p>AI picks the <b>3 best keywords</b> from each image. Use them in ALT text, blogs and content.</p>
-                
-              </div>
-            </div>
-            <div class="feat">
-              <span class="feat-tag">Smart</span>
-              <span class="feat-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.4 3 8.1 7.5 9.5 4.5-1.4 7.5-5.1 7.5-9.5V6L12 3Z"/><path d="m8.8 12.2 2.3 2.3 4.2-4.6"/></svg></span>
-              <div class="feat-body">
-                <h3>No keyword stuffing</h3>
-                <p>Our <b>stuffing checker</b> catches over-used keywords and rewrites them, so text stays natural.</p>
-                <div class="feat-stat" id="kw-stuff">No ALT texts checked yet.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h2>Top keywords across your store</h2>
-          <div class="chips" id="kw-top"><span class="note" style="margin:0;">Loading…</span></div>
-          <div class="row" style="margin-top:14px; justify-content:flex-start; gap:10px;">
-            <button class="btn-ghost" id="kw-copy-all" style="padding:8px 16px; font-size:12.5px;">Copy all keywords</button>
-            <a class="btn-ghost" href="/api/keywords.csv" style="padding:8px 16px; font-size:12.5px; text-decoration:none; display:inline-block;">Download CSV</a>
-            <button class="btn-ghost" id="kw-refresh" style="padding:8px 16px; font-size:12.5px;">Refresh</button>
-            <span class="note" id="kw-msg" style="margin:0;"></span>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h2>Keywords by product</h2>
-          <div class="h-table-wrap">
-            <table class="h-table">
-              <thead><tr><th>Product</th><th>3 suggested keywords</th><th></th></tr></thead>
-              <tbody id="kw-body"></tbody>
-            </table>
-          </div>
-          <div class="h-empty hidden" id="kw-empty">No keywords yet. Run <b>Image ALT text</b> or <b>Image file name</b> labeling on some products and the AI's suggestions will appear here.</div>
-        </div>
-      </div>
-
-      <!-- ============ STORE SPEED VIEW ============ -->
-      <div id="view-speed" class="hidden">
-        <div class="panel">
-          <h2>Store speed</h2>
-          <p class="note" style="margin:0 0 16px;">What this app does for your storefront, and proof you can see. Press <b>Check my storefront</b> to read your live home page.</p>
-          <div class="sp-grid" id="sp-features"></div>
-          <p class="note" id="sp-note" style="margin:14px 0 0;"></p>
-          <div class="row" style="margin-top:18px; justify-content:flex-start; gap:10px;">
-            <button class="btn-primary" id="sp-check" style="padding:10px 22px; font-size:13.5px;">Check my storefront</button>
-            <a class="btn-ghost" id="sp-editor" target="_blank" rel="noopener" style="padding:10px 20px; font-size:13px; text-decoration:none; display:none;">Open theme editor</a>
-            <span class="note" id="sp-msg" style="margin:0;"></span>
-          </div>
-        </div>
-
-        <div class="panel hidden" id="sp-result">
-          <h2>Your storefront right now</h2>
-          <div class="grid4">
-            <div class="mini"><div class="n" id="sp-bytes">—</div><div class="l">Image weight</div></div>
-            <div class="mini"><div class="n" id="sp-count">—</div><div class="l">Images on page</div></div>
-            <div class="mini"><div class="n" id="sp-srcset">—</div><div class="l">Responsive (srcset)</div></div>
-            <div class="mini"><div class="n" id="sp-lazy">—</div><div class="l">Lazy-loaded</div></div>
-          </div>
-          <p class="note" id="sp-compare" style="margin:14px 0 0;"></p>
-          <p class="note" id="sp-ext" style="margin:8px 0 0;"></p>
-          <h2 style="margin-top:22px; font-size:16px;">Heaviest images</h2>
-          <div class="h-table-wrap"><table class="h-table"><thead><tr><th>Image</th><th>Size</th></tr></thead><tbody id="sp-heavy"></tbody></table></div>
-          <div class="row" style="margin-top:14px; justify-content:flex-start;"><button class="btn-primary" data-go="run" style="padding:9px 20px; font-size:13px;">Compress my images</button></div>
-        </div>
-      </div>
-
       <!-- ============ REPORT VIEW ============ -->
       <div id="view-report" class="hidden">
         <div class="panel">
@@ -996,7 +755,7 @@
             <div class="tool-right">
               <div class="preview-pane">
               <span class="picker-count">Preview (first selected image)</span>
-              <img id="enhance-preview-img" alt="" style="width:100%; max-height:220px; object-fit:contain; border:1px solid var(--line); border-radius:10px; background:#0d1521; display:block;">
+              <img id="enhance-preview-img" alt="" style="width:100%; max-height:220px; object-fit:contain; border:1px solid var(--line); border-radius:10px; background:#0a2029; display:block;">
               </div>
               <div class="row" style="margin-bottom:4px;">
                 <button class="btn-ghost" id="enhance-auto" style="padding:9px 18px; font-size:12.5px;">Auto enhance</button>
@@ -1024,7 +783,7 @@
             <div class="tool-right">
               <div class="preview-pane">
               <span class="picker-count">Live preview (first selected image)</span>
-              <div id="crop-preview-box" style="width:100%; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:rgba(9,14,22,.6);">
+              <div id="crop-preview-box" style="width:100%; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:rgba(5,17,22,.6);">
                 <img id="crop-preview-img" alt="" style="width:100%; height:100%; display:block; object-fit:contain; object-position:center;">
               </div>
               </div>
@@ -1060,7 +819,7 @@
             <div class="tool-right">
               <div class="preview-pane">
               <span class="picker-count">Live preview — box shape matches your target size, image scaled to fit inside it</span>
-              <div id="resize-preview-box" style="width:100%; max-width:220px; border:1px dashed var(--line); border-radius:8px; display:flex; align-items:center; justify-content:center; background:rgba(9,14,22,.6); overflow:hidden;">
+              <div id="resize-preview-box" style="width:100%; max-width:220px; border:1px dashed var(--line); border-radius:8px; display:flex; align-items:center; justify-content:center; background:rgba(5,17,22,.6); overflow:hidden;">
                 <img id="resize-preview-img" alt="" style="width:100%; height:100%; object-fit:contain; display:block;">
               </div>
               </div>
@@ -1132,7 +891,7 @@
               <div class="controls">
                 <div class="field" style="max-width:220px;">
                   <label>Stroke color</label>
-                  <input type="color" id="draw-color" value="#60d2fa" style="height:42px; padding:4px; cursor:pointer;">
+                  <input type="color" id="draw-color" value="#74e8e0" style="height:42px; padding:4px; cursor:pointer;">
                 </div>
                 <div class="field">
                   <label>Brush size — <span class="val" id="draw-size-val">4</span>px</label>
@@ -1140,7 +899,7 @@
                 </div>
               </div>
 
-              <div style="border:1px solid var(--line); border-radius:10px; overflow:hidden; background:rgba(9,14,22,.6);">
+              <div style="border:1px solid var(--line); border-radius:10px; overflow:hidden; background:rgba(5,17,22,.6);">
                 <canvas id="draw-canvas" width="760" height="420" style="width:100%; height:auto; display:block; cursor:crosshair; touch-action:none;"></canvas>
               </div>
               <p class="note">Select an image on the left to load it onto the canvas — nothing is uploaded until you save.</p>
@@ -1169,7 +928,7 @@
             <div class="tool-right">
               <div class="preview-pane">
               <span class="picker-count">Live preview (first selected image)</span>
-              <div id="colorbg-preview" style="width:100%; height:220px; border:1px solid var(--line); border-radius:10px; background:#0d1521; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+              <div id="colorbg-preview" style="width:100%; height:220px; border:1px solid var(--line); border-radius:10px; background:#0a2029; display:flex; align-items:center; justify-content:center; overflow:hidden;">
                 <img id="colorbg-preview-img" alt="" style="max-width:100%; max-height:100%; object-fit:contain;">
               </div>
               <span class="picker-count" id="colorbg-preview-status"></span>
@@ -1184,7 +943,7 @@
                 <div class="controls">
                   <div class="field" style="max-width:220px;">
                     <label>Background color</label>
-                    <input type="color" id="colorbg-color" value="#0d1521" style="height:42px; padding:4px; cursor:pointer;">
+                    <input type="color" id="colorbg-color" value="#0a2029" style="height:42px; padding:4px; cursor:pointer;">
                   </div>
                   <div class="field">
                     <label>Edge softness — <span class="val" id="colorbg-feather-val">2</span>px</label>
@@ -1225,7 +984,7 @@
             <div class="tool-right">
               <div class="field" style="margin-bottom:16px;">
                 <label>Prompt</label>
-                <textarea id="generate-prompt" rows="3" placeholder="e.g. matte ceramic mug on a linen surface, soft daylight, front angle" style="width:100%; background:rgba(10,16,25,.65); border:1px solid var(--line); color:var(--mist); padding:11px 13px; border-radius:9px; font-family:var(--body); font-size:13.5px; resize:vertical;"></textarea>
+                <textarea id="generate-prompt" rows="3" placeholder="e.g. matte ceramic mug on a linen surface, soft daylight, front angle" style="width:100%; background:rgba(6,20,25,.65); border:1px solid var(--line); color:var(--mist); padding:11px 13px; border-radius:9px; font-family:var(--body); font-size:13.5px; resize:vertical;"></textarea>
               </div>
 
               <div class="controls">
@@ -1289,13 +1048,6 @@ const forceWebpEl = $('force-webp'), redoEl = $('redo');
 const startBtn = $('start-btn'), stopBtn = $('stop-btn'), testBtn = $('test-btn');
 const connDot = $('conn-dot'), connText = $('conn-text'), shopTag = $('shop-tag');
 const installArea = $('install-area'), installShop = $('install-shop'), installBtn = $('install-btn');
-// Live app: merchants must arrive from Shopify, never type their store address (App Store rule).
-const MANUAL_SHOP = (document.querySelector('meta[name="manual-shop"]') || {}).content === 'yes';
-function showConnectOptions() {
-  if (MANUAL_SHOP) installArea.classList.remove('hidden');
-  else $('open-from-shopify').classList.remove('hidden');
-}
-function hideConnectOptions() { installArea.classList.add('hidden'); $('open-from-shopify').classList.add('hidden'); }
 const logoutBtn = $('logout-btn');
 const usageText = $('usage-text'), usageCount = $('usage-count'), usageBar = $('usage-bar');
 const errorBanner = $('error-banner'), logEl = $('log');
@@ -1430,26 +1182,6 @@ function thumb(src, px) {
   return src.replace(/(\.[a-zA-Z]+)(\?|$)/, `_${px}x${px}$1$2`);
 }
 
-// Long lists (a big store has thousands of products) are drawn 50 at a time. Drawing all of them
-// at once made the page freeze: 6,000+ products means well over 100,000 elements.
-const LIST_PAGE = 50;
-function pageEach(container, items, render, size = LIST_PAGE) {
-  let i = 0;
-  const more = document.createElement('button');
-  more.type = 'button'; more.className = 'btn-ghost show-more';
-  const step = () => {
-    more.remove();
-    items.slice(i, i + size).forEach(render);
-    i += size;
-    if (i < items.length) {
-      more.textContent = `Show ${Math.min(size, items.length - i)} more  ·  ${items.length - i} left`;
-      container.appendChild(more);
-    }
-  };
-  more.addEventListener('click', step);
-  step();
-}
-
 /* ================= Shared per-tool product/image picker ================= */
 let cachedCollections = null;
 let extraCollectionSelects = [];
@@ -1495,7 +1227,7 @@ function mountPicker(mountElId, opts) {
       </span>
     </div>
     <div class="report-list hidden" data-list style="margin-top:0;">
-      <div class="picker-empty"><span class="spin"></span>Loading products…</div>
+      <div class="picker-empty">Loading products…</div>
     </div>
   `;
 
@@ -1521,7 +1253,7 @@ function mountPicker(mountElId, opts) {
     loadArea.classList.add('hidden');
     pickerBar.classList.remove('hidden');
     listEl.classList.remove('hidden');
-    listEl.innerHTML = '<div class="picker-empty"><span class="spin"></span>Loading products…</div>';
+    listEl.innerHTML = '<div class="picker-empty">Loading products…</div>';
     countEl.textContent = 'Loading…';
     const qs = collectionId ? ('?collection_id=' + encodeURIComponent(collectionId)) : '';
     fetch('/api/products' + qs).then(r => r.json()).then(data => {
@@ -1540,7 +1272,7 @@ function mountPicker(mountElId, opts) {
       return;
     }
     listEl.innerHTML = '';
-    pageEach(listEl, withImages, p => {
+    withImages.forEach(p => {
       const box = document.createElement('div');
       box.className = 'r-product';
       const head = document.createElement('div');
@@ -1688,7 +1420,6 @@ updateResizePreview();
 $('resize-apply-btn').addEventListener('click', async () => {
   const sel = resizePicker.getSelected();
   if (!sel.size) { showError('Select at least one image above.'); return; }
-  if (!(await confirmSave({ lines: [`Resize ${plural(sel.size, 'image')} to fit ${$('resize-w').value} × ${$('resize-h').value} px`, `Quality ${qualityEl.value}`] }))) { notSavedToast(); return; }
   hideError();
   $('resize-status').textContent = 'Applying…';
   const body = {
@@ -1784,7 +1515,7 @@ function renderColorbgLivePreview() {
     const tile = Math.max(8, Math.round(canvas.width / 24));
     for (let y = 0; y < canvas.height; y += tile) {
       for (let x = 0; x < canvas.width; x += tile) {
-        ctx.fillStyle = ((x / tile + y / tile) % 2 === 0) ? '#172233' : '#0d1521';
+        ctx.fillStyle = ((x / tile + y / tile) % 2 === 0) ? '#123643' : '#0a2029';
         ctx.fillRect(x, y, tile, tile);
       }
     }
@@ -1804,7 +1535,7 @@ function renderColorbgLivePreview() {
   const solidArea = $('colorbg-solid-area');
   const colorEl = $('colorbg-color'), featherEl = $('colorbg-feather'), featherVal = $('colorbg-feather-val');
   const swatchWrap = $('colorbg-swatches');
-  const swatches = ['#0d1521', '#f4f1ea', '#111111', '#e0794f', '#6eeccf', '#eef3f8'];
+  const swatches = ['#0a2029', '#f4f1ea', '#111111', '#e0794f', '#8fbf6a', '#dcefee'];
 
   swatches.forEach(hex => {
     const sw = document.createElement('button');
@@ -1834,7 +1565,6 @@ $('colorbg-apply-btn').addEventListener('click', async () => {
   const sel = colorbgPicker.getSelected();
   if (!sel.size) { showError('Select at least one image above.'); return; }
   const mode = document.querySelector('#colorbg-mode .seg.active').dataset.bgmode;
-  if (!(await confirmSave({ lines: [`Change the background of ${plural(sel.size, 'image')} (${mode === 'solid' ? 'solid color ' + $('colorbg-color').value : mode})`] }))) { notSavedToast(); return; }
   hideError();
   $('colorbg-status').textContent = 'Removing background — this can take a few seconds per image…';
   const body = {
@@ -1914,7 +1644,6 @@ $('generate-clear').addEventListener('click', () => {
 $('generate-use-btn').addEventListener('click', async () => {
   const im = generatePicker.firstSelectedImage();
   if (!im || !generatedImageBase64) return;
-  if (!(await confirmSave({ lines: ['Replace the selected image with the AI-generated one'] }))) { notSavedToast(); return; }
   hideError();
   $('generate-status').textContent = 'Saving…';
   try {
@@ -2005,7 +1734,6 @@ $('enhance-auto').addEventListener('click', () => {
 $('enhance-apply-btn').addEventListener('click', async () => {
   const sel = enhancePicker.getSelected();
   if (!sel.size) { showError('Select at least one image above.'); return; }
-  if (!(await confirmSave({ lines: [`Apply the tone adjustments to ${plural(sel.size, 'image')}`] }))) { notSavedToast(); return; }
   hideError();
   $('enhance-status').textContent = 'Applying…';
   const body = { product_ids: [...sel.values()], image_ids: [...sel.keys()], values: enhanceValues };
@@ -2038,7 +1766,6 @@ $('crop-apply-btn').addEventListener('click', async () => {
   if (!sel.size) { showError('Select at least one image above.'); return; }
   const ratio = currentCropRatio();
   if (!ratio) { showError('Pick a crop ratio other than "Original" first.'); return; }
-  if (!(await confirmSave({ lines: [`Crop ${plural(sel.size, 'image')} to ${ratio}`, `Quality ${qualityEl.value}`] }))) { notSavedToast(); return; }
   hideError();
   $('crop-status').textContent = 'Applying…';
   const body = {
@@ -2077,7 +1804,6 @@ document.querySelectorAll('.side-link[data-view]').forEach(t => {
     const view = t.dataset.view;
     $('view-dashboard').classList.toggle('hidden', view !== 'dashboard');
     document.querySelector('.content-inner').classList.toggle('is-dash', view === 'dashboard');
-    document.querySelector('.content-inner').classList.toggle('is-run', view === 'run');
     $('view-run').classList.toggle('hidden', view !== 'run');
     $('view-ai').classList.toggle('hidden', view !== 'ai');
     $('view-ai-report').classList.toggle('hidden', view !== 'ai-report');
@@ -2089,8 +1815,6 @@ document.querySelectorAll('.side-link[data-view]').forEach(t => {
     $('view-color-bg').classList.toggle('hidden', view !== 'color-bg');
     $('view-generate').classList.toggle('hidden', view !== 'generate');
     $('view-history').classList.toggle('hidden', view !== 'history');
-    $('view-keywords').classList.toggle('hidden', view !== 'keywords');
-    $('view-speed').classList.toggle('hidden', view !== 'speed');
 
     document.querySelector('.content-inner').classList.toggle(
       'wide', ['enhance', 'crop', 'resize', 'draw', 'color-bg', 'generate'].includes(view)
@@ -2104,8 +1828,6 @@ document.querySelectorAll('.side-link[data-view]').forEach(t => {
     if (view === 'generate') initGeneratePage();
     if (view === 'history') initHistoryPage();
     if (view === 'dashboard') loadDashboard();
-    if (view === 'keywords') loadKeywords();
-    if (view === 'speed') initSpeedPage();
 
     if (view === 'ai' && t.dataset.aiMode) {
       const wantRename = t.dataset.aiMode === 'name';
@@ -2177,7 +1899,7 @@ aiCollectionSelect.addEventListener('change', () => {
 });
 
 async function loadProducts(collectionId) {
-  productList.innerHTML = '<div class="picker-empty"><span class="spin"></span>Loading products…</div>';
+  productList.innerHTML = '<div class="picker-empty">Loading products…</div>';
   pickerCount.textContent = 'Loading…';
   try {
     const res = await fetch('/api/products?collection_id=' + encodeURIComponent(collectionId));
@@ -2197,7 +1919,7 @@ function renderProducts() {
     updateCount(); return;
   }
   productList.innerHTML = '';
-  pageEach(productList, products, p => {
+  products.forEach(p => {
     const row = document.createElement('div');
     row.className = 'p-row' + (p.fully_done ? ' is-done' : '');
 
@@ -2328,7 +2050,7 @@ $('select-none').addEventListener('click', () => { selected = new Set(); imageOv
 
 /* ---------- AI view: its own collection/product picker ---------- */
 async function aiLoadProducts(collectionId) {
-  aiProductList.innerHTML = '<div class="picker-empty"><span class="spin"></span>Loading products…</div>';
+  aiProductList.innerHTML = '<div class="picker-empty">Loading products…</div>';
   aiPickerCount.textContent = 'Loading…';
   try {
     const res = await fetch('/api/products?collection_id=' + encodeURIComponent(collectionId));
@@ -2346,7 +2068,7 @@ function aiRenderProducts() {
     aiUpdateCount(); return;
   }
   aiProductList.innerHTML = '';
-  pageEach(aiProductList, aiProducts, p => {
+  aiProducts.forEach(p => {
     const row = document.createElement('label');
     row.className = 'p-row';
 
@@ -2398,14 +2120,14 @@ document.querySelectorAll('.seg[data-filter]').forEach(btn => {
   });
 });
 
-$('report-refresh').addEventListener('click', () => loadReport(true));
+$('report-refresh').addEventListener('click', loadReport);
 reportCollection.addEventListener('change', loadReport);
 
-async function loadReport(fresh) {
-  reportList.innerHTML = '<div class="picker-empty"><span class="spin"></span>Loading — this reads every product, so give it a moment…</div>';
+async function loadReport() {
+  reportList.innerHTML = '<div class="picker-empty">Loading — this reads every product, so give it a moment…</div>';
   const cid = reportCollection.value;
   try {
-    const res = await fetch('/api/report?' + new URLSearchParams({ ...(cid ? { collection_id: cid } : {}), ...(fresh === true ? { refresh: 1 } : {}) }));
+    const res = await fetch('/api/report' + (cid ? '?collection_id=' + encodeURIComponent(cid) : ''));
     const data = await res.json();
     if (!data.ok) { showError(data.error); reportList.innerHTML = ''; return; }
     hideError();
@@ -2437,7 +2159,7 @@ function renderReport() {
   }
 
   reportList.innerHTML = '';
-  pageEach(reportList, wanted, p => {
+  wanted.forEach(p => {
     const box = document.createElement('div');
     box.className = 'r-product';
 
@@ -2504,7 +2226,6 @@ $('reopt-clear').addEventListener('click', () => { rePick.clear(); updateReoptCo
 
 $('reopt-btn').addEventListener('click', async () => {
   if (!rePick.size) return;
-  if (!(await confirmSave({ lines: [`Re-optimize ${plural(rePick.size, 'selected image')}`, `Quality ${qualityEl.value}${forceWebpEl.checked ? ', converted to WebP' : ''}`] }))) { notSavedToast(); return; }
   hideError();
   const body = {
     scope: 'products',
@@ -2557,14 +2278,14 @@ document.querySelectorAll('.seg[data-ai-report-filter]').forEach(btn => {
   });
 });
 
-$('ai-report-refresh').addEventListener('click', () => loadAiReport(true));
+$('ai-report-refresh').addEventListener('click', loadAiReport);
 aiReportCollection.addEventListener('change', loadAiReport);
 
-async function loadAiReport(fresh) {
-  aiReportList.innerHTML = '<div class="picker-empty"><span class="spin"></span>Loading — this reads every product, so give it a moment…</div>';
+async function loadAiReport() {
+  aiReportList.innerHTML = '<div class="picker-empty">Loading — this reads every product, so give it a moment…</div>';
   const cid = aiReportCollection.value;
   try {
-    const res = await fetch('/api/ai/report?' + new URLSearchParams({ ...(cid ? { collection_id: cid } : {}), ...(fresh === true ? { refresh: 1 } : {}) }));
+    const res = await fetch('/api/ai/report' + (cid ? '?collection_id=' + encodeURIComponent(cid) : ''));
     const data = await res.json();
     if (!data.ok) { showError(data.error); aiReportList.innerHTML = ''; return; }
     hideError();
@@ -2596,7 +2317,7 @@ function renderAiReport() {
   }
 
   aiReportList.innerHTML = '';
-  pageEach(aiReportList, wanted, p => {
+  wanted.forEach(p => {
     const box = document.createElement('div');
     box.className = 'r-product';
 
@@ -2665,7 +2386,7 @@ async function testConnection() {
       connDot.className = 'status-dot live';
       connText.textContent = 'Connected';
       shopTag.textContent = data.shop_name;
-      hideConnectOptions();
+      installArea.classList.add('hidden');
       logoutBtn.style.display = 'inline-block';
       hideError();
       loadUsage();
@@ -2675,7 +2396,7 @@ async function testConnection() {
       connDot.className = 'status-dot err';
       connText.textContent = 'Not connected';
       shopTag.textContent = 'not connected';
-      showConnectOptions();
+      installArea.classList.remove('hidden');
       logoutBtn.style.display = 'none';
       showError(data.error);
       if (!$('view-dashboard').classList.contains('hidden')) loadDashboard();
@@ -2683,7 +2404,7 @@ async function testConnection() {
   } catch (e) {
     connDot.className = 'status-dot err';
     connText.textContent = 'Not connected';
-    showConnectOptions();
+    installArea.classList.remove('hidden');
     logoutBtn.style.display = 'none';
     showError('Could not reach the server.');
   }
@@ -2784,16 +2505,6 @@ async function startJob() {
     }
   }
 
-  {
-    const where = scope === 'store' ? 'every product in your store'
-      : `${plural(selected.size, 'selected product')}${collectionSelect.value ? ' in “' + collectionSelect.selectedOptions[0].textContent.trim() + '”' : ''}`;
-    const okSave = await confirmSave({ lines: [
-      `Compress images for ${where}`,
-      `Quality ${qualityEl.value}${forceWebpEl.checked ? ', converted to WebP' : ''}${redoEl.checked ? ', including images done before' : ''}`,
-    ] });
-    if (!okSave) { notSavedToast(); return; }
-  }
-
   const res = await fetch('/api/start', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -2892,20 +2603,18 @@ async function startAiJob() {
     showError('Pick at least one: update ALT text or rename files.');
     return;
   }
+  if (aiRenameFiles.checked) {
+    const ok = confirm(
+      'Rename image files?\n\n' +
+      'Re-uploads each image under a new filename — this changes its CDN URL. ' +
+      'Anything linking to the old image URL (other sites, ads, cached pages) breaks; ' +
+      'Shopify does not redirect old URLs to new ones.\n\n' +
+      'Continue?'
+    );
+    if (!ok) return;
+  }
   const body = aiScopeBody();
   if (!body) return;
-  {
-    const lines = [];
-    if (aiUpdateAlt.checked) lines.push('Write AI ALT text for the images');
-    if (aiRenameFiles.checked) lines.push('Rename the image files');
-    lines.push(body.scope === 'store' ? 'For every product in your store'
-      : body.scope === 'collection' ? 'For the products in the chosen collection'
-      : `For ${plural((body.product_ids || []).length, 'selected product')}`);
-    const warn = aiRenameFiles.checked
-      ? 'Renaming re-uploads each image under a new name. Its old web address stops working, so anything linking to the old one (other sites, ads, cached pages) breaks.'
-      : 'ALT text is replaced for these images. You can change it again later.';
-    if (!(await confirmSave({ lines, warn }))) { notSavedToast(); return; }
-  }
 
   const res = await fetch('/api/ai/start', {
     method: 'POST',
@@ -2984,7 +2693,7 @@ function initDrawCanvas() {
   let startX = 0, startY = 0;
   let snapshot = null;
 
-  ctx.fillStyle = 'rgba(9,14,22,0.001)';
+  ctx.fillStyle = 'rgba(5,17,22,0.001)';
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
@@ -3125,7 +2834,6 @@ function onDrawSelectionChange() {
 
 $('draw-save-product').addEventListener('click', async () => {
   if (!drawCurrentImage) return;
-  if (!(await confirmSave({ lines: ['Replace the image with your drawing'] }))) { notSavedToast(); return; }
   hideError();
   $('draw-status').textContent = 'Saving…';
   try {
@@ -3372,9 +3080,7 @@ function deviceLabel(ua) {
 async function loadHistory(page) {
   H.page = page;
   $('range-label').textContent = rangeLabel(H.start, H.end);
-  const body = $('hist-body');
-  body.innerHTML = '<tr class="loading-row"><td colspan="5"><span class="spin"></span>Loading history…</td></tr>';
-  $('hist-empty').classList.add('hidden');
+  const body = $('hist-body'); body.innerHTML = '';
   try {
     const q = new URLSearchParams({
       from: H.start.toISOString(), to: addDays(H.end, 1).toISOString(), page,
@@ -3382,7 +3088,6 @@ async function loadHistory(page) {
     const data = await (await fetch('/api/history?' + q)).json();
     if (!data.ok) { showError(data.error); return; }
     hideError();
-    body.innerHTML = '';
     $('hist-stat').innerHTML = `<b>${data.total}</b> visit${data.total === 1 ? '' : 's'} · <b>${data.unique_ips}</b> unique IP${data.unique_ips === 1 ? '' : 's'}`;
     $('hist-empty').classList.toggle('hidden', data.rows.length > 0);
     data.rows.forEach(r => {
@@ -3416,7 +3121,6 @@ $('dc-buy').addEventListener('click', () => { window.location.href = '/plans'; }
 $('dc-label-report').addEventListener('click', () => goToView('ai-report'));
 
 async function loadDashboard() {
-  $('view-dashboard').classList.add('is-loading-data');
   try {
     const d = await fetch('/api/dashboard').then(r => r.json());
     if (!d.ok) {
@@ -3438,11 +3142,6 @@ async function loadDashboard() {
       ? 'last 7 days · latest ' + new Date(d.last_visit.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
       : 'last 7 days';
     $('dc-alt').textContent = nf(s.alt_updated);
-    $('dc-stuff').textContent = s.stuffing_checked
-      ? `${nf(s.stuffing_checked)} ALT texts checked · ${nf(s.stuffing_fixed)} rewritten to avoid stuffing`
-      : 'No ALT texts checked yet.';
-    const tk = $('dc-topkw');
-    if (d.top_keywords && d.top_keywords.length) { tk.innerHTML = ''; d.top_keywords.forEach(t => tk.appendChild(chip(t.keyword, t.count))); }
     $('dc-renamed').textContent = nf(s.files_renamed);
 
     const total = u.free + u.credits, used = Math.min(u.used, total);
@@ -3452,7 +3151,6 @@ async function loadDashboard() {
 
     await loadDashCoverage(d);
   } catch (e) { $('dash-sub').textContent = 'Could not load the dashboard.'; }
-  $('view-dashboard').classList.remove('is-loading-data');
 }
 
 let dashData = null;
@@ -3492,165 +3190,6 @@ $('dc-cov-btn').addEventListener('click', async () => {
   } catch (e) { $('dc-cov-note').textContent = 'Could not read your products right now.'; btn.textContent = 'Scan my store'; }
   btn.disabled = false;
 });
-/* ================= Keyword suggestions ================= */
-function chip(text, count) {
-  const c = document.createElement('span'); c.className = 'chip'; c.textContent = text;
-  if (count != null) { const n = document.createElement('i'); n.textContent = '×' + count; c.appendChild(n); }
-  return c;
-}
-async function copyText(text, msgEl, ok) {
-  try { await navigator.clipboard.writeText(text); }
-  catch (e) { const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
-  if (msgEl) { msgEl.textContent = ok || 'Copied'; setTimeout(() => { msgEl.textContent = ''; }, 2000); }
-}
-document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => goToView(b.dataset.go)));
-
-let kwData = null;
-async function loadKeywords() {
-  try {
-    const d = await (await fetch('/api/keywords')).json();
-    if (!d.ok) { showError(d.error); return; }
-    hideError(); kwData = d;
-    $('kw-stuff').textContent = d.stuffing.checked
-      ? `${nf(d.stuffing.checked)} ALT texts checked · ${nf(d.stuffing.fixed)} rewritten to avoid stuffing`
-      : 'No ALT texts checked yet.';
-    const top = $('kw-top'); top.innerHTML = '';
-    if (!d.top.length) top.innerHTML = '<span class="note" style="margin:0;">No keywords yet.</span>';
-    d.top.forEach(t => top.appendChild(chip(t.keyword, t.count)));
-    const body = $('kw-body'); body.innerHTML = '';
-    $('kw-empty').classList.toggle('hidden', d.products.length > 0);
-    d.products.forEach(p => {
-      const tr = document.createElement('tr');
-      const t = document.createElement('td'); t.textContent = p.title; tr.appendChild(t);
-      const k = document.createElement('td'); const wrap = document.createElement('div'); wrap.className = 'chips';
-      p.keywords.forEach(w => wrap.appendChild(chip(w))); k.appendChild(wrap); tr.appendChild(k);
-      const a = document.createElement('td'); const b = document.createElement('button');
-      b.className = 'btn-ghost'; b.style.cssText = 'padding:5px 12px; font-size:12px;'; b.textContent = 'Copy';
-      b.addEventListener('click', () => { copyText(p.keywords.join(', '), null); b.textContent = 'Copied'; setTimeout(() => { b.textContent = 'Copy'; }, 1500); });
-      a.appendChild(b); tr.appendChild(a); body.appendChild(tr);
-    });
-  } catch (e) { showError('Could not load keyword suggestions.'); }
-}
-$('kw-refresh').addEventListener('click', loadKeywords);
-$('kw-copy-all').addEventListener('click', () => {
-  if (kwData && kwData.top.length) copyText(kwData.top.map(t => t.keyword).join(', '), $('kw-msg'), 'Copied all keywords');
-});
-/* ================= Store speed ================= */
-const SPEED_FEATURES = [
-  { key: null,               name: 'Image compression',   text: 'Shrinks your product images and converts them to WebP.', fixed: ['on', 'Active'] },
-  { key: 'LazyLoad',         name: 'Image LazyLoad',      text: 'Images below the fold load only when a shopper scrolls to them.' },
-  { key: 'Responsive images',name: 'Responsive images',   text: 'Phones download smaller copies of each image.' },
-  { key: 'Preloading',       name: 'Preloading',          text: 'The main image starts loading first.' },
-  { key: 'Critical CSS',     name: 'Critical CSS inlining', text: 'Above-the-fold styles are inlined so the page paints sooner.' },
-  { key: 'Smart JS Defer',   name: 'Smart JS Defer',      text: 'Holds third-party scripts until the page has loaded.' },
-  { key: 'App optimization', name: 'App optimization',    text: 'Delays chosen app scripts until the shopper interacts.' },
-  { key: null,               name: 'Minification',        text: 'Our storefront script is minified. Shopify already minifies your theme files.', fixed: ['on', 'Built in'] },
-];
-let speedInfo = null, speedResult = null;
-
-function badge(kind, text) { const b = document.createElement('span'); b.className = 'badge ' + kind; b.textContent = text; return b; }
-
-function renderSpeedFeatures() {
-  const box = $('sp-features'); box.innerHTML = '';
-  SPEED_FEATURES.forEach(f => {
-    let b;
-    if (f.fixed) b = badge(f.fixed[0], f.fixed[1]);
-    else if (speedResult && speedResult.extension.detected) b = speedResult.extension.features[f.key] ? badge('on', 'On') : badge('off', 'Off');
-    else if (speedInfo && speedInfo.extension_live) b = badge('todo', 'Turn on');
-    else b = badge('soon', 'Setup needed');
-    const item = document.createElement('div'); item.className = 'sp-item';
-    const top = document.createElement('div'); top.className = 'top';
-    const h = document.createElement('h4'); h.textContent = f.name; top.append(h, b);
-    const p = document.createElement('p'); p.textContent = f.text;
-    item.append(top, p); box.appendChild(item);
-  });
-}
-
-async function initSpeedPage() {
-  if (!speedInfo) {
-    try {
-      const d = await (await fetch('/api/speed/info')).json();
-      if (d.ok) {
-        speedInfo = d;
-        const a = $('sp-editor'); a.href = d.editor_url; a.style.display = d.extension_live ? 'inline-block' : 'none';
-      }
-    } catch (e) { /* the grid still renders */ }
-  }
-  renderSpeedFeatures();
-  const live = (speedInfo && speedInfo.extension_live) || (speedResult && speedResult.extension.detected);
-  $('sp-note').textContent = live ? 'Switch these on in your theme editor: Online Store → Themes → Customize → App embeds → one-globe-image-optimizer. Then press Check my storefront.' :
-    'Image compression and Minification are active now. The other six are storefront features — they switch on once the one-globe-image-optimizer extension is enabled in your theme (Online Store > Themes > Customize > App embeds).';
-}
-
-$('sp-check').addEventListener('click', async () => {
-  $('sp-msg').textContent = 'Reading your home page…';
-  try {
-    const d = await (await fetch('/api/speed/check', { method: 'POST' })).json();
-    if (!d.ok) { $('sp-msg').textContent = ''; showError(d.error); return; }
-    hideError(); $('sp-msg').textContent = ''; speedResult = d;
-    const im = d.images;
-    $('sp-bytes').textContent = fmtBytes(im.bytes);
-    $('sp-count').textContent = nf(im.on_page);
-    $('sp-srcset').textContent = nf(im.with_srcset);
-    $('sp-lazy').textContent = nf(im.lazy);
-    const prev = d.previous;
-    const cmp = $('sp-compare');
-    if (prev && prev.image_bytes && Math.abs(prev.image_bytes - im.bytes) > prev.image_bytes * 0.01) {
-      const pct = Math.round(100 * (im.bytes - prev.image_bytes) / prev.image_bytes);
-      cmp.textContent = `Last check: ${fmtBytes(prev.image_bytes)} → now ${fmtBytes(im.bytes)} (${pct < 0 ? '' : '+'}${pct}%).`;
-    } else cmp.textContent = `Measured the first ${im.measured} images on ${d.url}. Compress your images, then check again to see the weight drop.`;
-    $('sp-ext').textContent = d.extension.detected
-      ? 'Storefront extension: running on your store.'
-      : (speedInfo && speedInfo.extension_live ? 'Storefront extension: not detected on your home page yet — switch it on in the theme editor (App embeds).' : '');
-    const body = $('sp-heavy'); body.innerHTML = '';
-    im.heaviest.forEach(h => {
-      const tr = document.createElement('tr');
-      const a = document.createElement('td'); a.textContent = decodeURIComponent(h.url.split('?')[0].split('/').pop());
-      const b = document.createElement('td'); b.textContent = fmtBytes(h.bytes); b.style.whiteSpace = 'nowrap';
-      tr.append(a, b); body.appendChild(tr);
-    });
-    $('sp-result').classList.remove('hidden');
-    renderSpeedFeatures();
-    $('sp-note').textContent = d.extension.detected ? '' : $('sp-note').textContent;
-  } catch (e) { $('sp-msg').textContent = ''; showError('Could not check your storefront.'); }
-});
-/* ================= "Save to Shopify?" confirmation ================= */
-// Every action that changes your store calls this first. Nothing is sent to Shopify
-// unless the merchant presses "Save to Shopify".
-function confirmSave({ lines = [], warn = 'The original images are replaced in your store and cannot be restored.' } = {}) {
-  return new Promise(resolve => {
-    const prevFocus = document.activeElement;
-    const overlay = document.createElement('div'); overlay.className = 'cs-overlay';
-    overlay.setAttribute('role', 'dialog'); overlay.setAttribute('aria-modal', 'true'); overlay.setAttribute('aria-labelledby', 'cs-title');
-    const box = document.createElement('div'); box.className = 'cs-box';
-    const h = document.createElement('h3'); h.id = 'cs-title'; h.textContent = 'Save to Shopify?'; box.appendChild(h);
-    if (lines.length) {
-      const ul = document.createElement('ul');
-      lines.forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
-      box.appendChild(ul);
-    }
-    if (warn) { const w = document.createElement('div'); w.className = 'cs-warn'; w.textContent = warn; box.appendChild(w); }
-    const actions = document.createElement('div'); actions.className = 'cs-actions';
-    const no = document.createElement('button'); no.type = 'button'; no.className = 'btn-ghost'; no.textContent = "Don't save";
-    const yes = document.createElement('button'); yes.type = 'button'; yes.className = 'btn-primary'; yes.textContent = 'Save to Shopify';
-    actions.append(no, yes); box.appendChild(actions); overlay.appendChild(box); document.body.appendChild(overlay);
-
-    const done = ok => { document.removeEventListener('keydown', onKey, true); overlay.remove(); if (prevFocus && prevFocus.focus) prevFocus.focus(); resolve(ok); };
-    const onKey = e => {
-      if (e.key === 'Escape') { e.preventDefault(); done(false); }
-      else if (e.key === 'Tab') { e.preventDefault(); (document.activeElement === yes ? no : yes).focus(); }
-    };
-    document.addEventListener('keydown', onKey, true);
-    overlay.addEventListener('mousedown', e => { if (e.target === overlay) done(false); });
-    no.addEventListener('click', () => done(false)); yes.addEventListener('click', () => done(true));
-    no.focus();      // the safe choice is focused, so a stray Enter never saves
-  });
-}
-function notSavedToast() {
-  const t = document.createElement('div'); t.className = 'cs-toast'; t.textContent = 'Not saved — nothing was changed in your Shopify store.';
-  document.body.appendChild(t); setTimeout(() => t.remove(), 3500);
-}
-const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 </script>
 </body>
 </html>

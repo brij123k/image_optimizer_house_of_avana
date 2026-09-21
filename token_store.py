@@ -25,6 +25,10 @@ def _conn():
         new_file = not os.path.exists(DB_PATH)
         conn = sqlite3.connect(DB_PATH, timeout=10)
         conn.row_factory = sqlite3.Row
+        # A live server handles several requests at once: WAL lets readers and a writer work
+        # together, and the timeout makes a busy writer wait instead of failing.
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=10000")
         if new_file:
             try:
                 os.chmod(DB_PATH, 0o600)
@@ -41,7 +45,9 @@ def _conn():
         """)
         # Expiring offline tokens: added later, so migrate older DBs in place.
         cols = {r["name"] for r in conn.execute("PRAGMA table_info(shops)")}
-        for col in ("refresh_token", "expires_at", "refresh_expires_at"):
+        for col in ("refresh_token", "expires_at", "refresh_expires_at",
+                    "shop_id", "shop_name", "owner_name", "email", "shopify_plan",
+                    "currency", "country", "info_refreshed_at"):
             if col not in cols:
                 conn.execute(f"ALTER TABLE shops ADD COLUMN {col} TEXT")
         conn.commit()
@@ -73,6 +79,22 @@ def save_shop(shop, access_token, scope=None, refresh_token=None,
             expires_at         = excluded.expires_at,
             refresh_expires_at = excluded.refresh_expires_at
     """, (shop, access_token, scope, now, now, refresh_token, expires_at, refresh_expires_at))
+    conn.commit()
+
+
+def save_shop_info(shop, info):
+    """Stores the merchant details read from Shopify (owner, email, plan…).
+    Called after install and again whenever the info is refreshed, so the
+    plan is always current. install date stays as first recorded."""
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    conn = _conn()
+    conn.execute("""
+        UPDATE shops SET shop_id=?, shop_name=?, owner_name=?, email=?,
+            shopify_plan=?, currency=?, country=?, info_refreshed_at=?
+        WHERE shop=?
+    """, (info.get("shop_id"), info.get("shop_name"), info.get("owner_name"),
+          info.get("email"), info.get("shopify_plan"), info.get("currency"),
+          info.get("country"), now, shop))
     conn.commit()
 
 

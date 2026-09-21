@@ -127,9 +127,9 @@ class ShopifyClient:
 
     def update_image(self, product_id, image_id, base64_data, filename=None, alt=None):
         """Replaces an image's binary data in place, keeping its ID (and so its
-        position). Passing filename re-uploads under a new name — this changes
-        the image's CDN URL, so anything linking to the old one breaks. Returns
-        the updated image object."""
+        position). NOTE: Shopify silently ignores `filename` on an in-place
+        update — the call succeeds but the name never changes. To really rename
+        an image use replace_image(). Returns the updated image object."""
         url = f"{self.base_url}/products/{product_id}/images/{image_id}.json"
         image = {"id": image_id, "attachment": base64_data}
         if filename:
@@ -137,6 +137,37 @@ class ShopifyClient:
         if alt is not None:
             image["alt"] = alt
         return self._request("PUT", url, json={"image": image}, timeout=60).json()["image"]
+
+    def replace_image(self, product_id, image_id, base64_data, filename, alt=None):
+        """Really renames an image: uploads the data as a new image under
+        `filename`, then deletes the old one. Shopify has no rename call.
+
+        Keeps the old image's position and variant assignments (and its ALT
+        text unless `alt` is given). The new image has a NEW id and CDN URL, so
+        callers must record the returned image's id, not the old one.
+        Order matters: the new image is created before the old one is removed,
+        so a failure part-way never loses the picture."""
+        base = f"{self.base_url}/products/{product_id}/images"
+        old = self._request("GET", f"{base}/{image_id}.json", timeout=30).json()["image"]
+        payload = {
+            "attachment": base64_data,
+            "filename": filename,
+            "alt": alt if alt is not None else old.get("alt"),
+            "position": old.get("position"),
+        }
+        if old.get("variant_ids"):
+            payload["variant_ids"] = old["variant_ids"]
+        new = self._request("POST", f"{base}.json", json={"image": payload}, timeout=60).json()["image"]
+        try:
+            self._request("DELETE", f"{base}/{image_id}.json", timeout=30)
+        except Exception:
+            # Roll back so the product isn't left with the picture twice.
+            try:
+                self._request("DELETE", f"{base}/{new['id']}.json", timeout=30)
+            except Exception:  # noqa: BLE001
+                pass
+            raise
+        return new
 
     def update_image_alt(self, product_id, image_id, alt):
         """Sets an image's ALT text only — no re-upload, no URL change."""

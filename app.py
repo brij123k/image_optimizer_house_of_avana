@@ -4,15 +4,21 @@ import time
 from datetime import datetime
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, redirect, render_template, request
 
 from shopify_client import ShopifyClient
 from image_optimizer import compress_image
-from shopify_auth import auth_bp, current_credentials
+from shopify_auth import auth_bp, current_credentials, is_production, login_from_signed_request
 from billing import billing_bp
 import billing_store
+import product_cache
 from ai_metadata import ai_bp
 from image_edit import edit_bp
+from history import history_bp
+from dashboard import dashboard_bp
+from keywords import keywords_bp
+from speed import speed_bp
+from compliance import compliance_bp
 
 load_dotenv()
 
@@ -23,10 +29,28 @@ if not app.secret_key:
         "Missing FLASK_SECRET_KEY. Set it in .env — generate one with: "
         "python -c \"import secrets; print(secrets.token_hex(32))\""
     )
+
+# ---- session cookie: only sent by this site's own pages, never readable by scripts ----
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=is_production(),     # HTTPS only on the live server
+    PERMANENT_SESSION_LIFETIME=60 * 60 * 24 * 7,
+)
+if is_production():
+    # Behind nginx: trust one proxy hop so the real client IP and https are seen.
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
 app.register_blueprint(auth_bp)
+app.register_blueprint(compliance_bp)
 app.register_blueprint(billing_bp)
 app.register_blueprint(ai_bp)
 app.register_blueprint(edit_bp)
+app.register_blueprint(history_bp)
+app.register_blueprint(dashboard_bp)
+app.register_blueprint(keywords_bp)
+app.register_blueprint(speed_bp)
 
 # Minimum bytes an image must shrink by to count as "optimized" and get
 # re-uploaded. Avoids pointless writes for images that are already tiny.
@@ -137,6 +161,7 @@ def run_optimization(domain, token, quality, max_width, max_height=None, force_w
 
     ledger = {}
     unsaved = 0
+    product_cache.invalidate(domain)
 
     def flush_ledger():
         """Best effort — a failed ledger write must not fail the job."""
@@ -257,6 +282,8 @@ def run_optimization(domain, token, quality, max_width, max_height=None, force_w
                     unsaved += 1
                     quota_left -= 1
                     billing_store.record_usage(domain, 1)
+                    billing_store.add_stat(domain, "images_compressed", 1)
+                    billing_store.add_stat(domain, "bytes_saved", max(0, saved))
 
                     with STATE_LOCK:
                         STATE["optimized_images"] += 1
@@ -297,6 +324,7 @@ def run_optimization(domain, token, quality, max_width, max_height=None, force_w
         if quota_hit:
             summary += " Your plan limit was reached — buy an image pack to optimize the rest."
         log(summary)
+        product_cache.invalidate(domain)
 
     except Exception as exc:  # noqa: BLE001 - top-level failure (bad creds, network)
         try:
@@ -307,11 +335,66 @@ def run_optimization(domain, token, quality, max_width, max_height=None, force_w
             STATE["status"] = "error"
             STATE["finished_at"] = datetime.now().isoformat(timespec="seconds")
         log(f"Error: {exc}")
+        product_cache.invalidate(domain)
+
+
+@app.before_request
+def block_forged_requests():
+    """CSRF guard. Requests that change data must carry a header that a page on
+    another site cannot add to a cross-site request (static/loading.js adds it
+    to every fetch this app's own pages make). Shopify's signed webhooks are exempt."""
+    if request.method in ("POST", "PUT", "PATCH", "DELETE") and not request.path.startswith("/webhooks/"):
+        if request.headers.get("X-Requested-With") != "ihs":
+            return jsonify({"ok": False, "error": "Blocked: request did not come from this app."}), 403
+
+
+@app.after_request
+def compress_big_json(resp):
+    """The product list can be ~15 MB of JSON on a big store; compressed it is ~10x smaller."""
+    import gzip
+    if (resp.status_code == 200 and resp.mimetype == "application/json" and not resp.direct_passthrough
+            and "gzip" in request.headers.get("Accept-Encoding", "") and "Content-Encoding" not in resp.headers):
+        data = resp.get_data()
+        if len(data) > 20_000:
+            resp.set_data(gzip.compress(data, compresslevel=5))
+            resp.headers["Content-Encoding"] = "gzip"
+            resp.headers["Vary"] = "Accept-Encoding"
+    return resp
+
+
+@app.after_request
+def security_headers(resp):
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    if is_production():
+        resp.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+    return resp
 
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    # Shopify opens the app with a signed address; that is the only way in besides OAuth.
+    result = login_from_signed_request(request.args)
+    if result == "invalid":
+        return ("This link is invalid or has expired. Please open the app again from your Shopify admin.", 401)
+    if result == "install":
+        return redirect("/auth?shop=" + request.args["shop"].strip().lower())
+    return render_template("index.html", manual_shop=not is_production())
+
+
+@app.route("/privacy")
+def privacy_page():
+    return render_template("legal.html", page="privacy", title="Privacy policy",
+                           company=os.environ.get("COMPANY_NAME", "One Globe FZE"),
+                           email=os.environ.get("SUPPORT_EMAIL", "support@example.com"))
+
+
+@app.route("/support")
+def support_page():
+    return render_template("legal.html", page="support", title="Support",
+                           company=os.environ.get("COMPANY_NAME", "One Globe FZE"),
+                           email=os.environ.get("SUPPORT_EMAIL", "support@example.com"))
 
 
 @app.route("/plans")
@@ -323,7 +406,9 @@ def plans_page():
 def test_connection():
     try:
         client = get_client()
-        return jsonify({"ok": True, "shop_name": client.verify_connection()})
+        name = client.verify_connection()
+        product_cache.prewarm(client.store_domain, client)   # read the store in the background now
+        return jsonify({"ok": True, "shop_name": name})
     except Exception as exc:  # noqa: BLE001
         return jsonify({"ok": False, "error": str(exc)}), 400
 
@@ -343,8 +428,9 @@ def products():
     collection_id = request.args.get("collection_id") or None
     try:
         client = get_client()
-        items = list(client.iter_products(collection_id=collection_id))
-        ledger = client.load_ledger()
+        refresh = bool(request.args.get("refresh"))
+        items = product_cache.products(client.store_domain, client, collection_id, refresh)
+        ledger = product_cache.ledger(client.store_domain, client, "compress", refresh)
         out = []
         for p in items:
             images = p.get("images", [])
@@ -376,8 +462,9 @@ def report():
     collection_id = request.args.get("collection_id") or None
     try:
         client = get_client()
-        items = list(client.iter_products(collection_id=collection_id))
-        ledger = client.load_ledger()
+        refresh = bool(request.args.get("refresh"))
+        items = product_cache.products(client.store_domain, client, collection_id, refresh)
+        ledger = product_cache.ledger(client.store_domain, client, "compress", refresh)
 
         products_out = []
         total = done_total = 0
@@ -430,6 +517,7 @@ def reset_ledger():
     try:
         client = get_client()
         client.clear_ledger()
+        product_cache.invalidate(client.store_domain)
         return jsonify({"ok": True})
     except Exception as exc:  # noqa: BLE001
         return jsonify({"ok": False, "error": str(exc)}), 400
@@ -507,5 +595,6 @@ def status():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5089))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    port = int(os.environ.get("PORT", 5088))
+    # The debugger allows remote code execution, so it is off unless FLASK_DEBUG=1 (local .env only).
+    app.run(host="0.0.0.0", port=port, debug=os.environ.get("FLASK_DEBUG") == "1")

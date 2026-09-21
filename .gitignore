@@ -4,9 +4,18 @@ __pycache__/
 *.pyc
 shops.db
 shops.db-shm
-shops.db-walvenv/
+shops.db-wal
+venv/
 .env
 __pycache__/
 *.pyc
 .DS_Store
 shops.db
+
+# Shopify CLI
+.shopify/
+node_modules/
+
+# env backups (contain secrets)
+.env.bak*
+

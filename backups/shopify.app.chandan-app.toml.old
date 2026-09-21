@@ -1,0 +1,22 @@
+# Shopify app configuration — read by the Shopify CLI (`shopify app deploy`).
+#
+# Values come from this project's .env. CAUTION: `shopify app deploy` pushes this file's
+# settings to Shopify, replacing the app's URLs and scopes in the Dev Dashboard.
+# If your dashboard settings differ, run `shopify app config link` first — it rewrites
+# this file from what the dashboard currently has.
+
+client_id = "1482268b0da0a20cefca86a90d78fbf9"
+name = "image_optmizer"
+application_url = "https://stench-sabotage-thrower.ngrok-free.dev"
+embedded = false
+
+[access_scopes]
+scopes = "read_products,write_products,read_metafields,write_metafields"
+# The app runs its own OAuth flow (/auth and /auth/callback), so keep the classic install flow.
+use_legacy_install_flow = true
+
+[auth]
+redirect_urls = ["https://stench-sabotage-thrower.ngrok-free.dev/auth/callback"]
+
+[webhooks]
+api_version = "2026-07"

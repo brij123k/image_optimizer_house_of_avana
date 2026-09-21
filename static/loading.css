@@ -1,0 +1,51 @@
+/* Loading indicators shared by every page (see loading.js). */
+@keyframes ihs-spin { to { transform: rotate(360deg); } }
+@keyframes ihs-shimmer { 0% { background-position: -240px 0; } 100% { background-position: 240px 0; } }
+
+.spin {
+  display:inline-block; width:14px; height:14px; border-radius:50%; vertical-align:-2px; margin-right:9px;
+  border:2px solid rgba(96,210,250,.25); border-top-color:var(--glow, #60d2fa);
+  animation:ihs-spin .7s linear infinite;
+}
+
+/* thin bar across the top of the window */
+#ihs-topbar {
+  position:fixed; top:0; left:0; height:3px; width:0; z-index:10000; opacity:0; pointer-events:none;
+  background:linear-gradient(90deg,#60d2fa,#6eeccf); box-shadow:0 0 12px rgba(96,210,250,.7);
+  transition:width .35s ease, opacity .25s ease;
+}
+#ihs-topbar.on { opacity:1; }
+
+/* small "Working…" pill, bottom right */
+#ihs-busy {
+  position:fixed; right:18px; bottom:18px; z-index:10000; display:flex; align-items:center;
+  padding:10px 16px; border-radius:999px; font-size:12.5px; font-weight:500; color:#f5f5f5;
+  background:rgba(13,21,33,.92); border:1px solid rgba(96,210,250,.35);
+  box-shadow:0 10px 30px rgba(0,0,0,.45); opacity:0; transform:translateY(8px); pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease;
+}
+#ihs-busy.show { opacity:1; transform:none; }
+#ihs-busy .spin { margin-right:10px; }
+
+/* a button whose request is in flight */
+button.is-loading { position:relative; color:transparent !important; pointer-events:none; }
+button.is-loading::after {
+  content:''; position:absolute; inset:0; margin:auto; width:16px; height:16px; border-radius:50%;
+  border:2px solid rgba(96,210,250,.3); border-top-color:var(--glow, #60d2fa); animation:ihs-spin .7s linear infinite;
+}
+button.btn-primary.is-loading::after, .plan-card.highlight button.is-loading::after {
+  border-color:rgba(8,11,17,.25); border-top-color:#080b11;
+}
+
+/* skeleton shimmer while a card's number is loading */
+.is-loading-data .dcard .v, .is-loading-data .mini .n {
+  color:transparent !important; border-radius:8px; min-width:60px;
+  background:linear-gradient(90deg, rgba(127,154,178,.08) 0, rgba(127,154,178,.22) 120px, rgba(127,154,178,.08) 240px);
+  background-size:480px 100%; animation:ihs-shimmer 1.2s linear infinite;
+}
+.loading-row td { text-align:center; padding:26px !important; color:var(--fog, #7f9ab2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .spin, button.is-loading::after { animation-duration:2s; }
+  .is-loading-data .dcard .v, .is-loading-data .mini .n { animation:none; }
+}

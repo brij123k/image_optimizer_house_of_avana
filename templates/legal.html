@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ title }} — image-optimizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0b111b; --panel:#131d2c; --line:#1f2f45; --text:#dbe6f1; --muted:#7f9ab2; --accent:#60d2fa; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:linear-gradient(180deg,#0b111b,#0d1521 60%,#101b29); color:var(--text);
+         font-family:'Inter',sans-serif; line-height:1.65; min-height:100vh; }
+  .wrap { max-width:780px; margin:0 auto; padding:56px 22px 90px; }
+  a { color:var(--accent); }
+  h1 { font-family:'Space Grotesk',sans-serif; font-size:34px; margin:6px 0 4px; color:#f5f5f5; }
+  h2 { font-family:'Space Grotesk',sans-serif; font-size:19px; margin:34px 0 8px; color:#f5f5f5; }
+  p, li { color:var(--text); font-size:15px; }
+  .muted { color:var(--muted); font-size:13.5px; }
+  ul { padding-left:20px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:6px 24px 22px; margin-top:22px; }
+  table { border-collapse:collapse; width:100%; font-size:14px; margin-top:8px; }
+  th, td { border-bottom:1px solid var(--line); padding:9px 8px; text-align:left; vertical-align:top; }
+  th { color:var(--muted); font-weight:600; font-size:12px; letter-spacing:.06em; text-transform:uppercase; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="muted" href="/">&larr; Back to the app</a>
+  <h1>{{ title }}</h1>
+  <p class="muted">image-optimizer, provided by {{ company }} &middot; contact: <a href="mailto:{{ email }}">{{ email }}</a></p>
+
+{% if page == "privacy" %}
+  <div class="card">
+    <h2>What this app does</h2>
+    <p>image-optimizer compresses and renames the product images in your Shopify store, writes ALT text for them with AI,
+       and suggests keywords. To do that it reads your products and images and, when you ask it to, replaces or renames images.</p>
+
+    <h2>What we collect and why</h2>
+    <table>
+      <tr><th>Data</th><th>Why</th></tr>
+      <tr><td>Your store's domain, name, country, currency and Shopify plan, and the owner's name and email, as Shopify reports them at install</td><td>To identify your account and show it back to you</td></tr>
+      <tr><td>An access token from Shopify</td><td>To read and update your product images on your behalf. It is stored on our server with restricted access</td></tr>
+      <tr><td>Your product titles and product images</td><td>Read to compress, rename and label them. The app keeps counts and keywords, not copies of your images</td></tr>
+      <tr><td>Usage counters, suggested keywords and a record of which images were processed</td><td>To show your dashboard and avoid processing an image twice</td></tr>
+      <tr><td>Access history: time, IP address, approximate city and browser type of visits to the app</td><td>To show you your own access history and to keep the app secure. Kept for up to 180 days</td></tr>
+      <tr><td>Purchase records (plan, price, date)</td><td>To credit image packs you buy through Shopify Billing. We never see payment card details</td></tr>
+    </table>
+    <p>We do <b>not</b> collect or store information about your store's customers or orders.</p>
+
+    <h2>Who else receives data</h2>
+    <ul>
+      <li><b>Shopify</b> &ndash; the platform the app runs on and the source of your store data.</li>
+      <li><b>Google (Gemini API)</b> &ndash; when you use AI labeling, the product image and its title are sent to Google to generate ALT text, file names and keywords.</li>
+      <li><b>ipwho.is</b> &ndash; visitor IP addresses are sent to this service to find an approximate city for your access history.</li>
+      <li><b>Our hosting provider</b> &ndash; the servers the app runs on.</li>
+    </ul>
+    <p>We do not sell your data.</p>
+
+    <h2>Keeping and deleting data</h2>
+    <ul>
+      <li>When you uninstall the app, your access token is deleted straight away.</li>
+      <li>Shopify then tells us to delete your store's remaining data (48 hours after uninstall), and we do: your store record, usage counters, keywords, access history and processing records.</li>
+      <li>We keep purchase records (store domain, plan, price, date) because we must retain financial records.</li>
+      <li>Because we hold no data about your customers, requests to access or delete a shopper's data need no action from us.</li>
+    </ul>
+
+    <h2>Your choices</h2>
+    <p>You can uninstall the app at any time. To ask what we hold about your store, or to have it deleted sooner, email <a href="mailto:{{ email }}">{{ email }}</a>.</p>
+
+    <h2>Changes</h2>
+    <p>If we change this policy in a way that matters, we will update this page.</p>
+  </div>
+
+{% else %}
+  <div class="card">
+    <h2>Need help?</h2>
+    <p>Email <a href="mailto:{{ email }}">{{ email }}</a> with your store address and a short description of the problem. A screenshot helps.</p>
+
+    <h2>Good to know</h2>
+    <ul>
+      <li><b>Originals are replaced.</b> Compressing an image replaces it in your store, and the original cannot be restored. Try one product first.</li>
+      <li><b>Renaming changes the image URL.</b> A renamed image gets a new address, and the old one stops working. Anything linking to the old address, such as blog posts or emails, will break.</li>
+      <li><b>Credits.</b> Each image compressed, renamed or labeled uses one credit. Every store starts with 100 free, and credit packs never expire.</li>
+      <li><b>Where to find it.</b> Open the app from your Shopify admin under Apps.</li>
+    </ul>
+
+    <h2>Uninstalling</h2>
+    <p>Remove the app from your Shopify admin (Settings &rarr; Apps). Your stored data is deleted as described in the <a href="/privacy">privacy policy</a>.</p>
+  </div>
+{% endif %}
+</div>
+</body>
+</html>

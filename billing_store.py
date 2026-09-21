@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 from token_store import conn as _shared_conn
 
-FREE_IMAGES = 20
+FREE_IMAGES = 100
 
 
 def _conn():
@@ -29,6 +29,14 @@ def _conn():
             price      TEXT NOT NULL,
             status     TEXT NOT NULL DEFAULT 'pending',  -- pending | credited
             created_at TEXT NOT NULL
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS stats (
+            shop  TEXT NOT NULL,
+            key   TEXT NOT NULL,
+            value INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY (shop, key)
         )
     """)
     c.commit()
@@ -107,3 +115,27 @@ def list_purchases(shop):
         "WHERE shop = ? ORDER BY created_at DESC", (shop,)
     ).fetchall()
     return [dict(r) for r in rows]
+
+
+# ---- lifetime counters for the dashboard --------------------------------
+# keys: images_compressed, bytes_saved, alt_updated, files_renamed
+
+def add_stat(shop, key, n=1):
+    """Adds n to a lifetime counter. Never raises — stats must not fail a job."""
+    try:
+        c = _conn()
+        c.execute("""
+            INSERT INTO stats (shop, key, value) VALUES (?, ?, ?)
+            ON CONFLICT(shop, key) DO UPDATE SET value = value + excluded.value
+        """, (shop, key, int(n)))
+        c.commit()
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def get_stats(shop):
+    rows = _conn().execute("SELECT key, value FROM stats WHERE shop = ?", (shop,)).fetchall()
+    out = {"images_compressed": 0, "bytes_saved": 0, "alt_updated": 0, "files_renamed": 0,
+           "stuffing_checked": 0, "stuffing_fixed": 0, "keywords_found": 0}
+    out.update({r["key"]: r["value"] for r in rows})
+    return out

@@ -104,7 +104,7 @@ def begin_auth():
 
     query = urlencode({
         "client_id": _cfg("SHOPIFY_API_KEY", required=True),
-        "scope": _cfg("SHOPIFY_SCOPES", "read_products,write_products,read_metafields,write_metafields"),
+        "scope": _cfg("SHOPIFY_SCOPES", "read_products,write_products"),
         "redirect_uri": _cfg("SHOPIFY_APP_URL", required=True).rstrip("/") + "/auth/callback",
         "state": nonce,
         # Omit grant_options[] to get an offline token — one that keeps working
@@ -161,6 +161,10 @@ def callback():
 
     _save_token_payload(shop, payload)
     register_uninstall_webhook(shop, access_token)
+    try:
+        refresh_shop_info(shop, access_token)
+    except Exception as exc:  # noqa: BLE001 - never fail an install over this
+        current_app.logger.warning("Could not read shop info for %s: %s", shop, exc)
 
     # Mark this browser session as belonging to the shop, so the UI knows which
     # store it's acting on without the token ever reaching the browser.
@@ -197,21 +201,74 @@ def fresh_token(shop):
     if exp and rec.get("refresh_token"):
         soon = datetime.now(timezone.utc) + timedelta(seconds=60)
         if datetime.fromisoformat(exp) <= soon:
-            resp = requests.post(
-                f"https://{shop}/admin/oauth/access_token",
-                json={
-                    "client_id": _cfg("SHOPIFY_API_KEY", required=True),
-                    "client_secret": _cfg("SHOPIFY_API_SECRET", required=True),
-                    "grant_type": "refresh_token",
-                    "refresh_token": rec["refresh_token"],
-                },
-                timeout=20,
-            )
-            resp.raise_for_status()
-            payload = resp.json()
-            _save_token_payload(shop, payload)
-            return payload["access_token"]
+            try:
+                resp = requests.post(
+                    f"https://{shop}/admin/oauth/access_token",
+                    json={
+                        "client_id": _cfg("SHOPIFY_API_KEY", required=True),
+                        "client_secret": _cfg("SHOPIFY_API_SECRET", required=True),
+                        "grant_type": "refresh_token",
+                        "refresh_token": rec["refresh_token"],
+                    },
+                    timeout=20,
+                )
+                resp.raise_for_status()
+                payload = resp.json()
+                _save_token_payload(shop, payload)
+                return payload["access_token"]
+            except (requests.RequestException, KeyError, ValueError) as exc:
+                # The saved login expired and can't be renewed (e.g. the app was re-released or
+                # reinstalled). Don't crash: the caller falls back to the app's own credentials,
+                # or asks the merchant to install again.
+                current_app.logger.warning("Could not refresh the token for %s: %s", shop, exc)
+                return None
     return rec["access_token"]
+
+
+INFO_MAX_AGE = timedelta(hours=1)
+
+
+def refresh_shop_info(shop, token=None):
+    """Reads owner/email/plan from Shopify and saves them. Raises on failure."""
+    from shopify_client import ShopifyClient  # local import: avoids a cycle
+    token = token or fresh_token(shop)
+    client = ShopifyClient(shop, token, api_version())
+    d = client._request("GET", f"{client.base_url}/shop.json", timeout=15).json()["shop"]
+    info = {
+        "shop_id": str(d.get("id") or ""),
+        "shop_name": d.get("name"),
+        "owner_name": d.get("shop_owner"),
+        "email": d.get("customer_email") or d.get("email"),
+        "shopify_plan": d.get("plan_display_name") or d.get("plan_name"),
+        "currency": d.get("currency"),
+        "country": d.get("country_name"),
+    }
+    token_store.save_shop_info(shop, info)
+    return info
+
+
+@auth_bp.route("/api/shop-info")
+def shop_info():
+    """Saved store details. Re-reads from Shopify when they are over an hour
+    old (or ?refresh=1) so the plan stays up to date; falls back to the saved
+    copy if Shopify can't be reached."""
+    shop = current_shop()
+    rec = token_store.get_shop(shop) if shop else None
+    if not rec:
+        return jsonify({"ok": False, "error": "No shop in session."}), 401
+    stale = True
+    if rec.get("info_refreshed_at"):
+        age = datetime.now(timezone.utc) - datetime.fromisoformat(rec["info_refreshed_at"])
+        stale = age > INFO_MAX_AGE
+    if stale or request.args.get("refresh"):
+        try:
+            refresh_shop_info(shop)
+            rec = token_store.get_shop(shop)
+        except Exception as exc:  # noqa: BLE001
+            current_app.logger.warning("Could not refresh info for %s: %s", shop, exc)
+    keys = ("shop", "shop_id", "shop_name", "owner_name", "email", "shopify_plan",
+            "currency", "country", "installed_at", "info_refreshed_at")
+    return jsonify({"ok": True, **{k: rec.get(k) for k in keys}})
 
 
 def register_uninstall_webhook(shop, access_token):
@@ -249,18 +306,96 @@ def uninstalled():
 # Helpers for the rest of the app
 # --------------------------------------------------------------------------
 
+def is_production():
+    """APP_ENV=production on the live server. Anything else is local development."""
+    return os.environ.get("APP_ENV", "development").strip().lower() == "production"
+
+
 def current_shop():
-    """The shop this request is acting on: the browser session first, then a
-    ?shop= parameter, then the single-store .env fallback for local use."""
+    """The shop this request is acting on — the logged-in browser session only.
+
+    The session is set in exactly two places: the OAuth callback, and a request
+    that Shopify itself signed (see login_from_signed_request). A bare ?shop=
+    in the address proves nothing, so it is NOT accepted — otherwise anyone who
+    knew a store's domain could act on that store.
+
+    Local development only: SHOPIFY_STORE_DOMAIN in .env acts as a stand-in
+    login so the app can be tried in a browser without installing. It is ignored
+    when APP_ENV=production.
+    """
     shop = session.get("shop")
     if valid_shop(shop):
         return shop
-    shop = (request.args.get("shop") or "").strip().lower()
-    if valid_shop(shop) and token_store.get_token(shop):
+    if not is_production():
+        fallback = (os.environ.get("SHOPIFY_STORE_DOMAIN") or "").strip().lower()
+        if valid_shop(fallback):
+            return fallback
+    return None
+
+
+SIGNED_REQUEST_MAX_AGE = 15 * 60   # seconds
+
+
+def login_from_signed_request(args):
+    """Handles Shopify opening the app: /?shop=…&hmac=…&timestamp=…&host=…
+
+    Shopify signs these requests, so a valid, fresh signature is proof that the
+    merchant came from that store's admin. Returns:
+      "logged_in"  – signature ok and the app is installed: session set
+      "install"    – signature ok but not installed yet: caller should start OAuth
+      "invalid"    – bad or stale signature
+      None         – not a signed request at all
+    """
+    import time
+    if not args.get("hmac"):
+        return None
+    shop = (args.get("shop") or "").strip().lower()
+    if not valid_shop(shop) or not verify_query_hmac(args):
+        return "invalid"
+    try:
+        age = abs(time.time() - int(args.get("timestamp", "0")))
+    except ValueError:
+        return "invalid"
+    if age > SIGNED_REQUEST_MAX_AGE:
+        return "invalid"
+    if token_store.get_token(shop):
         session["shop"] = shop
-        return shop
-    fallback = (os.environ.get("SHOPIFY_STORE_DOMAIN") or "").strip().lower()
-    return fallback or None
+        return "logged_in"
+    return "install"
+
+
+_CC_CACHE = {}   # shop -> (token, expires_at_epoch) ; a failed try is cached briefly as (None, retry_at)
+
+
+def client_credentials_token(shop):
+    """Access token for a store that already has this app installed and belongs to
+    the same organization as the app, obtained with the app's own client id/secret
+    (Shopify's client-credentials grant) — no install screen, no OAuth redirect.
+    Tokens last 24 hours; this refreshes them shortly before they expire.
+    Returns None when the app isn't installed on that shop."""
+    import time
+    now = time.time()
+    hit = _CC_CACHE.get(shop)
+    if hit and now < hit[1]:
+        return hit[0]
+    try:
+        resp = requests.post(
+            f"https://{shop}/admin/oauth/access_token",
+            data={"grant_type": "client_credentials",
+                  "client_id": _cfg("SHOPIFY_API_KEY", required=True),
+                  "client_secret": _cfg("SHOPIFY_API_SECRET", required=True)},
+            timeout=20,
+        )
+        if resp.status_code != 200:
+            _CC_CACHE[shop] = (None, now + 60)      # don't hammer Shopify while it isn't installed
+            return None
+        data = resp.json()
+        token = data["access_token"]
+        _CC_CACHE[shop] = (token, now + max(60, int(data.get("expires_in", 86400)) - 300))
+        return token
+    except (requests.RequestException, KeyError, ValueError):
+        _CC_CACHE[shop] = (None, now + 30)
+        return None
 
 
 def current_credentials():
@@ -269,7 +404,9 @@ def current_credentials():
     shop = current_shop()
     if not shop:
         raise PermissionError("No shop in session. Visit /auth?shop=your-store.myshopify.com")
-    token = fresh_token(shop) or os.environ.get("SHOPIFY_ACCESS_TOKEN")
+    # SHOPIFY_ACCESS_TOKEN is a local-development stand-in only; the live server never uses it.
+    dev_token = None if is_production() else os.environ.get("SHOPIFY_ACCESS_TOKEN")
+    token = fresh_token(shop) or dev_token or client_credentials_token(shop)
     if not token:
         raise PermissionError(f"{shop} hasn't installed the app yet. Visit /auth?shop={shop}")
     return shop, token

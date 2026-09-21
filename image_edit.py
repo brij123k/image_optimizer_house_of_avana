@@ -16,6 +16,8 @@ import io
 import os
 
 import requests
+
+import product_cache
 from flask import Blueprint, jsonify, request
 from PIL import Image
 
@@ -26,7 +28,7 @@ from shopify_client import ShopifyClient
 
 edit_bp = Blueprint("edit", __name__)
 
-GEMINI_MODEL = "gemini-2.5-flash-image-preview"
+GEMINI_MODEL = "gemini-3.1-flash-image"
 GEMINI_IMAGE_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 
 
@@ -99,6 +101,7 @@ def edit_enhance():
             edited.save(out, format="PNG" if edited.mode == "RGBA" else "JPEG", quality=90)
             b64 = base64.b64encode(out.getvalue()).decode()
             client.update_image(product_id, image_id, b64)
+            product_cache.invalidate(client.store_domain)
             billing_store.record_usage(shop, 1)
             quota_left -= 1
             updated.append(image_id)
@@ -132,6 +135,7 @@ def edit_draw():
 
     try:
         client.update_image(product_id, image_id, data_url, filename="drawn.png")
+        product_cache.invalidate(client.store_domain)
         billing_store.record_usage(shop, 1)
     except Exception as exc:  # noqa: BLE001
         return jsonify({"ok": False, "error": str(exc)}), 400
@@ -225,6 +229,7 @@ def edit_color_bg():
 
             b64 = base64.b64encode(out.getvalue()).decode()
             client.update_image(product_id, image_id, b64, filename=filename)
+            product_cache.invalidate(client.store_domain)
             billing_store.record_usage(shop, 1)
             quota_left -= 1
             updated.append(image_id)
@@ -260,7 +265,7 @@ def edit_generate_preview():
     try:
         resp = requests.post(
             GEMINI_IMAGE_URL,
-            params={"key": _gemini_key()},
+            headers={"x-goog-api-key": _gemini_key()},
             json={"contents": [{"parts": [{"text": full_prompt}]}]},
             timeout=60,
         )
@@ -296,6 +301,7 @@ def edit_generate_use():
 
     try:
         client.update_image(product_id, image_id, image_b64, filename="generated.png")
+        product_cache.invalidate(client.store_domain)
         billing_store.record_usage(shop, 1)
     except Exception as exc:  # noqa: BLE001
         return jsonify({"ok": False, "error": str(exc)}), 400

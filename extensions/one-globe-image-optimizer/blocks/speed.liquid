@@ -1,0 +1,82 @@
+{%- comment -%}
+  one-globe-image-optimizer. App embed: loads in <head> on every storefront page.
+  Every feature is off until the merchant switches it on in
+  Online Store > Themes > Customize > App embeds.
+{%- endcomment -%}
+<link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
+
+{%- comment -%} The preload links are written by hand because image_tag would also print an <img> tag, which does not belong in the head. {%- endcomment -%}
+{% # theme-check-disable AssetPreload %}
+{%- if block.settings.preload -%}
+  {%- if request.page_type == 'product' and product.featured_image -%}
+    <link rel="preload" as="image" fetchpriority="high"
+      href="{{ product.featured_image | image_url: width: 1080 }}"
+      imagesrcset="{{ product.featured_image | image_url: width: 540 }} 540w, {{ product.featured_image | image_url: width: 810 }} 810w, {{ product.featured_image | image_url: width: 1080 }} 1080w"
+      imagesizes="(min-width: 750px) 50vw, 100vw">
+  {%- elsif request.page_type == 'collection' and collection.image -%}
+    <link rel="preload" as="image" fetchpriority="high"
+      href="{{ collection.image | image_url: width: 1080 }}">
+  {%- endif -%}
+{%- endif -%}
+
+{% # theme-check-enable AssetPreload %}
+
+{%- if block.settings.critical_css != blank -%}
+  <style id="ihs-critical-css">{{ block.settings.critical_css | replace: '</style', '<\/style' }}</style>
+{%- endif -%}
+
+<script>
+  window.IHS = {
+    lazy: {{ block.settings.lazy_load | json }},
+    skip: {{ block.settings.skip_first_images | json }},
+    responsive: {{ block.settings.responsive | json }},
+    deferCss: {{ block.settings.defer_css | json }},
+    cssExclude: {{ block.settings.css_exclude | json }},
+    deferJs: {{ block.settings.defer_js | json }},
+    jsExclude: {{ block.settings.js_exclude | json }},
+    delayApps: {{ block.settings.delay_apps | json }},
+    delayPatterns: {{ block.settings.delay_patterns | json }},
+    delayTimeout: {{ block.settings.delay_timeout | json }}
+  };
+</script>
+{%- comment -%} Must run synchronously while the page is still being read, so it can mark images lazy before the browser starts fetching them. The file is tiny (under 4 KB). {%- endcomment -%}
+{% # theme-check-disable ParserBlockingScript %}
+<script src="{{ 'speed.js' | asset_url }}"></script>
+{% # theme-check-enable ParserBlockingScript %}
+
+{% schema %}
+{
+  "name": "one-globe-image-optimizer",
+  "target": "head",
+  "settings": [
+    { "type": "header", "content": "Images" },
+    { "type": "checkbox", "id": "lazy_load", "label": "LazyLoad images", "default": true,
+      "info": "Below-the-fold images load only when scrolled near." },
+    { "type": "range", "id": "skip_first_images", "label": "Never lazy-load the first images", "min": 0, "max": 6, "step": 1, "default": 2,
+      "info": "Keeps the main image on screen loading immediately." },
+    { "type": "checkbox", "id": "responsive", "label": "Responsive images", "default": true,
+      "info": "Adds srcset/sizes so phones download smaller files." },
+    { "type": "checkbox", "id": "preload", "label": "Preload the main image", "default": true,
+      "info": "Product and collection pages." },
+
+    { "type": "header", "content": "CSS" },
+    { "type": "textarea", "id": "critical_css", "label": "Critical CSS (inlined in the head)",
+      "info": "Paste above-the-fold CSS from a critical-CSS generator. Leave empty to skip." },
+    { "type": "checkbox", "id": "defer_css", "label": "Defer non-critical stylesheets", "default": false,
+      "info": "Only turn on together with Critical CSS above, or the page flashes unstyled." },
+    { "type": "text", "id": "css_exclude", "label": "Never defer stylesheets containing",
+      "info": "Comma separated, e.g. base.css, theme" },
+
+    { "type": "header", "content": "JavaScript (best effort)" },
+    { "type": "checkbox", "id": "defer_js", "label": "Smart JS Defer", "default": false,
+      "info": "Holds third-party scripts until the page has loaded. Test cart and checkout after enabling." },
+    { "type": "text", "id": "js_exclude", "label": "Never defer scripts containing",
+      "info": "Comma separated, e.g. cart, checkout, klaviyo" },
+    { "type": "checkbox", "id": "delay_apps", "label": "App Optimization: delay listed app scripts", "default": false,
+      "info": "Waits for the first tap, scroll or key press before running the scripts listed below." },
+    { "type": "textarea", "id": "delay_patterns", "label": "Scripts to delay (parts of the script URL)",
+      "info": "One per line or comma separated, e.g. chat, reviews, popup" },
+    { "type": "range", "id": "delay_timeout", "label": "Run delayed scripts anyway after (seconds)", "min": 2, "max": 15, "step": 1, "default": 6 }
+  ]
+}
+{% endschema %}

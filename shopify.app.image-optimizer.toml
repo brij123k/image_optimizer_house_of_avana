@@ -1,0 +1,25 @@
+# One Globe FZE — "image-optimizer". Linked with `shopify app config link`.
+# `shopify app deploy` pushes THIS file to that app on Shopify: its URLs, scopes and the
+# storefront extension. The values match how the Flask app logs stores in (/auth, /auth/callback).
+
+client_id = "2f25fbaa3134d5856f5f70e0ff3cbeca"
+name = "image-optimizer"
+application_url = "https://stench-sabotage-thrower.ngrok-free.dev"
+embedded = false
+
+[webhooks]
+api_version = "2026-07"
+
+  # Shopify's mandatory privacy webhooks — see compliance.py
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+  uri = "https://stench-sabotage-thrower.ngrok-free.dev/webhooks/compliance"
+
+[access_scopes]
+scopes = "read_products,write_products"
+optional_scopes = [ ]
+# The Flask app runs its own OAuth flow, so keep the classic install flow.
+use_legacy_install_flow = true
+
+[auth]
+redirect_urls = ["https://stench-sabotage-thrower.ngrok-free.dev/auth/callback"]

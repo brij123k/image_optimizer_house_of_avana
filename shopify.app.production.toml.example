@@ -1,0 +1,23 @@
+# Copy this to shopify.app.production.toml, replace app.example.com with your real domain,
+# and link/deploy it. It is the same app as shopify.app.image-optimizer.toml, pointed at the live server.
+#   npx @shopify/cli@latest app deploy --config production
+
+client_id = "2f25fbaa3134d5856f5f70e0ff3cbeca"
+name = "image-optimizer"
+application_url = "https://app.example.com"
+embedded = false
+
+[webhooks]
+api_version = "2026-07"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+  uri = "https://app.example.com/webhooks/compliance"
+
+[access_scopes]
+scopes = "read_products,write_products"
+optional_scopes = [ ]
+use_legacy_install_flow = true
+
+[auth]
+redirect_urls = ["https://app.example.com/auth/callback"]
