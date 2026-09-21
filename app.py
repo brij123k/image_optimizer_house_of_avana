@@ -4,11 +4,11 @@ import time
 from datetime import datetime
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, redirect, render_template, request
+from flask import Flask, jsonify, redirect, render_template, request, session
 
 from shopify_client import ShopifyClient
 from image_optimizer import compress_image
-from shopify_auth import auth_bp, current_credentials, is_production, login_from_signed_request
+from shopify_auth import auth_bp, current_credentials, is_production, login_from_signed_request, valid_shop
 from billing import billing_bp
 import billing_store
 import product_cache
@@ -374,12 +374,19 @@ def security_headers(resp):
 
 @app.route("/")
 def index():
-    # Shopify opens the app with a signed address; that is the only way in besides OAuth.
-    result = login_from_signed_request(request.args)
-    if result == "invalid":
-        return ("This link is invalid or has expired. Please open the app again from your Shopify admin.", 401)
-    if result == "install":
-        return redirect("/auth?shop=" + request.args["shop"].strip().lower())
+    """The app's address. Shopify opens it with ?shop=<store> (usually signed) after an install.
+
+    Rule: if the request names a store and this browser is not already logged in to THAT store,
+    start the Shopify approval flow straight away (Shopify's automated check requires this).
+    Starting the flow is harmless: only that store's own staff can approve it, so a made-up or
+    forged ?shop= gets nobody in. A valid signed request from an installed store logs in directly.
+    """
+    shop = (request.args.get("shop") or "").strip().lower()
+    if shop:
+        if not valid_shop(shop):
+            return ("That store address is not valid.", 400)
+        if login_from_signed_request(request.args) != "logged_in" and session.get("shop") != shop:
+            return redirect("/auth?shop=" + shop)
     return render_template("index.html", manual_shop=not is_production())
 
 
