@@ -3,7 +3,7 @@
 #   npx @shopify/cli@latest app deploy --config production
 
 client_id = "2f25fbaa3134d5856f5f70e0ff3cbeca"
-name = "image-optimizer"
+name = "One Globe Image Optimizer"
 application_url = "https://app.example.com"
 embedded = false
 
@@ -15,7 +15,7 @@ api_version = "2026-07"
   uri = "https://app.example.com/webhooks/compliance"
 
 [access_scopes]
-scopes = "read_products,write_products"
+scopes = "write_products"
 optional_scopes = [ ]
 use_legacy_install_flow = true
 

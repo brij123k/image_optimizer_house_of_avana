@@ -104,7 +104,7 @@ def begin_auth():
 
     query = urlencode({
         "client_id": _cfg("SHOPIFY_API_KEY", required=True),
-        "scope": _cfg("SHOPIFY_SCOPES", "read_products,write_products"),
+        "scope": _cfg("SHOPIFY_SCOPES", "write_products"),
         "redirect_uri": _cfg("SHOPIFY_APP_URL", required=True).rstrip("/") + "/auth/callback",
         "state": nonce,
         # Omit grant_options[] to get an offline token — one that keeps working
@@ -334,6 +334,29 @@ def current_shop():
 
 
 SIGNED_REQUEST_MAX_AGE = 15 * 60   # seconds
+
+
+def token_still_valid(shop):
+    """True if the saved login for this shop still works on Shopify.
+
+    A merchant can uninstall and reinstall the app, and if the uninstall message to us was ever
+    lost we would still hold an old token. Shopify requires the app to go through approval (OAuth)
+    again on every install, so before trusting a saved token we ask Shopify once. A rejected token
+    is deleted. If Shopify can't be reached we assume it is fine rather than lock merchants out.
+    """
+    try:
+        token = fresh_token(shop)
+        if not token:
+            token_store.delete_shop(shop)
+            return False
+        r = requests.get(f"https://{shop}/admin/api/{api_version()}/shop.json",
+                         headers={"X-Shopify-Access-Token": token}, timeout=8)
+    except requests.RequestException:
+        return True
+    if r.status_code in (401, 402, 403, 404):    # uninstalled, or the store is gone/frozen
+        token_store.delete_shop(shop)
+        return False
+    return True
 
 
 def login_from_signed_request(args):

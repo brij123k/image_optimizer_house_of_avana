@@ -9,7 +9,7 @@ The extension lives in `extensions/one-globe-image-optimizer/`. Until it is depl
   replacing the app's URL and scopes in the Dev Dashboard.
   - If the dashboard currently shows different URLs or scopes, run `shopify app config link`
     first. It rewrites `shopify.app.toml` from the dashboard, then re-check the values.
-  - The toml asks for the scopes `read_products,write_products`. Do not add `read_metafields` or
+  - The toml asks for the scopes `write_products`. Do not add `read_metafields` or
     `write_metafields`: they are not real Shopify scopes and make the deploy fail. The app saves its
     "already optimized" record without them.
 - The `application_url` is your server's address (https://206-81-12-41.sslip.io). If you ever change the address, update

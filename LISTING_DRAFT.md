@@ -1,64 +1,80 @@
 # Shopify App Store listing — draft to paste into the Partner Dashboard
 
-Partner Dashboard → App distribution → All apps → the app → App Store listing. Character limits are in brackets.
-Files: icon `listing/app-icon-1200.png` (1200×1200), screenshots `listing/screenshots/` (1600×900).
+Written against Shopify's App Store requirements. Limits are in brackets and were measured.
+Files: icon `listing/app-icon-1200.png` (1200×1200), feature image `listing/feature-image-1600x900.png`, screenshots `listing/screenshots/` (1600×900).
 
-## Text
+## Name — must be the SAME in the listing and in the app's TOML file
+**App name** [≤30, 25]: **One Globe Image Optimizer**
+The TOML file (`shopify.app.image-optimizer.toml`) now uses this exact name. Brand first ("One Globe"), then what it does.
+Before submitting, search the App Store for this name to be sure nobody else uses it or something very similar.
 
-**App name** [≤30, 25]
-One Globe Image Optimizer
+## Text (benefit-led, no data claims or guarantees)
+**App card subtitle** [≤62, 53]
+Help product pages load faster and be found in search
 
-**App introduction** [≤100, 91]
-Compress product images, write AI ALT text and get keyword ideas, without keyword stuffing.
+**App introduction** [≤100, 95]
+Lighter product images and clear ALT text can help your pages load faster and appear in search.
 
-**Tagline / subtitle** [74]
-Smaller images, AI ALT text and file names, and 3 keyword ideas per image.
-
-**App details** [≤500, 385]
-Big product photos slow your store down. One Globe Image Optimizer compresses your images (and can convert them to WebP), then uses AI to write a specific ALT text and file name for every image, plus 3 keyword ideas you can reuse in blogs and content. Every ALT text is checked so keywords are not stuffed. Preview, then choose to save: nothing changes in your store until you confirm.
+**App details** [≤500, 418]
+Compress product images in bulk, by store, collection or product, and convert them to WebP. AI writes a specific ALT text and file name for each image from what it shows, and suggests three keywords per image you can reuse in your content. Each ALT text is checked so keywords are not overused. Every change asks for your confirmation before it is saved to your store. Originals are replaced, so try one product first.
 
 **Feature list** [≤80 each]
-1. Compress images in bulk and convert to WebP, by store, collection or product   (76)
-2. AI ALT text and file names written for each image, not one text for all   (71)
-3. 3 keyword ideas per image to reuse in blogs, descriptions and content   (69)
-4. Keyword-stuffing checker rewrites over-optimised ALT text automatically   (71)
-5. Asks 'Save to Shopify?' before every change; shows your storefront image weight   (79)
+1. Compress images in bulk and convert them to WebP   (48)
+2. AI-written ALT text and file names, specific to each image   (58)
+3. Three keyword ideas per image to reuse in your content   (54)
+4. An automatic check keeps ALT text natural, not keyword-stuffed   (62)
+5. A confirmation before any change is saved to your store   (55)
 
-**Search terms**: image optimizer, compress images, alt text, image seo, webp, file names, keywords
+**Search terms** [max 5, one idea each]: image optimizer, compress images, alt text, image seo, webp
 
-## Pricing (one-time purchases, no subscription)
-- **Free** — first 100 images on every store (compression, AI ALT text, file renaming, keyword ideas)
-- **100 images — $2.00**, **500 images — $10.00**, **1000 images — $18.00** (credits never expire)
+**Integrations**: none. (Do not list Shopify itself.)
 
-## Screenshots (1600×900) — suggested captions
-1. `01-dashboard.png` — See credits, savings and store coverage at a glance
-2. `02-ai-alt-text-and-keywords.png` — AI ALT text, file names and 3 keywords per image, with anti-stuffing
-3. `03-compress-images.png` — Compress a whole store, a collection or a single product
-4. `04-store-speed.png` — Check how much your storefront images weigh
-5. `05-plans.png` — Simple one-time credit packs, 100 images free
+## Feature media and screenshots — alt text is required
+| File | Alt text |
+|---|---|
+| `feature-image-1600x900.png` | App icon beside the words: Lighter product images. Clearer ALT text. |
+| `01-dashboard.png` | App dashboard showing image credits, images compressed, storage saved and store coverage |
+| `02-ai-alt-text-and-keywords.png` | AI labeling screen with options to write ALT text and rename image files |
+| `03-compress-images.png` | Compress Images screen with quality setting, WebP option and scope by store or collection |
+| `04-store-speed.png` | Store speed screen listing storefront image features and a button to check the storefront |
+| `05-save-confirmation.png` | Confirmation window asking to save changes to the Shopify store, with Don't save selected first |
 
-## Links and contacts (fill in before submitting)
-- Privacy policy: `https://YOUR-DOMAIN/privacy`
-- Support: `https://YOUR-DOMAIN/support`  ·  Support email: **(set SUPPORT_EMAIL)**
-- Emergency developer contact: **(name, email, phone)**
-- Demo store: `mystore-123456789789457569.myshopify.com`  (remove its storefront password, or give the reviewers the password)
+- Use the feature image as the **feature media** (or record a 2–3 minute promotional video, no more than 25% screencast).
+- Screenshots: 3–6 desktop images, at least one showing the app. Already checked: no browser frame, no personal data, **no pricing**, no reviews, no outcome claims.
+  The old plans screenshot was removed because it showed prices.
 
-## Test instructions for Shopify's reviewers [paste]
-1. Install the app on a development store, then open it from Apps in the Shopify admin. You land on the Dashboard, already logged in. No account or store address is needed.
-2. Open **Compress Images**, choose **A collection**, pick ONE product, press **Optimize images**. A "Save to Shopify?" window appears — press **Save to Shopify**. The image is replaced by a smaller one.
-3. Open **Image ALT text**, tick **Update ALT text**, choose one product, press **Run AI labeling**, confirm. Each image gets its own ALT text. Open **Keyword suggestions** to see the 3 keywords per product.
-4. Open **Plans** and press **Buy this pack** on the $2.00 pack. Approve the (test) charge on Shopify's page. You return to the app and the credits are added.
-5. Uninstall the app from Settings → Apps. The store's data is deleted through Shopify's privacy webhooks.
-Notes: the app changes product images in the store, so use a test store. "Don't save" in the confirmation window changes nothing.
+## Pricing
+- Billing method: **One-time payment** (charged through Shopify Billing). The app has no subscription.
+- **100 images — $2.00**, **500 images — $10.00**, **1000 images — $18.00**. Credits never expire. Merchants can buy another pack at any time from inside the app, with no reinstall and no need to contact support.
+- Say in the pricing details: "Every store starts with 100 free images."
+- Link the pricing page: `https://YOUR-DOMAIN/support` (or a pricing page of your own).
 
-## Screencast outline (about 3 minutes)
-Install → open from admin → Dashboard tour (20s) → compress one product with the confirm window (40s) → AI ALT text + keywords (50s) → Plans and a test purchase (40s) → uninstall (10s).
+## Categories, eligibility and links
+- **Category / tags**: choose the closest for image optimization and SEO. Pick features that are really true (compression, ALT text, file names).
+- **Install eligibility**: requires the **Online Store** sales channel. No country, shipping or currency limits.
+- **Privacy policy (required)**: `https://YOUR-DOMAIN/privacy`
+- **Support / FAQ**: `https://YOUR-DOMAIN/support` · Support email: (set `SUPPORT_EMAIL` on the server)
+- **Emergency developer contact**: (name, email, phone)
+- **Demo store**: `mystore-123456789789457569.myshopify.com` — link straight to the app's Compress Images page and add: "Pick one product, press Optimize images, then Save to Shopify." Remove the store's password or give it to reviewers.
 
-## Before you submit — status
-- [x] Data-deletion webhooks, privacy page, support page, install flow, security fixes (in the code)
-- [ ] App on a real HTTPS server and the live address deployed to Shopify (see DEPLOY_DIGITALOCEAN.md)
-- [ ] `SUPPORT_EMAIL` set; privacy policy read by someone
-- [ ] Full test on the live server with a development store (install, compress, test purchase, uninstall)
-- [ ] `SHOPIFY_BILLING_TEST=false` just before submitting
-- [ ] Theme extension tested in a real theme — leave the six storefront features OUT of the listing until then
-- [ ] Screencast recorded, emergency contact added
+## App review instructions [paste]
+1. Install the app on a development store and open it from Apps in the Shopify admin. You are taken to Shopify's approval screen first, then to the Dashboard. No account or store address is needed.
+2. **Compress Images** → choose **A collection** → pick ONE product → **Optimize images**. A "Save to Shopify?" window appears. Press **Save to Shopify**. Expected: the image is replaced by a smaller one. Pressing **Don't save** changes nothing.
+3. **Image ALT text** → tick **Update ALT text** → choose one product → **Run AI labeling** → confirm. Expected: each image gets its own ALT text. **Keyword suggestions** then lists 3 keywords for the product.
+4. **Plans** → **Buy this pack** on the $2.00 pack → approve the test charge on Shopify's page. Expected: you return to the app and 100 credits are added.
+5. Uninstall the app (Settings → Apps). Expected: the store's data is deleted through Shopify's privacy webhooks. Reinstalling starts the approval screen again.
+Note: the app changes product images, so use a test store. English screencast: show every step above and the expected result of each.
+
+## Requirement check (from Shopify's document)
+- [x] **Authentication**: opening the app for a store that isn't logged in goes straight to Shopify's approval screen, also after an uninstall and reinstall (the saved login is checked with Shopify first).
+- [x] **Permissions**: only `write_products` (it includes reading products). Nothing else is requested.
+- [x] **No pop-up windows** for approval or payment; both use normal page redirects.
+- [x] **Billing** uses Shopify's billing system; more credits can be bought any time without reinstalling.
+- [x] **Cookies** are `SameSite=Lax`, `Secure` and `HttpOnly` on the live server.
+- [x] **Privacy policy**, mandatory privacy webhooks and webhook signature checks in place.
+- [ ] **Performance**: the storefront extension must not lower a store's Lighthouse score by more than 10 points (home 17%, product 40%, collection 43%). See the note below.
+- [ ] Real HTTPS address deployed to Shopify, live test on a development store, support email set, screencast recorded.
+
+## About the storefront extension and the performance rule
+The extension (LazyLoad, responsive images, preloading and so on) changes how pages of real stores load, so Shopify will measure it. It has not been measured yet.
+Safest plan: **submit the first version without the extension**, then add it later after testing with Lighthouse on a real theme. The listing above does not mention it.

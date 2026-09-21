@@ -8,7 +8,7 @@ from flask import Flask, jsonify, redirect, render_template, request, session
 
 from shopify_client import ShopifyClient
 from image_optimizer import compress_image
-from shopify_auth import auth_bp, current_credentials, is_production, login_from_signed_request, valid_shop
+from shopify_auth import auth_bp, current_credentials, is_production, login_from_signed_request, token_still_valid, valid_shop
 from billing import billing_bp
 import billing_store
 import product_cache
@@ -385,7 +385,11 @@ def index():
     if shop:
         if not valid_shop(shop):
             return ("That store address is not valid.", 400)
-        if login_from_signed_request(request.args) != "logged_in" and session.get("shop") != shop:
+        signed_in = login_from_signed_request(request.args) == "logged_in"
+        if signed_in and not token_still_valid(shop):
+            session.pop("shop", None)           # the app was uninstalled: approve again from scratch
+            signed_in = False
+        if not signed_in and session.get("shop") != shop:
             return redirect("/auth?shop=" + shop)
     return render_template("index.html", manual_shop=not is_production())
 
