@@ -1,10 +1,10 @@
-# One Globe FZE — "image-optimizer". Linked with `shopify app config link`.
+# One Globe FZE — "image-optimizer". Live on DigitalOcean at https://206-81-12-41.sslip.io.
 # `shopify app deploy` pushes THIS file to that app on Shopify: its URLs, scopes and the
 # storefront extension. The values match how the Flask app logs stores in (/auth, /auth/callback).
 
 client_id = "2f25fbaa3134d5856f5f70e0ff3cbeca"
 name = "image-optimizer"
-application_url = "https://stench-sabotage-thrower.ngrok-free.dev"
+application_url = "https://206-81-12-41.sslip.io"
 embedded = false
 
 [webhooks]
@@ -13,7 +13,7 @@ api_version = "2026-07"
   # Shopify's mandatory privacy webhooks — see compliance.py
   [[webhooks.subscriptions]]
   compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
-  uri = "https://stench-sabotage-thrower.ngrok-free.dev/webhooks/compliance"
+  uri = "https://206-81-12-41.sslip.io/webhooks/compliance"
 
 [access_scopes]
 scopes = "read_products,write_products"
@@ -22,4 +22,4 @@ optional_scopes = [ ]
 use_legacy_install_flow = true
 
 [auth]
-redirect_urls = ["https://stench-sabotage-thrower.ngrok-free.dev/auth/callback"]
+redirect_urls = ["https://206-81-12-41.sslip.io/auth/callback"]

@@ -1,0 +1,18 @@
+[Unit]
+Description=Image Optimizer Flask App
+After=network.target
+
+[Service]
+User=imageoptimizer
+Group=imageoptimizer
+WorkingDirectory=/home/imageoptimizer/app/image_optimizer_house_of_avana
+EnvironmentFile=/home/imageoptimizer/app/image_optimizer_house_of_avana/.env
+# ONE worker (job progress is kept in memory) with 8 threads; 300 s because store scans are slow.
+ExecStart=/home/imageoptimizer/venv/bin/gunicorn --workers 1 --threads 8 --timeout 300 --bind 127.0.0.1:8000 app:app
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

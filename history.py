@@ -49,7 +49,7 @@ def _conn():
 
 
 def client_ip():
-    """The visitor's IP. Behind a proxy (ngrok, a host's load balancer) the
+    """The visitor's IP. Behind a proxy (nginx, a host's load balancer) the
     socket address is the proxy's, so trust X-Forwarded-For only in that case —
     a direct connection can't be allowed to claim any IP it likes."""
     remote = request.remote_addr or ""

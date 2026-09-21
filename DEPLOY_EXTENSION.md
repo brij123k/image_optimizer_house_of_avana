@@ -12,8 +12,8 @@ The extension lives in `extensions/one-globe-image-optimizer/`. Until it is depl
   - The toml asks for the scopes `read_products,write_products`. Do not add `read_metafields` or
     `write_metafields`: they are not real Shopify scopes and make the deploy fail. The app saves its
     "already optimized" record without them.
-- The `application_url` is your ngrok address. It changes whenever ngrok restarts —
-  update `SHOPIFY_APP_URL` in `.env` and the two URLs in `shopify.app.toml`, then deploy again.
+- The `application_url` is your server's address (https://206-81-12-41.sslip.io). If you ever change the address, update
+  `SHOPIFY_APP_URL` in the server's `.env` and the three URLs in `shopify.app.image-optimizer.toml`, then deploy again.
 
 ## Steps
 1. Install the CLI: `npm install -g @shopify/cli`

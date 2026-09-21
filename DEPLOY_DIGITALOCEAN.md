@@ -85,8 +85,8 @@ cp shopify.app.production.toml.example shopify.app.production.toml
 npx @shopify/cli@latest app config link         # choose the production config name when asked
 npx @shopify/cli@latest app deploy --config production
 ```
-This replaces the ngrok address with your real one, for the app URL, the login redirect and the privacy webhooks.
-Stop using the ngrok address after this.
+This puts your server's address into Shopify for the app URL, the login redirect and the privacy webhooks.
+ngrok is no longer used.
 
 ## 10. Test before you submit
 1. Install the app on a development store from the Dev Dashboard. You should land on the app already logged in.
