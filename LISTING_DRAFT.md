@@ -4,8 +4,8 @@ Written against Shopify's App Store requirements. Limits are in brackets and wer
 Files: icon `listing/app-icon-1200.png` (1200×1200), feature image `listing/feature-image-1600x900.png`, screenshots `listing/screenshots/` (1600×900).
 
 ## Name — must be the SAME in the listing and in the app's TOML file
-**App name** [≤30, 25]: **One Globe Image Optimizer**
-The TOML file (`shopify.app.image-optimizer.toml`) now uses this exact name. Brand first ("One Globe"), then what it does.
+**App name** [≤30, 19]: **1-globe 1-optimizer**
+The TOML file (`shopify.app.image-optimizer.toml`) now uses this exact name. Brand first ("1-globe"), then what it does.
 Before submitting, search the App Store for this name to be sure nobody else uses it or something very similar.
 
 ## Text (benefit-led, no data claims or guarantees)

@@ -109,7 +109,7 @@ def purchase():
     try:
         client = _client_for(shop)
         data = client.graphql(_PURCHASE_MUTATION, {
-            "name": f"One Globe Image Optimizer — {plan['label']}",
+            "name": f"1-globe 1-optimizer — {plan['label']}",
             "price": {"amount": plan["price"], "currencyCode": "USD"},
             "returnUrl": f"{_app_url()}/billing/callback",
             "test": _test_mode(),
