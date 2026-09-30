@@ -18,11 +18,13 @@ import os
 import re
 import threading
 import time
+import unicodedata
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 import requests
 from flask import Blueprint, jsonify, request
-from PIL import Image
+from PIL import Image, ImageOps
 
 import billing_store
 import keywords as kw
@@ -75,8 +77,22 @@ def _image_info(raw_bytes):
     return MIME_BY_FORMAT.get(fmt, "image/jpeg"), EXT_BY_FORMAT.get(fmt, "jpg")
 
 
+DEFAULT_LANGUAGE = "English"
+
+
+def _clean_language(raw):
+    """The language the merchant typed or picked, e.g. "Hindi" or "Brazilian
+    Portuguese". It goes straight into the prompt, so only letters (any
+    script), spaces, hyphens and brackets are kept."""
+    text = "".join(ch for ch in str(raw or "")
+                   if unicodedata.category(ch)[0] in "LM" or ch in " -()")
+    return re.sub(r"\s+", " ", text).strip(" -")[:40] or DEFAULT_LANGUAGE
+
+
 def _slugify(text, fallback="product-image"):
-    slug = re.sub(r"[^a-z0-9]+", "-", (text or "").lower()).strip("-")
+    # Accents are dropped ("añil" -> "anil") so slugs stay plain a-z in any language.
+    text = unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode()
+    slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
     slug = re.sub(r"-{2,}", "-", slug)
     return (slug[:60].rstrip("-")) or fallback
 
@@ -88,6 +104,11 @@ This is image {position} of {total} for the product.
 Base everything on what you can actually SEE in THIS image — the real item, its
 colour, material, pattern, angle, and any visible detail. If the product name
 disagrees with the picture, trust the picture. Never invent details you cannot see.
+
+LANGUAGE: write alt_text and keywords in {language}, as a native {language} speaker would
+shop for and describe the item. The examples below are in English only to show the format.
+file_slug is the one exception: it goes into a web address, so write it in {language} using
+only plain Latin letters a-z (transliterate other scripts, drop accents).
 
 Never mention any of these: collection names, category/section names, the store
 or brand name, or the word "collection".{banned}
@@ -115,18 +136,58 @@ file_slug rules:
 # same request usually succeeds seconds later, so retry rather than fail the image.
 _RETRY_STATUS = {429, 500, 502, 503, 504}
 _RETRY_DELAYS = (2, 5, 10)
+# A 429 that says to wait longer than this (or names a per-day quota) won't
+# clear within one image, so that model is skipped instead of waited on.
+_MAX_QUOTA_WAIT = 15
+
+# model -> time before which it is not worth calling (its quota is used up).
+# Cleared at the start of every job, so a new day's quota is picked up.
+_EXHAUSTED = {}
+_EXHAUSTED_LOCK = threading.Lock()
+_HTTP = threading.local()
+
+
+class QuotaExhausted(RuntimeError):
+    """Every Gemini model is out of quota, so the rest of the job would only fail slowly."""
+
+
+def _gemini_session():
+    """One keep-alive connection per worker thread, instead of a new TLS handshake per image."""
+    if getattr(_HTTP, "session", None) is None:
+        _HTTP.session = requests.Session()
+    return _HTTP.session
+
+
+def _quota_hint(resp):
+    """(is_daily_quota, retry_seconds) read from a Gemini 429 body."""
+    try:
+        details = resp.json()["error"].get("details", [])
+    except (ValueError, KeyError, TypeError, AttributeError):
+        return False, None
+    daily = any("PerDay" in str(v.get("quotaId", "")) for d in details for v in d.get("violations", []))
+    wait = None
+    for d in details:
+        m = re.match(r"([\d.]+)s$", str(d.get("retryDelay", "")))
+        if m:
+            wait = float(m.group(1))
+    return daily, wait
 
 
 def _post_with_retry(body):
-    """Tries the primary model with backoff, then a fallback model, before giving up."""
+    """Tries the primary model with backoff, then the fallback models, before
+    giving up. A model whose quota is used up is skipped at once rather than
+    retried, and QuotaExhausted is raised when no model has quota left."""
     primary = os.environ.get("GEMINI_MODEL") or GEMINI_MODEL
     models = [primary] + [m for m in GEMINI_FALLBACK_MODELS if m != primary]
     last = None
     for model in models:
+        with _EXHAUSTED_LOCK:
+            if _EXHAUSTED.get(model, 0) > time.time():
+                continue
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
         for delay in (*_RETRY_DELAYS, None):
             try:
-                resp = requests.post(url, headers={"x-goog-api-key": _gemini_key()}, json=body, timeout=45)
+                resp = _gemini_session().post(url, headers={"x-goog-api-key": _gemini_key()}, json=body, timeout=45)
             except requests.RequestException as exc:
                 last = exc
             else:
@@ -134,10 +195,49 @@ def _post_with_retry(body):
                     resp.raise_for_status()
                     return resp
                 last = requests.HTTPError(f"{resp.status_code} from {model}", response=resp)
+                if resp.status_code == 429:
+                    daily, wait = _quota_hint(resp)
+                    if daily or (wait or 0) > _MAX_QUOTA_WAIT:
+                        with _EXHAUSTED_LOCK:
+                            _EXHAUSTED[model] = time.time() + (6 * 3600 if daily else wait)
+                        break
+                    if wait and delay is not None:
+                        delay = max(delay, wait)
             if delay is None:
                 break
             time.sleep(delay)
+    with _EXHAUSTED_LOCK:
+        if all(_EXHAUSTED.get(m, 0) > time.time() for m in models):
+            raise QuotaExhausted(
+                "Gemini's quota is used up on every model. A free-tier key allows only about 20 images a "
+                "day per model — turn on billing for the key in Google AI Studio to label more."
+            )
     raise last
+
+
+AI_IMAGE_MAX = 768  # longest side sent to Gemini; plenty to read colour, material and angle
+
+
+def _image_for_ai(raw_bytes, mime_type):
+    """A small JPEG copy of the image for Gemini. A full-size product photo can
+    be several MB and many image tiles for the model to read; the label only
+    needs a preview. The original bytes are still what gets re-uploaded."""
+    try:
+        img = Image.open(io.BytesIO(raw_bytes))
+        if max(img.size) <= AI_IMAGE_MAX and mime_type in ("image/jpeg", "image/png", "image/webp"):
+            return raw_bytes, mime_type
+        img = ImageOps.exif_transpose(img)
+        img.thumbnail((AI_IMAGE_MAX, AI_IMAGE_MAX))
+        if img.mode in ("RGBA", "LA", "P"):
+            img = img.convert("RGBA")
+            flat = Image.new("RGB", img.size, "white")
+            flat.paste(img, mask=img.getchannel("A"))
+            img = flat
+        out = io.BytesIO()
+        img.convert("RGB").save(out, "JPEG", quality=85)
+        return out.getvalue(), "image/jpeg"
+    except Exception:  # noqa: BLE001 - an odd file is still worth sending as-is
+        return raw_bytes, mime_type
 
 
 def _strip_terms(text, terms, slug=False):
@@ -170,13 +270,13 @@ def _strip_terms(text, terms, slug=False):
 
 
 def generate_metadata(raw_bytes, mime_type, product_title, position=1, total=1, taken_alts=(), banned_terms=(),
-                      used_keywords=(), fix_issues=()):
+                      used_keywords=(), fix_issues=(), language=DEFAULT_LANGUAGE):
     """Calls Gemini's vision model once and returns {"alt_text", "file_slug", "keywords"}."""
     body = {
         "contents": [{
             "parts": [
                 {"text": _PROMPT.format(
-                    title=product_title or "", position=position, total=total,
+                    title=product_title or "", position=position, total=total, language=language,
                     taken=("Alt texts already used on this product (do not repeat): "
                            + " | ".join(taken_alts)) if taken_alts else "",
                     banned=(" Specifically avoid: " + "; ".join(banned_terms) + ".") if banned_terms else "",
@@ -206,19 +306,20 @@ def generate_metadata(raw_bytes, mime_type, product_title, position=1, total=1, 
 
 
 def generate_clean_metadata(raw_bytes, mime_type, product_title, position=1, total=1, taken_alts=(),
-                            banned_terms=(), used_keywords=()):
+                            banned_terms=(), used_keywords=(), language=DEFAULT_LANGUAGE):
     """generate_metadata() plus the keyword-stuffing check. If the ALT text is
     flagged, the model is asked once to rewrite it; if it is still flagged the
     text is trimmed. Adds meta["stuffing"] = {"status": clean|rewritten|trimmed, "issues": [...]}."""
+    raw_bytes, mime_type = _image_for_ai(raw_bytes, mime_type)
     meta = generate_metadata(raw_bytes, mime_type, product_title, position, total, taken_alts,
-                             banned_terms, used_keywords)
+                             banned_terms, used_keywords, language=language)
     check = kw.check_stuffing(meta["alt_text"], meta["keywords"])
     if check["ok"]:
         meta["stuffing"] = {"status": "clean", "issues": []}
         return meta
     issues = check["issues"]
     retry = generate_metadata(raw_bytes, mime_type, product_title, position, total, taken_alts,
-                              banned_terms, used_keywords, fix_issues=issues)
+                              banned_terms, used_keywords, fix_issues=issues, language=language)
     if kw.check_stuffing(retry["alt_text"], retry["keywords"] or meta["keywords"])["ok"]:
         retry["keywords"] = retry["keywords"] or meta["keywords"]
         retry["stuffing"] = {"status": "rewritten", "issues": issues}
@@ -237,10 +338,11 @@ def _resolve_products(client, scope, collection_id, product_ids):
 
 
 LEDGER_FLUSH_EVERY = 25
+AI_WORKERS = 4  # products labeled at the same time; override with AI_WORKERS in .env
 
 
 def run_ai_job(domain, token, scope="store", collection_id=None, product_ids=None,
-                update_alt=True, rename_files=False):
+                update_alt=True, rename_files=False, language=DEFAULT_LANGUAGE):
     with STATE_LOCK:
         STATE.update({
             "status": "running",
@@ -255,25 +357,168 @@ def run_ai_job(domain, token, scope="store", collection_id=None, product_ids=Non
             "stop_requested": False,
             "quota_exceeded": False,
         })
+    with _EXHAUSTED_LOCK:
+        _EXHAUSTED.clear()
 
+    version = os.environ.get("SHOPIFY_API_VERSION", "2026-07")
+    client = ShopifyClient(domain, token, version)
     ledger = {}
     unsaved = 0
+    quota_left = 0
+    job_lock = threading.Lock()    # ledger, unsaved and quota_left are shared by the workers
+    flush_lock = threading.Lock()  # one ledger write at a time
+    gemini_out = threading.Event()
+    local = threading.local()
     product_cache.invalidate(domain)
+
+    def worker_client():
+        """requests sessions aren't meant to be shared across threads, so each worker gets its own."""
+        if getattr(local, "client", None) is None:
+            local.client = ShopifyClient(domain, token, version)
+        return local.client
+
+    def stopping():
+        with STATE_LOCK:
+            return STATE["stop_requested"]
+
+    def take_credit():
+        nonlocal quota_left
+        with job_lock:
+            if quota_left <= 0:
+                return False
+            quota_left -= 1
+            return True
+
+    def refund_credit():
+        nonlocal quota_left
+        with job_lock:
+            quota_left += 1
 
     def flush_ledger():
         """Best effort — a failed ledger write must not fail the job."""
         nonlocal unsaved
-        if not unsaved:
+        with flush_lock:
+            with job_lock:
+                pending, snapshot = unsaved, dict(ledger)
+            if not pending:
+                return
+            try:
+                client.save_ai_ledger(snapshot)
+                with job_lock:
+                    unsaved -= pending
+            except Exception as exc:  # noqa: BLE001
+                _log(f"Warning: could not save the label record — {exc}")
+
+    def label_product(product, banned_terms):
+        """Labels one product's images in order — each image's prompt lists the
+        ALT texts already used on the product, so these can't run in parallel."""
+        nonlocal unsaved
+        if stopping():
             return
+        shop = worker_client()
+        title = product.get("title", f"Product {product['id']}")
+        images = product.get("images", [])
         try:
-            client.save_ai_ledger(ledger)
-            unsaved = 0
-        except Exception as exc:  # noqa: BLE001
-            _log(f"Warning: could not save the label record — {exc}")
+            now = datetime.now().isoformat(timespec="seconds")
+            taken_alts, used_slugs, kw_used, product_kw = [], set(), {}, {}
+
+            for idx, image in enumerate(images, start=1):
+                if stopping():
+                    break
+                if not take_credit():
+                    with STATE_LOCK:
+                        STATE["quota_exceeded"] = True
+                    break
+                try:
+                    # Each photo shows something different, so each gets its own
+                    # ALT text and file name rather than one copied across all.
+                    raw = shop.download_image(image["src"])
+                    mime_type, ext = _image_info(raw)
+                    hint = [f"{k} ({n}x)" for k, n in sorted(kw_used.items(), key=lambda kv: -kv[1])][:6]
+                    meta = generate_clean_metadata(raw, mime_type, title, idx, len(images), taken_alts, banned_terms,
+                                                   hint, language=language)
+                    slug, n = meta["file_slug"], 2
+                    while slug in used_slugs:
+                        slug = f"{meta['file_slug']}-{n}"
+                        n += 1
+
+                    if rename_files:
+                        # Shopify can't rename in place, so this uploads a copy
+                        # under the new name and removes the old one. The image
+                        # gets a new id — the ledger below must use that one.
+                        new_image = shop.replace_image(
+                            product["id"], image["id"],
+                            base64.b64encode(raw).decode(),
+                            filename=f"{slug}.{ext}",
+                            alt=meta["alt_text"] if update_alt else None,
+                            old=image,
+                        )
+                        image = {**image, "id": new_image["id"]}
+                    else:
+                        shop.update_image_alt(product["id"], image["id"], meta["alt_text"])
+                except Exception:
+                    refund_credit()
+                    raise
+
+                used_slugs.add(slug)
+                taken_alts.append(meta["alt_text"])
+                for k in meta["keywords"]:
+                    product_kw[k] = product_kw.get(k, 0) + 1
+                    if kw._count(meta["alt_text"], k):
+                        kw_used[k] = kw_used.get(k, 0) + 1
+                with STATE_LOCK:
+                    if rename_files:
+                        STATE["renamed_images"] += 1
+                    if update_alt:
+                        STATE["updated_alt"] += 1
+
+                # One credit per image touched this run, no matter how many
+                # operations (resize, ALT, rename) applied to it.
+                billing_store.record_usage(domain, 1)
+                billing_store.add_stat(domain, "stuffing_checked", 1)
+                if meta["stuffing"]["status"] != "clean":
+                    billing_store.add_stat(domain, "stuffing_fixed", 1)
+                    _log(f"Stuffing guard: {title} image {idx} — {meta['stuffing']['status']} "
+                         f"({'; '.join(meta['stuffing']['issues'])})")
+                if update_alt:
+                    billing_store.add_stat(domain, "alt_updated", 1)
+                if rename_files:
+                    billing_store.add_stat(domain, "files_renamed", 1)
+                kw.save_keywords(domain, product["id"], title, image["id"], meta["keywords"])
+                billing_store.add_stat(domain, "keywords_found", len(meta["keywords"]))
+                with job_lock:
+                    ledger[str(image["id"])] = {
+                        "alt": meta["alt_text"] if update_alt else None,
+                        "renamed": bool(rename_files),
+                        "at": now,
+                        "keywords": meta["keywords"],
+                    }
+                    unsaved += 1
+                    due = unsaved >= LEDGER_FLUSH_EVERY
+                if due:
+                    flush_ledger()
+
+            top = [k for k, _ in sorted(product_kw.items(), key=lambda kv: -kv[1])][:3]
+            _log(f"Labeled: {title} — {len(taken_alts)} of {len(images)} image(s), e.g. \"{taken_alts[0] if taken_alts else ''}\""
+                 + (f" · Keywords: {', '.join(top)}" if top else ""))
+
+        except QuotaExhausted as exc:
+            # Every remaining image would fail the same way, so stop the whole job.
+            if not gemini_out.is_set():
+                gemini_out.set()
+                _log(f"Stopping: {exc}")
+            with STATE_LOCK:
+                STATE["stop_requested"] = True
+                STATE["failed_products"] += 1
+        except Exception as exc:  # noqa: BLE001 - keep going on per-product failure
+            with STATE_LOCK:
+                STATE["failed_products"] += 1
+            _log(f"Failed: {title} — {exc}")
+        finally:
+            with STATE_LOCK:
+                STATE["processed_products"] += 1
 
     try:
-        version = os.environ.get("SHOPIFY_API_VERSION", "2026-07")
-        client = ShopifyClient(domain, token, version)
         ledger = client.load_ai_ledger()
         products = _resolve_products(client, scope, collection_id, product_ids)
         try:  # names that must never appear in ALT text or file names
@@ -285,7 +530,7 @@ def run_ai_job(domain, token, scope="store", collection_id=None, product_ids=Non
         with STATE_LOCK:
             STATE["total_products"] = len(products)
         total_images = sum(len(p["images"]) for p in products)
-        _log(f"Found {len(products)} products with images to label.")
+        _log(f"Found {len(products)} products with images to label. Writing in {language}.")
 
         quota_left = billing_store.remaining(domain)
         if quota_left < total_images:
@@ -294,120 +539,30 @@ def run_ai_job(domain, token, scope="store", collection_id=None, product_ids=Non
                 f"Labeling what fits, then stopping — buy a pack to do the rest."
             )
 
-        for product in products:
-            with STATE_LOCK:
-                if STATE["stop_requested"]:
-                    STATE["status"] = "stopped"
-                    flush_ledger()
-                    _log("Stopped.")
-                    product_cache.invalidate(domain)
-                    return
-
-            title = product.get("title", f"Product {product['id']}")
-            images = product.get("images", [])
-
-            try:
-                now = datetime.now().isoformat(timespec="seconds")
-                taken_alts, used_slugs, kw_used, product_kw = [], set(), {}, {}
-                meta = None
-
-                for idx, image in enumerate(images, start=1):
-                    if quota_left <= 0:
-                        with STATE_LOCK:
-                            STATE["quota_exceeded"] = True
-                        continue
-
-                    # Each photo shows something different, so each gets its own
-                    # ALT text and file name rather than one copied across all.
-                    raw = client.download_image(image["src"])
-                    mime_type, ext = _image_info(raw)
-                    hint = [f"{k} ({n}x)" for k, n in sorted(kw_used.items(), key=lambda kv: -kv[1])][:6]
-                    meta = generate_clean_metadata(raw, mime_type, title, idx, len(images), taken_alts, banned_terms, hint)
-                    for k in meta["keywords"]:
-                        product_kw[k] = product_kw.get(k, 0) + 1
-                        if kw._count(meta["alt_text"], k):
-                            kw_used[k] = kw_used.get(k, 0) + 1
-                    billing_store.add_stat(domain, "stuffing_checked", 1)
-                    if meta["stuffing"]["status"] != "clean":
-                        billing_store.add_stat(domain, "stuffing_fixed", 1)
-                        _log(f"Stuffing guard: {title} image {idx} — {meta['stuffing']['status']} "
-                             f"({'; '.join(meta['stuffing']['issues'])})")
-                    taken_alts.append(meta["alt_text"])
-                    slug, n = meta["file_slug"], 2
-                    while slug in used_slugs:
-                        slug = f"{meta['file_slug']}-{n}"
-                        n += 1
-                    used_slugs.add(slug)
-
-                    touched = False
-                    if rename_files:
-                        filename = f"{slug}.{ext}"
-                        # Shopify can't rename in place, so this uploads a copy
-                        # under the new name and removes the old one. The image
-                        # gets a new id — the ledger below must use that one.
-                        new_image = client.replace_image(
-                            product["id"], image["id"],
-                            base64.b64encode(raw).decode(),
-                            filename=filename,
-                            alt=meta["alt_text"] if update_alt else None,
-                        )
-                        image = {**image, "id": new_image["id"]}
-                        touched = True
-                        with STATE_LOCK:
-                            STATE["renamed_images"] += 1
-                            if update_alt:
-                                STATE["updated_alt"] += 1
-                    elif update_alt:
-                        client.update_image_alt(product["id"], image["id"], meta["alt_text"])
-                        touched = True
-                        with STATE_LOCK:
-                            STATE["updated_alt"] += 1
-
-                    if touched:
-                        # One credit per image touched this run, no matter how many
-                        # operations (resize, ALT, rename) applied to it.
-                        quota_left -= 1
-                        billing_store.record_usage(domain, 1)
-                        if update_alt:
-                            billing_store.add_stat(domain, "alt_updated", 1)
-                        if rename_files:
-                            billing_store.add_stat(domain, "files_renamed", 1)
-                        ledger[str(image["id"])] = {
-                            "alt": meta["alt_text"] if update_alt else None,
-                            "renamed": bool(rename_files),
-                            "at": now,
-                            "keywords": meta["keywords"],
-                        }
-                        kw.save_keywords(domain, product["id"], title, image["id"], meta["keywords"])
-                        billing_store.add_stat(domain, "keywords_found", len(meta["keywords"]))
-                        unsaved += 1
-                    time.sleep(0.3)
-
-                if unsaved >= LEDGER_FLUSH_EVERY:
-                    flush_ledger()
-
-                top = [k for k, _ in sorted(product_kw.items(), key=lambda kv: -kv[1])][:3]
-                _log(f"Labeled: {title} — {len(taken_alts)} of {len(images)} image(s), e.g. \"{taken_alts[0] if taken_alts else ''}\""
-                     + (f" · Keywords: {', '.join(top)}" if top else ""))
-
-            except Exception as exc:  # noqa: BLE001 - keep going on per-product failure
-                with STATE_LOCK:
-                    STATE["failed_products"] += 1
-                _log(f"Failed: {title} — {exc}")
-
-            finally:
-                with STATE_LOCK:
-                    STATE["processed_products"] += 1
+        try:
+            workers = max(1, min(16, int(os.environ.get("AI_WORKERS") or AI_WORKERS)))
+        except ValueError:
+            workers = AI_WORKERS
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            list(pool.map(lambda p: label_product(p, banned_terms), products))
 
         flush_ledger()
         with STATE_LOCK:
-            STATE["status"] = "done"
+            user_stop = STATE["stop_requested"] and not gemini_out.is_set()
+            STATE["status"] = "error" if gemini_out.is_set() else "stopped" if user_stop else "done"
             STATE["finished_at"] = datetime.now().isoformat(timespec="seconds")
             quota_hit = STATE["quota_exceeded"]
-        summary = f"Done. Labeled {STATE['processed_products']} products."
-        if quota_hit:
-            summary += " Your plan limit was reached — buy an image pack to label the rest."
-        _log(summary)
+            processed = STATE["processed_products"]
+            labeled = processed - STATE["failed_products"]
+        if gemini_out.is_set():
+            _log(f"Labeled {labeled} products before Gemini ran out of quota.")
+        elif user_stop:
+            _log("Stopped.")
+        else:
+            summary = f"Done. Labeled {processed} products."
+            if quota_hit:
+                summary += " Your plan limit was reached — buy an image pack to label the rest."
+            _log(summary)
         product_cache.invalidate(domain)
 
     except Exception as exc:  # noqa: BLE001 - top-level failure (bad creds, network)
@@ -457,6 +612,7 @@ def ai_start():
     product_ids = body.get("product_ids") or []
     update_alt = bool(body.get("update_alt", True))
     rename_files = bool(body.get("rename_files", False))
+    language = _clean_language(body.get("language"))
 
     if not update_alt and not rename_files:
         return jsonify({"ok": False, "error": "Pick at least one: update ALT text or rename files."}), 400
@@ -470,6 +626,7 @@ def ai_start():
         kwargs=dict(
             domain=domain, token=token, scope=scope, collection_id=collection_id,
             product_ids=product_ids, update_alt=update_alt, rename_files=rename_files,
+            language=language,
         ),
         daemon=True,
     ).start()

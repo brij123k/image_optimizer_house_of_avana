@@ -7,6 +7,7 @@ can reuse them later in blog posts and other content.
 import csv
 import io
 import re
+import unicodedata
 from collections import Counter
 from datetime import datetime, timezone
 
@@ -26,8 +27,15 @@ _GENERIC = {"image", "images", "photo", "photos", "picture", "pictures", "produc
 
 # ---------------------------------------------------------------- keywords
 
+def _letters(text, keep="'- "):
+    """Lowercases and turns everything but letters/digits (in any script, with
+    their combining marks, e.g. Hindi vowel signs) and `keep` into spaces."""
+    return "".join(ch if unicodedata.category(ch)[0] in "LMN" or ch in keep else " "
+                   for ch in str(text).lower())
+
+
 def _norm(text):
-    text = re.sub(r"[^a-z0-9'\- ]+", " ", str(text).lower().replace("_", " "))
+    text = _letters(str(text).replace("_", " "))
     return re.sub(r"\s+", " ", text).strip(" -'")
 
 
@@ -50,10 +58,9 @@ def clean_keywords(raw, banned=(), limit=3):
 
 
 def _count(text, phrase):
-    t = " " + re.sub(r"[^a-z0-9' ]+", " ", text.lower()) + " "
-    p = re.sub(r"[^a-z0-9' ]+", " ", phrase.lower()).strip()
-    t = re.sub(r"\s+", " ", t)
-    return len(re.findall(r"(?<![a-z0-9])" + re.escape(p) + r"(?![a-z0-9])", t)) if p else 0
+    t = re.sub(r"\s+", " ", " " + _letters(text, "' ") + " ")
+    p = re.sub(r"\s+", " ", _letters(phrase, "' ")).strip()
+    return len(re.findall(r"(?<= )" + re.escape(p) + r"(?= )", t)) if p else 0
 
 
 # ---------------------------------------------------------- stuffing check
@@ -73,7 +80,7 @@ def check_stuffing(alt, keywords=()):
     if re.match(r"(?i)^(an? )?(image|picture|photo|photograph)s? of\b", alt):
         issues.append('starts with "image of" / "picture of"')
 
-    words = [w for w in re.findall(r"[a-z0-9']+", alt.lower()) if w not in _STOP and len(w) > 2]
+    words = [w for w in _letters(alt, "'").split() if w not in _STOP and len(w) > 2]
     for w, c in Counter(words).most_common(1):
         if c > 2:
             issues.append(f'the word "{w}" is repeated {c} times')

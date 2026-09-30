@@ -57,13 +57,37 @@ Compress product images in bulk, by store, collection or product, and convert th
 - **Emergency developer contact**: (name, email, phone)
 - **Demo store**: `mystore-123456789789457569.myshopify.com` — link straight to the app's Compress Images page and add: "Pick one product, press Optimize images, then Save to Shopify." Remove the store's password or give it to reviewers.
 
-## App review instructions [paste]
-1. Install the app on a development store and open it from Apps in the Shopify admin. You are taken to Shopify's approval screen first, then to the Dashboard. No account or store address is needed.
-2. **Compress Images** → choose **A collection** → pick ONE product → **Optimize images**. A "Save to Shopify?" window appears. Press **Save to Shopify**. Expected: the image is replaced by a smaller one. Pressing **Don't save** changes nothing.
-3. **Image ALT text** → tick **Update ALT text** → choose one product → **Run AI labeling** → confirm. Expected: each image gets its own ALT text. **Keyword suggestions** then lists 3 keywords for the product.
-4. **Plans** → **Buy this pack** on the $2.00 pack → approve the test charge on Shopify's page. Expected: you return to the app and 100 credits are added.
-5. Uninstall the app (Settings → Apps). Expected: the store's data is deleted through Shopify's privacy webhooks. Reinstalling starts the approval screen again.
-Note: the app changes product images, so use a test store. English screencast: show every step above and the expected result of each.
+## App review instructions [paste into "Testing instructions", ≤2800, 2398]
+Paste everything inside the fence as plain text.
+
+```text
+The app edits product images, so please test on a development store with a few products that have images. No login or account is needed: Shopify's approval screen is the only sign-in. Every store gets 100 free image credits, so steps 1-6 need no payment.
+
+1. Install the app and open it from Apps in the Shopify admin. Approve the permission (write_products only). Expected: the Dashboard opens with 100 credits and charts of store activity.
+
+2. Compress Images: choose "A collection", pick one collection, keep one product ticked, press "Optimize images". A "Save to Shopify?" window appears.
+- "Don't save": nothing changes.
+- "Save to Shopify": the images are replaced with smaller copies (tick "Convert to WebP" first to also get WebP). Expected: the Progress panel shows the size before and after, and the Log lists each image.
+
+3. Image ALT text: keep "Update ALT text" ticked, leave Language as English (or type any language, e.g. French), choose one collection and one product, press "Run AI labeling", then confirm. Expected: each image gets its own ALT text in the chosen language. Check it in the product's media in the Shopify admin.
+
+4. Image file name: tick "Rename image files" and run it on one product. The confirm window warns that renaming changes the image URL. Expected: images are re-uploaded under descriptive file names.
+
+5. Keyword suggestions: shows 3 keywords per product from step 3, plus a keyword-stuffing check. "Download CSV" exports them.
+
+6. Label report and Image report: press Refresh. Expected: every image is shown as done or not done, with charts by day and by product.
+
+7. Plans: press "Buy this pack" on the 100 images pack ($2.00) and approve the test charge on Shopify's page. Expected: you return to the app and 100 credits are added. Payment is a one-time charge, not a subscription.
+
+8. Store speed: press "Check my storefront". Expected: image weight and counts for the store's home page. If the store has a password, the check can't read the page.
+
+9. History: lists when the app was opened, with a visits-per-day chart.
+
+10. Uninstall from Settings > Apps. Expected: store data is removed through Shopify's privacy webhooks. Reinstalling starts at the approval screen again.
+
+Notes: the image editing tools (Enhance, Crop, Resize, Draw, Color background, Generate) work on one image and also ask before saving. AI steps take a few seconds per image.
+```
+English screencast: show every step above and the expected result of each.
 
 ## Requirement check (from Shopify's document)
 - [x] **Authentication**: opening the app for a store that isn't logged in goes straight to Shopify's approval screen, also after an uninstall and reinstall (the saved login is checked with Shopify first).

@@ -9,7 +9,7 @@ from flask import Blueprint, jsonify
 import billing_store
 import keywords as kw
 import token_store
-from history import _conn as _history_conn
+from history import _conn as _history_conn, daily_visits, tz_offset
 from shopify_auth import current_shop
 
 dashboard_bp = Blueprint("dashboard", __name__)
@@ -22,7 +22,9 @@ def dashboard():
         return jsonify({"ok": False, "error": "No shop in session."}), 401
 
     rec = token_store.get_shop(shop) or {}
-    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(timespec="seconds")
+    now = datetime.now(timezone.utc)
+    week_ago = (now - timedelta(days=7)).isoformat(timespec="seconds")
+    month_ago = (now - timedelta(days=31)).isoformat(timespec="seconds")
     c = _history_conn()
     visits_7d = c.execute(
         "SELECT COUNT(*) n FROM access_log WHERE shop=? AND ts>=?", (shop, week_ago)
@@ -45,5 +47,6 @@ def dashboard():
         "purchases": [p for p in billing_store.list_purchases(shop) if p["status"] == "credited"][:3],
         "top_keywords": kw.summary(shop)["top"][:8],
         "visits_7d": visits_7d,
+        "visits_daily": daily_visits(shop, month_ago, now.isoformat(timespec="seconds"), tz_offset()),
         "last_visit": dict(last) if last else None,
     })

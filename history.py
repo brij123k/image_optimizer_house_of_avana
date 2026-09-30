@@ -120,6 +120,25 @@ def log_access():
         current_app.logger.warning("access log failed: %s", exc)
 
 
+def tz_offset():
+    """The browser's UTC offset in minutes (?tz=330 for India), clamped to real zones."""
+    try:
+        return max(-720, min(840, int(request.args.get("tz", 0))))
+    except ValueError:
+        return 0
+
+
+def daily_visits(shop, start, end, tz=0):
+    """{"YYYY-MM-DD": visits} for days in the viewer's own time zone. Days with
+    no visits are left out; the chart fills them with zero."""
+    rows = _conn().execute(
+        "SELECT substr(datetime(ts, ?), 1, 10) d, COUNT(*) n FROM access_log "
+        "WHERE shop=? AND ts>=? AND ts<? GROUP BY d",
+        (f"{tz:+d} minutes", shop, start, end),
+    ).fetchall()
+    return {r["d"]: r["n"] for r in rows}
+
+
 def _iso(value):
     """Accepts an ISO timestamp from the browser and returns it as UTC ISO."""
     dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
@@ -151,5 +170,6 @@ def history():
     ).fetchall()
     return jsonify({
         "ok": True, "total": total, "unique_ips": uniq, "page": page, "page_size": PAGE_SIZE,
+        "daily": daily_visits(shop, start, end, tz_offset()),
         "rows": [dict(r) for r in rows],
     })

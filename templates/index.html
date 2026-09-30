@@ -280,6 +280,50 @@
   .dot { width:9px; height:9px; border-radius:50%; display:inline-block; }
   .dot.moss { background:var(--moss); } .dot.ember { background:var(--ember); }
 
+  /* ---- charts ----
+     Fill colors are deeper steps of the brand glow/mint/ember, checked for
+     contrast and colour-blind separation on the dark panel. Blue and mint are
+     too close to sit side by side, so a stacked bar never puts them next to each other. */
+  :root { --viz-amount:#2596c7; --viz-done:#23a88c; --viz-todo:#d0643a; --viz-rest:#34465e;
+          --viz-grid:rgba(127,154,178,.13); --viz-base:#2c3d55; }
+  .viz-two { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:22px; margin-top:18px; }
+  .viz-h { font-family:var(--mono); font-size:11.5px; letter-spacing:.04em; color:var(--fog); margin:0 0 10px; font-weight:400; }
+  .viz-empty { font-size:12.5px; color:var(--fog); padding:14px 0; }
+  .viz-stack { display:flex; gap:2px; height:14px; border-radius:4px; overflow:hidden; background:rgba(9,14,22,.8); }
+  .viz-stack.is-empty { opacity:.5; }
+  .viz-seg { flex:1 1 0; min-width:3px; cursor:default; transition:filter .15s; }
+  .viz-seg:hover, .viz-seg:focus-visible { filter:brightness(1.25); outline:none; }
+  .viz-legend { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:10px; font-size:12px; color:var(--fog); }
+  .viz-legend span { display:flex; align-items:center; gap:7px; }
+  .viz-legend i { width:10px; height:10px; border-radius:2px; flex:none; }
+  .viz-legend b { color:var(--mist); font-weight:600; }
+  .viz-bars { display:flex; flex-direction:column; gap:2px; }
+  .viz-row { display:grid; grid-template-columns:minmax(80px, 38%) 1fr auto; align-items:center; gap:10px; padding:4px 6px; margin:0 -6px; border-radius:6px; cursor:default; }
+  .viz-row:hover, .viz-row:focus-visible { background:rgba(127,154,178,.08); outline:none; }
+  .viz-name { font-size:12.5px; color:var(--mist); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .viz-track { height:10px; }
+  .viz-bar { display:block; height:100%; border-radius:0 4px 4px 0; transition:width .45s ease; }
+  .viz-val { font-size:12px; color:var(--fog); font-variant-numeric:tabular-nums; min-width:44px; text-align:right; }
+  .viz-svg { display:block; overflow:visible; }
+  .viz-svg .viz-grid { stroke:var(--viz-grid); stroke-width:1; }
+  .viz-svg .viz-base { stroke:var(--viz-base); stroke-width:1; }
+  .viz-svg .viz-tick { fill:var(--fog); font-size:10.5px; font-family:var(--body); font-variant-numeric:tabular-nums; }
+  .viz-svg .viz-col { outline:none; }
+  .viz-svg .viz-col:hover path, .viz-svg .viz-col:focus path { filter:brightness(1.3); }
+  .viz-svg .viz-col:hover .viz-hit, .viz-svg .viz-col:focus .viz-hit { fill:rgba(127,154,178,.07); }
+  .viz-table { margin-top:10px; font-size:12px; color:var(--fog); }
+  .viz-table summary { cursor:pointer; width:max-content; }
+  .viz-table .h-table-wrap { margin-top:8px; max-height:220px; overflow-y:auto; }
+  .viz-tip {
+    position:fixed; z-index:1000; pointer-events:none; display:flex; flex-direction:column; gap:3px;
+    background:#0a111b; border:1px solid var(--line); border-radius:8px; padding:8px 11px;
+    box-shadow:0 10px 26px -12px rgba(0,0,0,.9); max-width:260px;
+  }
+  .viz-tip[hidden] { display:none; }
+  .viz-tip b { font-size:14px; color:var(--mist); font-variant-numeric:tabular-nums; }
+  .viz-tip span { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--fog); }
+  .viz-tip i { width:12px; height:2px; border-radius:1px; flex:none; }
+
   .log {
     background:rgba(6,10,16,.75); border:1px solid var(--line); border-radius:10px;
     padding:16px 18px; height:230px; overflow-y:auto; font-family:var(--mono);
@@ -556,6 +600,8 @@
             <span class="hist-stat" id="hist-stat"></span>
             <div class="rp hidden" id="rp"></div>
           </div>
+          <h3 class="viz-h" style="margin-top:16px;">Visits per day</h3>
+          <div id="hist-chart" style="margin-bottom:18px;"></div>
           <div class="h-table-wrap">
             <table class="h-table">
               <thead><tr><th>Time</th><th>City</th><th>IP address</th><th>Page</th><th>Device</th></tr></thead>
@@ -604,8 +650,13 @@
         </div>
 
         <div class="panel">
+          <h2>App visits · last 30 days</h2>
+          <div id="dc-visits-chart"><div class="viz-empty">Loading…</div></div>
+        </div>
+
+        <div class="panel">
           <h2>Image coverage</h2>
-          <div class="bar-track"><div class="bar-fill moss" id="dc-cov-bar" style="width:0%"></div></div>
+          <div id="dc-cov-chart" style="margin-bottom:16px;"></div>
           <div class="grid4">
             <div class="mini"><div class="n" id="dc-products">—</div><div class="l">Products</div></div>
             <div class="mini"><div class="n" id="dc-images">—</div><div class="l">Images</div></div>
@@ -634,9 +685,15 @@
             <button class="btn-ghost" id="dc-label-report" style="padding:8px 16px; font-size:12.5px; margin-top:12px;">Open label report</button>
           </div>
         </div>
-        <div class="panel">
-          <h2>Your top keywords</h2>
-          <div class="chips" id="dc-topkw"><span class="note" style="margin:0;">Nothing yet — run ALT text labeling and your keywords will appear here.</span></div>
+        <div class="dash-two">
+          <div class="panel">
+            <h2>What the app has done</h2>
+            <div id="dc-work-chart"><div class="viz-empty">Loading…</div></div>
+          </div>
+          <div class="panel">
+            <h2>Your top keywords</h2>
+            <div id="dc-topkw"><div class="viz-empty">Loading…</div></div>
+          </div>
         </div>
       </div>
 
@@ -709,6 +766,10 @@
             <div class="mini"><div class="n moss" id="mini-done">0</div><div class="l">Done before</div></div>
             <div class="mini"><div class="n" id="mini-status">Idle</div><div class="l">Status</div></div>
           </div>
+          <div class="viz-two">
+            <div><h3 class="viz-h">Image size, this run</h3><div id="run-size-chart"></div></div>
+            <div><h3 class="viz-h">What happened to each image</h3><div id="run-outcome-chart"></div></div>
+          </div>
         </div>
 
         <div class="panel">
@@ -762,6 +823,23 @@
             </span>
           </label>
 
+          <div class="field" style="margin-top:18px; max-width:340px;">
+            <label for="ai-language">Language</label>
+            <input type="text" id="ai-language" list="ai-language-list" value="English" maxlength="40" autocomplete="off" placeholder="Pick or type any language">
+            <datalist id="ai-language-list">
+              <option value="English"></option><option value="Hindi"></option><option value="Spanish"></option>
+              <option value="French"></option><option value="German"></option><option value="Italian"></option>
+              <option value="Portuguese"></option><option value="Dutch"></option><option value="Arabic"></option>
+              <option value="Bengali"></option><option value="Tamil"></option><option value="Telugu"></option>
+              <option value="Marathi"></option><option value="Gujarati"></option><option value="Punjabi"></option>
+              <option value="Urdu"></option><option value="Chinese (Simplified)"></option><option value="Japanese"></option>
+              <option value="Korean"></option><option value="Russian"></option><option value="Turkish"></option>
+              <option value="Indonesian"></option><option value="Thai"></option><option value="Vietnamese"></option>
+              <option value="Polish"></option><option value="Swedish"></option>
+            </datalist>
+            <span class="hint" style="display:block; color:var(--fog); font-size:12px; margin-top:6px; line-height:1.5;">ALT text and keywords are written in this language. Pick one or type any other. File names always use plain a–z letters.</span>
+          </div>
+
           <h2 style="margin-top:28px;">What to label</h2>
           <div class="segmented">
             <button class="seg" data-ai-scope="collection">A collection</button>
@@ -800,6 +878,8 @@
             <div class="mini"><div class="n" id="ai-mini-renamed">0</div><div class="l">Renamed</div></div>
             <div class="mini"><div class="n ember" id="ai-mini-status">Idle</div><div class="l">Status</div></div>
           </div>
+          <h3 class="viz-h" style="margin-top:20px;">Products in this run</h3>
+          <div id="ai-progress-chart"></div>
         </div>
 
         <div class="panel">
@@ -820,7 +900,7 @@
             <button class="btn-ghost" id="ai-report-refresh">Refresh</button>
           </div>
 
-          <div class="bar-track"><div class="bar-fill moss" id="ai-report-bar"></div></div>
+          <div id="ai-report-chart" style="margin-bottom:16px;"></div>
           <div class="grid4">
             <div class="mini"><div class="n" id="ai-rep-products">—</div><div class="l">Products</div></div>
             <div class="mini"><div class="n" id="ai-rep-images">—</div><div class="l">Images</div></div>
@@ -832,6 +912,10 @@
             Shows each image's <b>current ALT text</b> right from Shopify, plus whether this app is the one that set it. The record of what this app has touched lives in a metafield (namespace <code>image_ai_labels</code>).
             <button class="link-btn danger" id="ai-reset-ledger">Reset the record</button>
           </p>
+          <div class="viz-two">
+            <div><h3 class="viz-h">Images labeled per day</h3><div id="ai-report-days"><div class="viz-empty">Press Refresh to load.</div></div></div>
+            <div><h3 class="viz-h">Most images still to label</h3><div id="ai-report-pending"></div></div>
+          </div>
         </div>
 
         <div class="panel">
@@ -876,11 +960,13 @@
               </div>
             </div>
           </div>
+          <h3 class="viz-h" style="margin-top:20px;">ALT texts checked for stuffing</h3>
+          <div id="kw-stuff-chart"></div>
         </div>
 
         <div class="panel">
           <h2>Top keywords across your store</h2>
-          <div class="chips" id="kw-top"><span class="note" style="margin:0;">Loading…</span></div>
+          <div id="kw-top"><div class="viz-empty">Loading…</div></div>
           <div class="row" style="margin-top:14px; justify-content:flex-start; gap:10px;">
             <button class="btn-ghost" id="kw-copy-all" style="padding:8px 16px; font-size:12.5px;">Copy all keywords</button>
             <a class="btn-ghost" href="/api/keywords.csv" style="padding:8px 16px; font-size:12.5px; text-decoration:none; display:inline-block;">Download CSV</a>
@@ -925,8 +1011,10 @@
           </div>
           <p class="note" id="sp-compare" style="margin:14px 0 0;"></p>
           <p class="note" id="sp-ext" style="margin:8px 0 0;"></p>
-          <h2 style="margin-top:22px; font-size:16px;">Heaviest images</h2>
-          <div class="h-table-wrap"><table class="h-table"><thead><tr><th>Image</th><th>Size</th></tr></thead><tbody id="sp-heavy"></tbody></table></div>
+          <div class="viz-two">
+            <div><h3 class="viz-h">Images on your home page</h3><div id="sp-practice-chart"></div></div>
+            <div><h3 class="viz-h">Heaviest images</h3><div id="sp-heavy"></div></div>
+          </div>
           <div class="row" style="margin-top:14px; justify-content:flex-start;"><button class="btn-primary" data-go="run" style="padding:9px 20px; font-size:13px;">Compress my images</button></div>
         </div>
       </div>
@@ -943,7 +1031,7 @@
             <button class="btn-ghost" id="report-refresh">Refresh</button>
           </div>
 
-          <div class="bar-track"><div class="bar-fill moss" id="report-bar"></div></div>
+          <div id="report-chart" style="margin-bottom:16px;"></div>
           <div class="grid4">
             <div class="mini"><div class="n" id="rep-products">—</div><div class="l">Products</div></div>
             <div class="mini"><div class="n" id="rep-images">—</div><div class="l">Images</div></div>
@@ -955,6 +1043,10 @@
             The record lives in a metafield on your store (namespace <code>image_compactor</code>), created by this app on its first successful run. Shop-level metafields have no screen in the Shopify admin, so this page is where you see them.
             <button class="link-btn danger" id="reset-ledger">Reset the record</button>
           </p>
+          <div class="viz-two">
+            <div><h3 class="viz-h">Images optimized per day</h3><div id="report-days"><div class="viz-empty">Press Refresh to load.</div></div></div>
+            <div><h3 class="viz-h">Most images not optimized</h3><div id="report-pending"></div></div>
+          </div>
         </div>
 
         <div class="panel">
@@ -1423,6 +1515,207 @@ qualityEl.addEventListener('input', () => qualityVal.textContent = qualityEl.val
 function fmtBytes(n) {
   if (n >= 1024 * 1024) return (n / (1024 * 1024)).toFixed(2) + ' MB';
   return Math.round(n / 1024) + ' KB';
+}
+
+/* ================= Charts =================
+   Three small chart types shared by every page: a ranked bar list, a
+   part-to-whole stacked bar and a per-day column chart. Labels come from store
+   data (product names, keywords), so they only ever go in via textContent. */
+const VIZ = { amount: 'var(--viz-amount)', done: 'var(--viz-done)', todo: 'var(--viz-todo)', rest: 'var(--viz-rest)' };
+const vizTip = document.createElement('div');
+vizTip.className = 'viz-tip'; vizTip.hidden = true; vizTip.setAttribute('role', 'tooltip');
+document.body.appendChild(vizTip);
+
+function vizShowTip(target, value, label, color, ev) {
+  vizTip.innerHTML = '';
+  const v = document.createElement('b'); v.textContent = value;
+  const l = document.createElement('span'); l.textContent = label;
+  if (color) { const k = document.createElement('i'); k.style.background = color; l.prepend(k); }
+  vizTip.append(v, l); vizTip.hidden = false;
+  const r = target.getBoundingClientRect();
+  const x = ev ? ev.clientX : r.left + r.width / 2, y = ev ? ev.clientY : r.top;
+  const w = vizTip.offsetWidth, h = vizTip.offsetHeight;
+  vizTip.style.left = Math.min(window.innerWidth - w - 8, Math.max(8, x - w / 2)) + 'px';
+  vizTip.style.top = (y - h - 12 < 8 ? y + 18 : y - h - 12) + 'px';
+}
+function vizHideTip() { vizTip.hidden = true; }
+function vizHover(el, value, label, color, focusable = true) {
+  if (focusable) el.setAttribute('tabindex', '0');
+  el.setAttribute('aria-label', `${label}: ${value}`);
+  el.addEventListener('pointermove', e => vizShowTip(el, value, label, color, e));
+  el.addEventListener('pointerleave', vizHideTip);
+  el.addEventListener('focus', () => vizShowTip(el, value, label, color));
+  el.addEventListener('blur', vizHideTip);
+}
+function vizEmpty(el, text) {
+  el.innerHTML = '';
+  const d = document.createElement('div'); d.className = 'viz-empty'; d.textContent = text; el.appendChild(d);
+}
+
+// Ranked horizontal bars. items: [{label, value, text?}] — text is the shown value (default: the count).
+function vizBars(el, items, { color = VIZ.amount, max, empty = 'Nothing to show yet.' } = {}) {
+  if (!items.length) { vizEmpty(el, empty); return; }
+  el.innerHTML = '';
+  const top = max || Math.max(1, ...items.map(i => i.value));
+  const list = document.createElement('div'); list.className = 'viz-bars';
+  items.forEach(it => {
+    const shown = it.text || nf(it.value);
+    const row = document.createElement('div'); row.className = 'viz-row';
+    const name = document.createElement('span'); name.className = 'viz-name'; name.textContent = it.label; name.title = it.label;
+    const track = document.createElement('span'); track.className = 'viz-track';
+    const bar = document.createElement('span'); bar.className = 'viz-bar'; bar.style.background = color;
+    bar.style.width = (it.value > 0 ? Math.max(1, Math.min(100, 100 * it.value / top)) : 0) + '%';
+    track.appendChild(bar);
+    const val = document.createElement('span'); val.className = 'viz-val'; val.textContent = shown;
+    row.append(name, track, val);
+    vizHover(row, shown, it.label, color);
+    list.appendChild(row);
+  });
+  el.appendChild(list);
+}
+
+// One 100% bar split into parts: [{label, value, color}]. The legend below carries every count.
+function vizStack(el, parts, { fmt = nf } = {}) {
+  el.innerHTML = '';
+  const total = parts.reduce((s, p) => s + p.value, 0);
+  const bar = document.createElement('div'); bar.className = 'viz-stack' + (total ? '' : ' is-empty');
+  const legend = document.createElement('div'); legend.className = 'viz-legend';
+  parts.forEach(p => {
+    const pct = total ? Math.round(100 * p.value / total) : 0;
+    if (p.value > 0) {
+      const seg = document.createElement('span'); seg.className = 'viz-seg';
+      seg.style.flexGrow = p.value; seg.style.background = p.color;
+      vizHover(seg, `${fmt(p.value)} · ${pct}%`, p.label, p.color);
+      bar.appendChild(seg);
+    }
+    const key = document.createElement('span');
+    const sw = document.createElement('i'); sw.style.background = p.color;
+    const b = document.createElement('b'); b.textContent = fmt(p.value);
+    key.append(sw, document.createTextNode(p.label + ' '), b, document.createTextNode(total ? ` (${pct}%)` : ''));
+    legend.appendChild(key);
+  });
+  el.append(bar, legend);
+}
+
+// A collapsed table under a chart, so every value is readable without hovering.
+function vizTable(el, head, rows) {
+  const d = document.createElement('details'); d.className = 'viz-table';
+  const s = document.createElement('summary'); s.textContent = 'Show as table';
+  const wrap = document.createElement('div'); wrap.className = 'h-table-wrap';
+  const t = document.createElement('table'); t.className = 'h-table';
+  const hr = document.createElement('tr');
+  head.forEach(h => { const th = document.createElement('th'); th.textContent = h; hr.appendChild(th); });
+  const thead = document.createElement('thead'); thead.appendChild(hr);
+  const tb = document.createElement('tbody');
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    r.forEach(c => { const td = document.createElement('td'); td.textContent = c; tr.appendChild(td); });
+    tb.appendChild(tr);
+  });
+  t.append(thead, tb); wrap.appendChild(t); d.append(s, wrap); el.appendChild(d);
+}
+
+const vizDayKey = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+// Every day from `start` to `end` (local dates), each with its count from `counts` ({"YYYY-MM-DD": n}).
+function vizDayRange(start, end, counts) {
+  const out = [], last = vizDayKey(end);
+  for (let d = new Date(start.getFullYear(), start.getMonth(), start.getDate()); vizDayKey(d) <= last; d.setDate(d.getDate() + 1)) {
+    out.push({ day: new Date(d), value: counts[vizDayKey(d)] || 0 });
+  }
+  return out;
+}
+
+// Counts timestamps per local day, over the last `maxDays` days that have any
+// activity (at least two weeks shown, so a single busy day still has context).
+function vizDaysFromTimes(times, maxDays = 60) {
+  const counts = {};
+  let first = null;
+  times.forEach(ts => {
+    const d = new Date(ts);
+    if (isNaN(d)) return;
+    counts[vizDayKey(d)] = (counts[vizDayKey(d)] || 0) + 1;
+    if (!first || d < first) first = d;
+  });
+  const end = new Date(), start = new Date(end);
+  start.setDate(end.getDate() - (maxDays - 1));
+  const minStart = new Date(end); minStart.setDate(end.getDate() - 13);
+  const from = !first ? minStart : first < start ? start : first > minStart ? minStart : first;
+  return vizDayRange(from, end, counts);
+}
+
+function vizNiceMax(v) {
+  if (v <= 1) return 1;
+  const p = 10 ** Math.floor(Math.log10(v));
+  return [1, 2, 2.5, 5, 10].map(m => m * p).find(n => n >= v);
+}
+
+// Per-day columns: [{day: Date, value}], oldest first. Drawn at the real pixel
+// width and redrawn when that changes (pages are hidden until opened).
+function vizDays(el, days, opts = {}) {
+  if (el._vizRO) el._vizRO.disconnect();
+  if (!days.some(d => d.value)) { vizEmpty(el, opts.empty || 'No activity in this period yet.'); return; }
+  let lastW = -1;
+  el._vizRO = new ResizeObserver(() => {
+    const w = el.clientWidth;
+    if (w && w !== lastW) { lastW = w; vizDrawDays(el, days, opts); }
+  });
+  el._vizRO.observe(el);
+}
+
+function vizDrawDays(el, days, { label = 'Count', color = VIZ.amount } = {}) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const mk = (tag, attrs) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); return n; };
+  el.innerHTML = '';
+  const W = el.clientWidth, H = 180, L = 34, R = 4, T = 10, B = 24;
+  const top = vizNiceMax(Math.max(...days.map(d => d.value)));
+  const y = v => T + (H - T - B) * (1 - v / top);
+  const svg = mk('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, class: 'viz-svg', role: 'img', 'aria-label': `${label} per day` });
+
+  [0, top / 2, top].filter(Number.isInteger).forEach(t => {
+    svg.appendChild(mk('line', { x1: L, x2: W - R, y1: y(t), y2: y(t), class: t ? 'viz-grid' : 'viz-base' }));
+    const tx = mk('text', { x: L - 8, y: y(t) + 3.5, 'text-anchor': 'end', class: 'viz-tick' });
+    tx.textContent = nf(t); svg.appendChild(tx);
+  });
+
+  const slot = (W - L - R) / days.length, bw = Math.max(1, slot - 2);
+  days.forEach((d, i) => {
+    const g = mk('g', { class: 'viz-col' });
+    g.appendChild(mk('rect', { class: 'viz-hit', x: L + i * slot, y: T, width: slot, height: H - T - B, fill: 'transparent' }));
+    if (d.value > 0) {
+      const x = L + i * slot + 1, base = y(0), yt = Math.min(y(d.value), base - 2), r = Math.min(4, bw / 2, base - yt);
+      g.appendChild(mk('path', {
+        fill: color,
+        d: `M${x},${base}V${yt + r}Q${x},${yt} ${x + r},${yt}H${x + bw - r}Q${x + bw},${yt} ${x + bw},${yt + r}V${base}Z`,
+      }));
+    }
+    const when = d.day.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    vizHover(g, nf(d.value), `${label} · ${when}`, color, d.value > 0);
+    svg.appendChild(g);
+  });
+
+  const last = days.length - 1;
+  [...new Set([0, Math.floor(last / 2), last])].forEach(i => {
+    const anchor = i === 0 ? 'start' : i === last ? 'end' : 'middle';
+    const x = i === 0 ? L : i === last ? W - R : L + (i + 0.5) * slot;
+    const t = mk('text', { x, y: H - 6, 'text-anchor': anchor, class: 'viz-tick' });
+    t.textContent = days[i].day.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    svg.appendChild(t);
+  });
+
+  el.appendChild(svg);
+  vizTable(el, ['Day', label], days.filter(d => d.value).reverse()
+    .map(d => [d.day.toLocaleDateString(undefined, { dateStyle: 'medium' }), nf(d.value)]));
+}
+
+// Products with the most images still to do, for the two report pages.
+function vizMostPending(el, products, isDone, empty) {
+  const rows = products
+    .map(p => ({ label: p.title, value: p.images.filter(im => !isDone(im)).length }))
+    .filter(r => r.value > 0)
+    .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label))
+    .slice(0, 8);
+  vizBars(el, rows, { color: VIZ.todo, empty });
 }
 function showError(msg) { errorBanner.style.display = 'block'; errorBanner.textContent = msg; }
 function hideError() { errorBanner.style.display = 'none'; }
@@ -2416,7 +2709,14 @@ async function loadReport(fresh) {
     $('rep-images').textContent = t.images;
     $('rep-done').textContent = t.optimized;
     $('rep-pending').textContent = t.pending;
-    $('report-bar').style.width = (t.images ? Math.round(100 * t.optimized / t.images) : 0) + '%';
+    vizStack($('report-chart'), [
+      { label: 'Optimized', value: t.optimized, color: VIZ.done },
+      { label: 'Not yet', value: t.pending, color: VIZ.todo },
+    ]);
+    const optimizedAt = data.products.flatMap(p => p.images.filter(im => im.optimized_at).map(im => im.optimized_at));
+    vizDays($('report-days'), vizDaysFromTimes(optimizedAt), { label: 'Images optimized', color: VIZ.done,
+      empty: 'Nothing optimized yet.' });
+    vizMostPending($('report-pending'), data.products, im => im.optimized, 'Every image is optimized.');
     renderReport();
   } catch (e) { showError('Could not load the report.'); }
 }
@@ -2575,7 +2875,14 @@ async function loadAiReport(fresh) {
     $('ai-rep-images').textContent = t.images;
     $('ai-rep-labeled').textContent = t.labeled;
     $('ai-rep-pending').textContent = t.pending;
-    $('ai-report-bar').style.width = (t.images ? Math.round(100 * t.labeled / t.images) : 0) + '%';
+    vizStack($('ai-report-chart'), [
+      { label: 'Labeled', value: t.labeled, color: VIZ.done },
+      { label: 'Not yet', value: t.pending, color: VIZ.todo },
+    ]);
+    const labeledAt = data.products.flatMap(p => p.images.filter(im => im.labeled_at).map(im => im.labeled_at));
+    vizDays($('ai-report-days'), vizDaysFromTimes(labeledAt), { label: 'Images labeled', color: VIZ.done,
+      empty: 'Nothing labeled yet.' });
+    vizMostPending($('ai-report-pending'), data.products, im => im.labeled, 'Every image is labeled.');
     renderAiReport();
   } catch (e) { showError('Could not load the report.'); }
 }
@@ -2841,6 +3148,17 @@ async function poll() {
   const pct = s.total_images ? Math.round(100 * s.processed_images / s.total_images) : 0;
   $('bar-fill').style.width = pct + '%';
 
+  vizBars($('run-size-chart'), s.bytes_before ? [
+    { label: 'Before', value: s.bytes_before, text: fmtBytes(s.bytes_before) },
+    { label: 'After', value: s.bytes_after, text: fmtBytes(s.bytes_after) },
+  ] : [], { empty: 'Sizes appear here once a run starts.' });
+  // Images handled so far; the progress bar above already shows what is left.
+  vizStack($('run-outcome-chart'), [
+    { label: 'Optimized', value: s.optimized_images, color: VIZ.done },
+    { label: 'Failed', value: s.failed_images, color: VIZ.todo },
+    { label: 'Already done / skipped', value: s.already_done_images + s.skipped_images, color: VIZ.rest },
+  ]);
+
   logEl.innerHTML = '';
   s.log.forEach(line => logEl.appendChild(renderLogLine(line)));
   logEl.scrollTop = logEl.scrollHeight;
@@ -2868,12 +3186,19 @@ async function poll() {
 /* ---------- AI metadata job ---------- */
 const aiStartBtn = $('ai-start-btn'), aiStopBtn = $('ai-stop-btn');
 const aiUpdateAlt = $('ai-update-alt'), aiRenameFiles = $('ai-rename-files');
+const aiLanguage = $('ai-language');
 const aiLogEl = $('ai-log');
 let aiPolling = null;
 let aiWasRunning = false;
 
+try { aiLanguage.value = localStorage.getItem('aiLanguage') || aiLanguage.value; } catch (e) { /* optional */ }
+aiLanguage.addEventListener('change', () => {
+  try { localStorage.setItem('aiLanguage', aiLanguage.value.trim()); } catch (e) { /* optional */ }
+});
+
 function aiScopeBody() {
-  const body = { scope: aiScope, update_alt: aiUpdateAlt.checked, rename_files: aiRenameFiles.checked };
+  const body = { scope: aiScope, update_alt: aiUpdateAlt.checked, rename_files: aiRenameFiles.checked,
+                 language: aiLanguage.value.trim() || 'English' };
   if (aiScope === 'collection') {
     if (!aiCollectionSelect.value) { showError('Choose a collection first.'); return null; }
     if (!aiSelected.size) { showError('Select at least one product.'); return null; }
@@ -2897,7 +3222,7 @@ async function startAiJob() {
   if (!body) return;
   {
     const lines = [];
-    if (aiUpdateAlt.checked) lines.push('Write AI ALT text for the images');
+    if (aiUpdateAlt.checked) lines.push(`Write AI ALT text for the images in ${body.language}`);
     if (aiRenameFiles.checked) lines.push('Rename the image files');
     lines.push(body.scope === 'store' ? 'For every product in your store'
       : body.scope === 'collection' ? 'For the products in the chosen collection'
@@ -2935,6 +3260,11 @@ async function pollAi() {
   $('ai-mini-alt').textContent = s.updated_alt;
   $('ai-mini-renamed').textContent = s.renamed_images;
   $('ai-mini-status').textContent = s.status.charAt(0).toUpperCase() + s.status.slice(1);
+  vizStack($('ai-progress-chart'), [
+    { label: 'Labeled', value: s.processed_products - s.failed_products, color: VIZ.done },
+    { label: 'Failed', value: s.failed_products, color: VIZ.todo },
+    { label: 'Still to do', value: Math.max(0, s.total_products - s.processed_products), color: VIZ.rest },
+  ]);
 
   aiLogEl.innerHTML = '';
   s.log.forEach(line => aiLogEl.appendChild(renderLogLine(line)));
@@ -3379,6 +3709,7 @@ async function loadHistory(page) {
   try {
     const q = new URLSearchParams({
       from: H.start.toISOString(), to: addDays(H.end, 1).toISOString(), page,
+      tz: -new Date().getTimezoneOffset(),
     });
     const data = await (await fetch('/api/history?' + q)).json();
     if (!data.ok) { showError(data.error); return; }
@@ -3386,6 +3717,7 @@ async function loadHistory(page) {
     body.innerHTML = '';
     $('hist-stat').innerHTML = `<b>${data.total}</b> visit${data.total === 1 ? '' : 's'} · <b>${data.unique_ips}</b> unique IP${data.unique_ips === 1 ? '' : 's'}`;
     $('hist-empty').classList.toggle('hidden', data.rows.length > 0);
+    vizDays($('hist-chart'), vizDayRange(H.start, H.end, data.daily || {}), { label: 'Visits', empty: 'No visits in this period.' });
     data.rows.forEach(r => {
       const tr = document.createElement('tr');
       const cell = (text, cls) => { const td = document.createElement('td'); td.textContent = text; if (cls) td.className = cls; tr.appendChild(td); };
@@ -3419,7 +3751,7 @@ $('dc-label-report').addEventListener('click', () => goToView('ai-report'));
 async function loadDashboard() {
   $('view-dashboard').classList.add('is-loading-data');
   try {
-    const d = await fetch('/api/dashboard').then(r => r.json());
+    const d = await fetch('/api/dashboard?tz=' + -new Date().getTimezoneOffset()).then(r => r.json());
     if (!d.ok) {
       $('dash-greeting').textContent = 'Dashboard';
       $('dash-sub').textContent = 'Connect your store to see your numbers.';
@@ -3442,8 +3774,18 @@ async function loadDashboard() {
     $('dc-stuff').textContent = s.stuffing_checked
       ? `${nf(s.stuffing_checked)} ALT texts checked · ${nf(s.stuffing_fixed)} rewritten to avoid stuffing`
       : 'No ALT texts checked yet.';
-    const tk = $('dc-topkw');
-    if (d.top_keywords && d.top_keywords.length) { tk.innerHTML = ''; d.top_keywords.forEach(t => tk.appendChild(chip(t.keyword, t.count))); }
+    vizBars($('dc-topkw'), (d.top_keywords || []).map(t => ({ label: t.keyword, value: t.count, text: `${nf(t.count)} images` })),
+      { empty: 'Nothing yet — run ALT text labeling and your keywords will appear here.' });
+    vizBars($('dc-work-chart'), [
+      { label: 'Images compressed', value: s.images_compressed },
+      { label: 'ALT texts written', value: s.alt_updated },
+      { label: 'Files renamed', value: s.files_renamed },
+      { label: 'Keywords found', value: s.keywords_found },
+      { label: 'Stuffing fixed', value: s.stuffing_fixed },
+    ].map(r => ({ ...r, value: r.value || 0 })));
+    const today = new Date(), monthAgo = new Date(); monthAgo.setDate(today.getDate() - 29);
+    vizDays($('dc-visits-chart'), vizDayRange(monthAgo, today, d.visits_daily || {}),
+      { label: 'Visits', empty: 'No visits in the last 30 days.' });
     $('dc-renamed').textContent = nf(s.files_renamed);
 
     const total = u.free + u.credits, used = Math.min(u.used, total);
@@ -3464,7 +3806,10 @@ function showCoverage(cov, at) {
   $('dc-images').textContent = nf(cov.images);
   $('dc-done').textContent = nf(cov.optimized);
   $('dc-pending').textContent = nf(cov.pending);
-  $('dc-cov-bar').style.width = cov.images ? (100 * cov.optimized / cov.images) + '%' : '0%';
+  vizStack($('dc-cov-chart'), [
+    { label: 'Optimized', value: cov.optimized, color: VIZ.done },
+    { label: 'Not yet', value: cov.pending, color: VIZ.todo },
+  ]);
   $('dc-cov-note').textContent = (cov.images
     ? `${Math.round(100 * cov.optimized / cov.images)}% optimized` : 'No images found') +
     (at ? ' · scanned ' + new Date(at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '');
@@ -3515,9 +3860,12 @@ async function loadKeywords() {
     $('kw-stuff').textContent = d.stuffing.checked
       ? `${nf(d.stuffing.checked)} ALT texts checked · ${nf(d.stuffing.fixed)} rewritten to avoid stuffing`
       : 'No ALT texts checked yet.';
-    const top = $('kw-top'); top.innerHTML = '';
-    if (!d.top.length) top.innerHTML = '<span class="note" style="margin:0;">No keywords yet.</span>';
-    d.top.forEach(t => top.appendChild(chip(t.keyword, t.count)));
+    vizStack($('kw-stuff-chart'), [
+      { label: 'Natural on first try', value: d.stuffing.checked - d.stuffing.fixed, color: VIZ.done },
+      { label: 'Rewritten to avoid stuffing', value: d.stuffing.fixed, color: VIZ.todo },
+    ]);
+    vizBars($('kw-top'), d.top.map(t => ({ label: t.keyword, value: t.count, text: `${nf(t.count)} images` })),
+      { empty: 'No keywords yet.' });
     const body = $('kw-body'); body.innerHTML = '';
     $('kw-empty').classList.toggle('hidden', d.products.length > 0);
     d.products.forEach(p => {
@@ -3603,13 +3951,14 @@ $('sp-check').addEventListener('click', async () => {
     $('sp-ext').textContent = d.extension.detected
       ? 'Storefront extension: running on your store.'
       : (speedInfo && speedInfo.extension_live ? 'Storefront extension: not detected on your home page yet — switch it on in the theme editor (App embeds).' : '');
-    const body = $('sp-heavy'); body.innerHTML = '';
-    im.heaviest.forEach(h => {
-      const tr = document.createElement('tr');
-      const a = document.createElement('td'); a.textContent = decodeURIComponent(h.url.split('?')[0].split('/').pop());
-      const b = document.createElement('td'); b.textContent = fmtBytes(h.bytes); b.style.whiteSpace = 'nowrap';
-      tr.append(a, b); body.appendChild(tr);
-    });
+    const fileName = url => { const f = url.split('?')[0].split('/').pop(); try { return decodeURIComponent(f); } catch (e) { return f; } };
+    vizBars($('sp-heavy'), im.heaviest.map(h => ({ label: fileName(h.url), value: h.bytes, text: fmtBytes(h.bytes) })),
+      { color: VIZ.todo, empty: 'No images measured.' });
+    const ofAll = n => `${nf(n)} of ${nf(im.on_page)}`;
+    vizBars($('sp-practice-chart'), [
+      { label: 'Responsive (srcset)', value: im.with_srcset, text: ofAll(im.with_srcset) },
+      { label: 'Lazy-loaded', value: im.lazy, text: ofAll(im.lazy) },
+    ], { max: Math.max(1, im.on_page), empty: 'No images found on the page.' });
     $('sp-result').classList.remove('hidden');
     renderSpeedFeatures();
     $('sp-note').textContent = d.extension.detected ? '' : $('sp-note').textContent;

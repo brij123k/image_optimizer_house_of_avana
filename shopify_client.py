@@ -37,8 +37,9 @@ class ShopifyClient:
     # ---------- internals ----------
 
     def _request(self, method, url, **kwargs):
-        """Wraps requests with a simple 429 retry (Shopify's leaky bucket)."""
-        for _ in range(4):
+        """Wraps requests with a simple 429 retry (Shopify's leaky bucket). Jobs
+        run several workers at once, so allow enough retries to wait out a full bucket."""
+        for _ in range(8):
             resp = self.session.request(method, url, **kwargs)
             if resp.status_code == 429:
                 time.sleep(float(resp.headers.get("Retry-After", 2)))
@@ -138,7 +139,7 @@ class ShopifyClient:
             image["alt"] = alt
         return self._request("PUT", url, json={"image": image}, timeout=60).json()["image"]
 
-    def replace_image(self, product_id, image_id, base64_data, filename, alt=None):
+    def replace_image(self, product_id, image_id, base64_data, filename, alt=None, old=None):
         """Really renames an image: uploads the data as a new image under
         `filename`, then deletes the old one. Shopify has no rename call.
 
@@ -146,9 +147,12 @@ class ShopifyClient:
         text unless `alt` is given). The new image has a NEW id and CDN URL, so
         callers must record the returned image's id, not the old one.
         Order matters: the new image is created before the old one is removed,
-        so a failure part-way never loses the picture."""
+        so a failure part-way never loses the picture.
+
+        Pass `old` (the image as listed with its product) to skip re-reading it."""
         base = f"{self.base_url}/products/{product_id}/images"
-        old = self._request("GET", f"{base}/{image_id}.json", timeout=30).json()["image"]
+        if old is None:
+            old = self._request("GET", f"{base}/{image_id}.json", timeout=30).json()["image"]
         payload = {
             "attachment": base64_data,
             "filename": filename,
