@@ -254,6 +254,7 @@ const usageText = $('usage-text'), usageCount = $('usage-count'), usageBar = $('
 const planList = $('plan-list');
 let freeImages = 10;
 let lastPlan = null;   // id of the most recently bought pack, highlighted as the current one
+let hasCredits = false;
 
 function showError(msg) { errorBanner.style.display = 'block'; errorBanner.textContent = msg; }
 function hideError() { errorBanner.style.display = 'none'; }
@@ -288,20 +289,18 @@ async function loadUsage() {
     usageCount.textContent = `${data.used} used · ${data.remaining} left`;
     usageBar.style.width = (total ? Math.round(100 * doneCount / total) : 100) + '%';
     usageBar.classList.toggle('empty', data.remaining === 0);
-    renderFreeCard(data.credits === 0);
+    hasCredits = data.credits > 0;
   } catch (e) { showError('Could not load your usage.'); }
 }
 
 function renderFreeCard(isCurrent) {
-  const existing = $('free-card-slot');
-  if (existing) existing.remove();
   const slot = document.createElement('div');
-  slot.id = 'free-card-slot';
   slot.innerHTML = planCardHTML({
-    name: 'Starter', price: 'Free', per: '', buyable: false, current: isCurrent,
+    name: 'Free', price: 'Free', per: '', buyable: false, current: isCurrent,
     features: [
       `${freeImages} image credits`, 'Compression + WebP conversion',
-      'AI ALT text labeling', '3 AI keyword suggestions per image', 'Keyword-stuffing protection', 'AI image file renaming', 'Usage report',
+      'AI ALT text labeling', '3 AI keyword suggestions per image', 'Keyword-stuffing protection', 'AI image file renaming',
+      'AI image generation (3 credits per image)', 'Usage report',
       'One-time, for the life of the install',
     ],
   });
@@ -313,6 +312,9 @@ async function loadPlans() {
     const res = await fetch('/api/billing/plans');
     const data = await res.json();
     if (!data.ok) { showError(data.error); return; }
+    if (data.free) freeImages = data.free;
+    // Drawn here, not in loadUsage(), so the Free card shows even when usage can't load.
+    renderFreeCard(!hasCredits && !lastPlan);
     data.plans.forEach(p => {
       const wrap = document.createElement('div');
       wrap.innerHTML = planCardHTML({

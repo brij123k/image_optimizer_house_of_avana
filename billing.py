@@ -30,21 +30,24 @@ PLANS = [
         "id": "pack_100", "label": "100 images", "images": 100, "price": "10.00",
         "features": [
             "100 image credits", "Compression + WebP conversion",
-            "AI ALT text labeling", "3 AI keyword suggestions per image", "Keyword-stuffing protection", "AI image file renaming", "Never expires",
+            "AI ALT text labeling", "3 AI keyword suggestions per image", "Keyword-stuffing protection", "AI image file renaming",
+            "AI image generation (3 credits per image)", "Never expires",
         ],
     },
     {
         "id": "pack_500", "label": "500 images", "images": 500, "price": "25.00",
         "features": [
             "500 image credits", "Compression + WebP conversion",
-            "AI ALT text labeling", "3 AI keyword suggestions per image", "Keyword-stuffing protection", "AI image file renaming", "Never expires", "Better price per image",
+            "AI ALT text labeling", "3 AI keyword suggestions per image", "Keyword-stuffing protection", "AI image file renaming",
+            "AI image generation (3 credits per image)", "Never expires", "Better price per image",
         ],
     },
     {
         "id": "pack_1000", "label": "1000 images", "images": 1000, "price": "45.00",
         "features": [
             "1000 image credits", "Compression + WebP conversion",
-            "AI ALT text labeling", "3 AI keyword suggestions per image", "Keyword-stuffing protection", "AI image file renaming", "Never expires", "Best price per image",
+            "AI ALT text labeling", "3 AI keyword suggestions per image", "Keyword-stuffing protection", "AI image file renaming",
+            "AI image generation (3 credits per image)", "Never expires", "Best price per image",
         ],
     },
 ]
@@ -85,7 +88,7 @@ def _client_for(shop):
 
 @billing_bp.route("/api/billing/plans")
 def plans():
-    return jsonify({"ok": True, "plans": PLANS})
+    return jsonify({"ok": True, "plans": PLANS, "free": billing_store.FREE_IMAGES})
 
 
 _CLOSED_STATUSES = {"DECLINED", "EXPIRED", "CANCELLED"}
