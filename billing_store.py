@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 from token_store import conn as _shared_conn
 
-FREE_IMAGES = 100
+FREE_IMAGES = 10
 
 
 def _conn():
@@ -27,7 +27,7 @@ def _conn():
             plan_id    TEXT NOT NULL,
             images     INTEGER NOT NULL,
             price      TEXT NOT NULL,
-            status     TEXT NOT NULL DEFAULT 'pending',  -- pending | credited
+            status     TEXT NOT NULL DEFAULT 'pending',  -- pending | credited | closed
             created_at TEXT NOT NULL
         )
     """)
@@ -93,20 +93,37 @@ def credit_purchase(charge_id):
     """Marks a pending purchase as paid and adds its images to the shop's
     balance. Idempotent — crediting an already-credited charge is a no-op, so
     it's safe to call this speculatively every time the merchant returns from
-    checkout."""
+    checkout. Returns the number of images added (0 if none)."""
     c = _conn()
     row = c.execute(
         "SELECT shop, images, status FROM purchases WHERE charge_id = ?", (charge_id,)
     ).fetchone()
     if not row or row["status"] == "credited":
-        return False
+        return 0
     c.execute("UPDATE purchases SET status = 'credited' WHERE charge_id = ?", (charge_id,))
     c.execute("""
         INSERT INTO usage (shop, images_used, credits_purchased) VALUES (?, 0, ?)
         ON CONFLICT(shop) DO UPDATE SET credits_purchased = credits_purchased + excluded.credits_purchased
     """, (row["shop"], row["images"]))
     c.commit()
-    return True
+    return row["images"]
+
+
+def close_purchase(charge_id):
+    """The merchant declined the charge or let it expire — stop checking on it."""
+    c = _conn()
+    c.execute("UPDATE purchases SET status = 'closed' WHERE charge_id = ? AND status = 'pending'",
+              (charge_id,))
+    c.commit()
+
+
+def last_plan(shop):
+    """plan_id of the most recently credited pack, or None if the shop never bought one."""
+    row = _conn().execute(
+        "SELECT plan_id FROM purchases WHERE shop = ? AND status = 'credited' "
+        "ORDER BY created_at DESC LIMIT 1", (shop,)
+    ).fetchone()
+    return row["plan_id"] if row else None
 
 
 def list_purchases(shop):

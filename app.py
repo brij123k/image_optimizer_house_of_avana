@@ -12,6 +12,7 @@ from shopify_auth import auth_bp, current_credentials, is_production, login_from
 from billing import billing_bp
 import billing_store
 import product_cache
+import token_store
 from ai_metadata import ai_bp
 from image_edit import edit_bp
 from history import history_bp
@@ -387,9 +388,11 @@ def index():
             return ("That store address is not valid.", 400)
         signed_in = login_from_signed_request(request.args) == "logged_in"
         if signed_in and not token_still_valid(shop):
-            session.pop("shop", None)           # the app was uninstalled: approve again from scratch
-            signed_in = False
-        if not signed_in and session.get("shop") != shop:
+            signed_in = False                   # the app was uninstalled: approve again from scratch
+        # After an uninstall the browser cookie still names the store, but the token is gone.
+        # Trusting that cookie left a reinstall stuck on a broken page until cookies were cleared.
+        if not signed_in and (session.get("shop") != shop or not token_store.get_token(shop)):
+            session.pop("shop", None)
             return redirect("/auth?shop=" + shop)
     return render_template("index.html", manual_shop=not is_production())
 

@@ -16,7 +16,7 @@ Flow:
 """
 import os
 
-from flask import Blueprint, jsonify, redirect, request
+from flask import Blueprint, current_app, jsonify, redirect, request
 
 import billing_store
 import token_store
@@ -27,21 +27,21 @@ billing_bp = Blueprint("billing", __name__)
 
 PLANS = [
     {
-        "id": "pack_100", "label": "100 images", "images": 100, "price": "2.00",
+        "id": "pack_100", "label": "100 images", "images": 100, "price": "10.00",
         "features": [
             "100 image credits", "Compression + WebP conversion",
             "AI ALT text labeling", "3 AI keyword suggestions per image", "Keyword-stuffing protection", "AI image file renaming", "Never expires",
         ],
     },
     {
-        "id": "pack_500", "label": "500 images", "images": 500, "price": "10.00",
+        "id": "pack_500", "label": "500 images", "images": 500, "price": "25.00",
         "features": [
             "500 image credits", "Compression + WebP conversion",
             "AI ALT text labeling", "3 AI keyword suggestions per image", "Keyword-stuffing protection", "AI image file renaming", "Never expires", "Better price per image",
         ],
     },
     {
-        "id": "pack_1000", "label": "1000 images", "images": 1000, "price": "18.00",
+        "id": "pack_1000", "label": "1000 images", "images": 1000, "price": "45.00",
         "features": [
             "1000 image credits", "Compression + WebP conversion",
             "AI ALT text labeling", "3 AI keyword suggestions per image", "Keyword-stuffing protection", "AI image file renaming", "Never expires", "Best price per image",
@@ -88,12 +88,42 @@ def plans():
     return jsonify({"ok": True, "plans": PLANS})
 
 
+_CLOSED_STATUSES = {"DECLINED", "EXPIRED", "CANCELLED"}
+
+
+def sync_pending(shop):
+    """Asks Shopify for the real status of every charge still marked pending,
+    credits the approved ones and closes the declined/expired ones. Returns
+    how many images were credited. Called from the checkout callback and on
+    every usage read, so a purchase is credited even if the merchant never
+    made it back through the callback (lost session, closed tab, error)."""
+    pending = billing_store.pending_charge_ids(shop)
+    if not pending:
+        return 0
+    credited = 0
+    try:
+        data = _client_for(shop).graphql(_PURCHASES_QUERY)
+        for edge in data["currentAppInstallation"]["oneTimePurchases"]["edges"]:
+            node = edge["node"]
+            if node["id"] not in pending:
+                continue
+            if node["status"] == "ACTIVE":
+                credited += billing_store.credit_purchase(node["id"])
+            elif node["status"] in _CLOSED_STATUSES:
+                billing_store.close_purchase(node["id"])
+    except Exception as exc:  # noqa: BLE001 - retried on the next usage read
+        current_app.logger.warning("Could not check pending charges for %s: %s", shop, exc)
+    return credited
+
+
 @billing_bp.route("/api/billing/usage")
 def usage():
     shop = current_shop()
     if not shop:
         return jsonify({"ok": False, "error": "No shop in session."}), 401
-    return jsonify({"ok": True, **billing_store.get_usage(shop)})
+    sync_pending(shop)
+    return jsonify({"ok": True, **billing_store.get_usage(shop),
+                    "last_plan": billing_store.last_plan(shop)})
 
 
 @billing_bp.route("/api/billing/purchase", methods=["POST"])
@@ -133,16 +163,5 @@ def billing_callback():
     if not shop:
         return redirect("/")
 
-    pending = billing_store.pending_charge_ids(shop)
-    if pending:
-        try:
-            client = _client_for(shop)
-            data = client.graphql(_PURCHASES_QUERY)
-            for edge in data["currentAppInstallation"]["oneTimePurchases"]["edges"]:
-                node = edge["node"]
-                if node["id"] in pending and node["status"] == "ACTIVE":
-                    billing_store.credit_purchase(node["id"])
-        except Exception:  # noqa: BLE001 - the merchant still lands on the app either way
-            pass
-
-    return redirect(f"/?shop={shop}&billing=done")
+    added = sync_pending(shop)
+    return redirect(f"/plans?added={added}")

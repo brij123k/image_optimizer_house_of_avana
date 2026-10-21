@@ -5,7 +5,8 @@ Crop & Transform and Resize keep using the existing /api/start job (see
 app.py) — they're just settings that ride along with a normal optimize run.
 Everything here is for the other four, which each write directly to one or
 more images and charge billing_store the same way run_optimization() does:
-one credit per image actually re-uploaded.
+one credit per image actually re-uploaded. Generate is the exception: every
+preview costs GENERATE_CREDITS, since each one is a paid image-generation call.
 
 These run synchronously in the request — a handful of interactive edits, not
 a bulk job, so there's no need for the background-thread/polling machinery
@@ -14,6 +15,7 @@ app.py uses for Compress Images.
 import base64
 import io
 import os
+import time
 
 import requests
 
@@ -28,8 +30,48 @@ from shopify_client import ShopifyClient
 
 edit_bp = Blueprint("edit", __name__)
 
-GEMINI_MODEL = "gemini-3.1-flash-image"
-GEMINI_IMAGE_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+# Primary model first; the Lite one is the fallback when the primary stays busy.
+GEMINI_IMAGE_MODELS = ["gemini-3.1-flash-image", "gemini-3.1-flash-lite-image"]
+GENERATE_CREDITS = 3  # one generated image costs ~3x an ALT-text label in Gemini fees
+
+# Google answers these when the model is briefly overloaded or rate-limited
+# ("server is busy"); the same request usually works seconds later. 404 means
+# a model isn't available to this key, so move on to the next one.
+_IMAGE_RETRY_STATUS = {429, 500, 502, 503, 504}
+_IMAGE_RETRY_DELAYS = (2, 5)
+_IMAGE_DEADLINE = 120  # seconds for all tries together, well under gunicorn's 300s timeout
+
+
+class GeminiBusy(RuntimeError):
+    """Every image model stayed busy through all retries."""
+
+
+def _generate_image(prompt):
+    """Calls Gemini image generation, retrying busy answers and falling back to
+    the next model. Returns the parsed JSON response."""
+    deadline = time.time() + _IMAGE_DEADLINE
+    for model in GEMINI_IMAGE_MODELS:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        for delay in (*_IMAGE_RETRY_DELAYS, None):
+            left = deadline - time.time()
+            if left < 10:
+                raise GeminiBusy("Ran out of time waiting for Gemini.")
+            try:
+                resp = requests.post(url, headers={"x-goog-api-key": _gemini_key()},
+                                     json={"contents": [{"parts": [{"text": prompt}]}]},
+                                     timeout=min(60, left))
+            except requests.RequestException:
+                pass                                # network hiccup or timeout: retry
+            else:
+                if resp.status_code == 404:
+                    break                           # model not available: next model
+                if resp.status_code not in _IMAGE_RETRY_STATUS:
+                    resp.raise_for_status()
+                    return resp.json()
+            if delay is None:
+                break
+            time.sleep(delay)
+    raise GeminiBusy("Every Gemini image model is busy.")
 
 
 def _get_client():
@@ -241,13 +283,17 @@ def edit_color_bg():
 
 @edit_bp.route("/api/edit/generate/preview", methods=["POST"])
 def edit_generate_preview():
-    """Generates an image but writes nothing and charges no quota — the
-    merchant only pays a credit once they pick a result with 'Use This
-    Image' (see edit_generate_use below)."""
+    """Generates an image but writes nothing to the store. Charges
+    GENERATE_CREDITS per preview: each call is a paid Gemini image generation,
+    whether or not the merchant then uses the result."""
     try:
-        _shop, _unused_client = _get_client()
+        shop, _unused_client = _get_client()
     except PermissionError as exc:
         return jsonify({"ok": False, "error": str(exc)}), 401
+
+    if billing_store.remaining(shop) < GENERATE_CREDITS:
+        return jsonify({"ok": False, "quota_exceeded": True,
+                        "error": f"Generating an image uses {GENERATE_CREDITS} credits. Buy a pack to continue."}), 402
 
     body = request.get_json(silent=True) or {}
     prompt = (body.get("prompt") or "").strip()
@@ -263,35 +309,30 @@ def edit_generate_preview():
     )
 
     try:
-        resp = requests.post(
-            GEMINI_IMAGE_URL,
-            headers={"x-goog-api-key": _gemini_key()},
-            json={"contents": [{"parts": [{"text": full_prompt}]}]},
-            timeout=60,
-        )
-        resp.raise_for_status()
-        data = resp.json()
+        data = _generate_image(full_prompt)
         parts = data["candidates"][0]["content"]["parts"]
         image_part = next(p for p in parts if "inline_data" in p or "inlineData" in p)
         inline = image_part.get("inline_data") or image_part.get("inlineData")
         image_b64 = inline["data"]
         mime_type = inline.get("mime_type") or inline.get("mimeType") or "image/png"
+    except GeminiBusy:
+        return jsonify({"ok": False, "error": "Google's image service is busy right now. Please try "
+                                              "again in a minute. No credits were used."}), 503
     except Exception as exc:  # noqa: BLE001
         return jsonify({"ok": False, "error": f"Generation failed: {exc}"}), 502
 
+    billing_store.record_usage(shop, GENERATE_CREDITS)
     return jsonify({"ok": True, "image_base64": image_b64, "mime_type": mime_type})
 
 
 @edit_bp.route("/api/edit/generate/use", methods=["POST"])
 def edit_generate_use():
     try:
-        shop, client = _get_client()
+        _shop, client = _get_client()
     except PermissionError as exc:
         return jsonify({"ok": False, "error": str(exc)}), 401
 
-    if billing_store.remaining(shop) <= 0:
-        return jsonify({"ok": False, "error": "Your plan limit is used up.", "quota_exceeded": True}), 402
-
+    # No charge here: the credits were already taken when the preview was generated.
     body = request.get_json(silent=True) or {}
     product_id = body.get("product_id")
     image_id = body.get("image_id")
@@ -302,7 +343,6 @@ def edit_generate_use():
     try:
         client.update_image(product_id, image_id, image_b64, filename="generated.png")
         product_cache.invalidate(client.store_domain)
-        billing_store.record_usage(shop, 1)
     except Exception as exc:  # noqa: BLE001
         return jsonify({"ok": False, "error": str(exc)}), 400
 

@@ -45,8 +45,8 @@ Compress product images in bulk, by store, collection or product, and convert th
 
 ## Pricing
 - Billing method: **One-time payment** (charged through Shopify Billing). The app has no subscription.
-- **100 images — $2.00**, **500 images — $10.00**, **1000 images — $18.00**. Credits never expire. Merchants can buy another pack at any time from inside the app, with no reinstall and no need to contact support.
-- Say in the pricing details: "Every store starts with 100 free images."
+- **100 images — $10.00**, **500 images — $25.00**, **1000 images — $45.00**. Credits never expire. Each image uses 1 credit; each AI-generated image uses 3 credits. Merchants can buy another pack at any time from inside the app, with no reinstall and no need to contact support.
+- Say in the pricing details: "Every store starts with 10 free images."
 - Link the pricing page: `https://YOUR-DOMAIN/support` (or a pricing page of your own).
 
 ## Categories, eligibility and links
@@ -61,7 +61,7 @@ Compress product images in bulk, by store, collection or product, and convert th
 Paste everything inside the fence as plain text.
 
 ```text
-The app edits product images, so please test on a development store with a few products that have images. No login or account is needed: Shopify's approval screen is the only sign-in. Every store gets 100 free image credits, so steps 1-6 need no payment.
+The app edits product images, so please test on a development store with a few products that have images. No login or account is needed: Shopify's approval screen is the only sign-in. Every store gets 10 free image credits. If steps 1-6 need more, buy a pack in test mode (step 7): test charges are free.
 
 1. Install the app and open it from Apps in the Shopify admin. Approve the permission (write_products only). Expected: the Dashboard opens with 100 credits and charts of store activity.
 
@@ -77,7 +77,7 @@ The app edits product images, so please test on a development store with a few p
 
 6. Label report and Image report: press Refresh. Expected: every image is shown as done or not done, with charts by day and by product.
 
-7. Plans: press "Buy this pack" on the 100 images pack ($2.00) and approve the test charge on Shopify's page. Expected: you return to the app and 100 credits are added. Payment is a one-time charge, not a subscription.
+7. Plans: press "Buy this pack" on the 100 images pack ($10.00) and approve the test charge on Shopify's page. Expected: you return to the app and 100 credits are added. Payment is a one-time charge, not a subscription.
 
 8. Store speed: press "Check my storefront". Expected: image weight and counts for the store's home page. If the store has a password, the check can't read the page.
 

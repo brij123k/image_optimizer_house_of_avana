@@ -1347,7 +1347,7 @@
                 <button class="btn-ghost" id="generate-clear" style="display:none;">Clear result</button>
               </div>
 
-              <p class="note" id="generate-note" style="display:none;">This calls a real image-generation API and doesn't save to your store until you click "Use This Image".</p>
+              <p class="note" id="generate-note" style="display:none;">Each generated image uses 3 credits. Nothing is saved to your store until you click "Use This Image" (no extra credit).</p>
               <span class="picker-count" id="generate-status"></span>
             </div>
           </div>
@@ -2183,7 +2183,11 @@ $('generate-btn').addEventListener('click', async () => {
       }),
     });
     const data = await res.json();
-    if (!data.ok) { showError(data.error); $('generate-status').textContent = ''; return; }
+    if (!data.ok) {
+      if (data.quota_exceeded) { window.location.href = '/plans'; return; }
+      showError(data.error); $('generate-status').textContent = ''; return;
+    }
+    loadUsage();
     generatedImageBase64 = data.image_base64;
     $('generate-result-img').src = `data:${data.mime_type};base64,${data.image_base64}`;
     $('generate-result-wrap').style.display = 'block';
