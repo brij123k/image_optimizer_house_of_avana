@@ -27,7 +27,7 @@ def _conn():
             plan_id    TEXT NOT NULL,
             images     INTEGER NOT NULL,
             price      TEXT NOT NULL,
-            status     TEXT NOT NULL DEFAULT 'pending',  -- pending | credited | closed
+            status     TEXT NOT NULL DEFAULT 'pending',  -- pending | credited | closed | uninstalled
             created_at TEXT NOT NULL
         )
     """)
@@ -114,6 +114,18 @@ def close_purchase(charge_id):
     c = _conn()
     c.execute("UPDATE purchases SET status = 'closed' WHERE charge_id = ? AND status = 'pending'",
               (charge_id,))
+    c.commit()
+
+
+def reset_shop(shop):
+    """Puts a shop back on the Free plan, as Shopify requires after an
+    uninstall: purchased credits and usage are cleared, so a reinstall starts
+    with FREE_IMAGES and any pack must be bought and approved again. Purchase
+    rows are kept (marked 'uninstalled') as a record of what was paid."""
+    c = _conn()
+    c.execute("DELETE FROM usage WHERE shop = ?", (shop,))
+    c.execute("UPDATE purchases SET status = 'uninstalled' "
+              "WHERE shop = ? AND status IN ('pending', 'credited')", (shop,))
     c.commit()
 
 

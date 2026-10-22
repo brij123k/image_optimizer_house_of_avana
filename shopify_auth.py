@@ -20,6 +20,7 @@ from urllib.parse import urlencode
 import requests
 from flask import Blueprint, current_app, jsonify, redirect, request, session
 
+import billing_store
 import token_store
 
 auth_bp = Blueprint("auth", __name__)
@@ -159,7 +160,12 @@ def callback():
     if not access_token:
         return jsonify({"ok": False, "error": "Shopify returned no access token."}), 502
 
+    # No saved record means a first install or a reinstall. Reset billing here too, not only in
+    # the uninstall webhook, so a lost webhook can't carry an old plan into the new install.
+    fresh_install = token_store.get_shop(shop) is None
     _save_token_payload(shop, payload)
+    if fresh_install:
+        billing_store.reset_shop(shop)
     register_uninstall_webhook(shop, access_token)
     try:
         refresh_shop_info(shop, access_token)
@@ -298,6 +304,7 @@ def uninstalled():
     shop = request.headers.get("X-Shopify-Shop-Domain", "").strip().lower()
     if valid_shop(shop):
         token_store.delete_shop(shop)
+        billing_store.reset_shop(shop)      # a reinstall must start on the Free plan
         current_app.logger.info("Uninstalled: %s", shop)
     return "", 200
 

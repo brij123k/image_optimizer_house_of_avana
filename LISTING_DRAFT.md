@@ -45,7 +45,7 @@ Compress product images in bulk, by store, collection or product, and convert th
 
 ## Pricing
 - Billing method: **One-time payment** (charged through Shopify Billing). The app has no subscription.
-- **100 images — $10.00**, **500 images — $25.00**, **1000 images — $45.00**. Credits never expire. Each image uses 1 credit; each AI-generated image uses 3 credits. Merchants can buy another pack at any time from inside the app, with no reinstall and no need to contact support.
+- **100 images — $10.00**, **500 images — $25.00**, **1000 images — $45.00**. Credits never expire while the app is installed; uninstalling removes them and a reinstall starts on the Free plan. Each image uses 1 credit; each AI-generated image uses 3 credits. Merchants can buy another pack at any time from inside the app, with no reinstall and no need to contact support.
 - Say in the pricing details: "Every store starts with 10 free images."
 - Link the pricing page: `https://YOUR-DOMAIN/support` (or a pricing page of your own).
 
